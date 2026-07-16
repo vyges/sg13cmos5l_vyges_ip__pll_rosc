@@ -1,0 +1,44 @@
+# sg13cmos5l_vy_ip__ringpll
+
+Ring-oscillator **PLL** for the IHP SG13CMOS5L (SG13G2) process — a self-biased,
+dual-control-path ring-VCO PLL with an integrated ÷N feedback divider and
+digital lock detect. Built for the **Chipalooza Challenge** (IHP run) as an
+openframe analog-slot IP.
+
+> Status: **proposal / feasibility** stage. See
+> [`../chipalooza/proposal/sg13g2-ringpll-proposal.md`](../chipalooza/proposal/sg13g2-ringpll-proposal.md).
+
+## What it is
+
+A foundational on-chip clock multiplier — the block from the original Efabless
+Chipalooza list that never reached a tapeout-ready layout. Designed to drop into
+one openframe pallet slot: 3.3 V from the slot power switch, bias from the
+harness V/I references, and `enable` / ÷N-select / `lock` over the digital
+control-status bus.
+
+| Parameter | Preliminary target |
+|---|---|
+| Reference in | ~10–50 MHz |
+| Output | ~100–800 MHz (÷N programmable) |
+| Supply | 3.3 V |
+
+## Layout
+
+| Dir | Contents |
+|---|---|
+| `xschem/` | schematics (VCO, PFD, charge pump, ÷N, lock detect, top) |
+| `magic/` | analog layout |
+| `netlist/` | extracted / simulation netlists |
+| `sim/` | testbenches — **`sim/ringvco_feasibility.spice`** + `run_tuning_sweep.sh` |
+| `verilog/` | digital control/status wrapper (LibreLane) |
+| `signoff/` | DRC / LVS / extract / STA reports |
+| `doc/` | design notes, characterization |
+
+## Toolchain
+
+IHP open flow: **xschem / ngspice / magic / netgen / klayout** + **LibreLane**
+for digital, with **Vyges Loom** (`vyges-drc` / `-lvs` / `-extract` / `-sta-si`)
+as independent sign-off. ngspice must support **OSDI v0.4** (the SG13G2 PSP103
+models) — use IIC-OSIC-TOOLS or ngspice ≥ 43.
+
+Apache-2.0.

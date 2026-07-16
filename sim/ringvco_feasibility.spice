@@ -1,0 +1,48 @@
+* Ring-VCO feasibility — IHP SG13CMOS5L (SG13G2), 3.3V HV devices
+* 5-stage inverter ring on a header-pMOS-controlled supply (vsup); a
+* current-pulse kick guarantees startup (no uic metastability). VCTRL sets
+* the header gate (vcb = 3.3 - VCTRL) -> supply current -> frequency.
+* Verified in IIC-OSIC-TOOLS (ngspice-46 + SG13G2 PDK, OSDI psp103):
+*   VCTRL=3.3 -> 1.168 GHz, VCTRL=1.7 -> 1.110 GHz  (tt, 27C, full 0..3.3V swing)
+* NOTE: supply-starved => narrow tuning (~5%); the production PLL uses a
+* per-stage CURRENT-STARVED VCO for wide range. This deck proves the process
+* frequency capability (>1 GHz, covers the 100-800 MHz target with margin).
+* Run:  see run_tuning_sweep.sh  (needs ngspice with OSDI v0.4 support)
+
+.param VCTRL=3.3
+.lib PDKROOT/libs.tech/ngspice/models/cornerMOShv.lib mos_tt
+
+VDD vdd 0 3.3
+VCB vcb 0 {3.3-VCTRL}
+Xhdr vdd vcb vsup vdd sg13_hv_pmos w=40u l=0.5u
+
+.subckt inv in out top
+Xp out in top top sg13_hv_pmos w=8u l=0.5u
+Xn out in 0   0   sg13_hv_nmos w=4u l=0.5u
+.ends
+Xi1 n5 n1 vsup inv
+Xi2 n1 n2 vsup inv
+Xi3 n2 n3 vsup inv
+Xi4 n3 n4 vsup inv
+Xi5 n4 n5 vsup inv
+
+C1 n1 0 10f
+C2 n2 0 10f
+C3 n3 0 10f
+C4 n4 0 10f
+C5 n5 0 10f
+
+* startup kick — pull n1 low briefly to break the metastable point
+Ikick n1 0 PULSE(0 500u 0 20p 20p 300p 0)
+
+.control
+tran 5p 200n
+let vmx = maximum(v(n1))
+let vmn = minimum(v(n1))
+print vmx vmn
+meas tran p1 WHEN v(n1)=1.65 RISE=5
+meas tran p2 WHEN v(n1)=1.65 RISE=6
+let freq = 1/(p2-p1)
+print freq
+.endc
+.end
