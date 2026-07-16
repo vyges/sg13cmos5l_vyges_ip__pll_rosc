@@ -1,12 +1,13 @@
-# sg13cmos5l_vy_ip__ringpll
+# vyges-ring-oscillator-pll
 
-Ring-oscillator **PLL** for the IHP SG13CMOS5L (SG13G2) process — a self-biased,
+Ring-oscillator **PLL** for the IHP **SG13CMOS5L** process — a self-biased,
 dual-control-path ring-VCO PLL with an integrated ÷N feedback divider and
-digital lock detect. Built for the **Chipalooza Challenge** (IHP run) as an
-openframe analog-slot IP.
+digital lock detect. **All-CMOS** (no SiGe HBT / MiM cap / deep-N-well /
+Schottky — none of which SG13CMOS5L provides); the loop-filter cap is MOM/poly
+within the 5-metal stack. Built for the **Chipalooza Challenge #2 (IHP
+SG13CMOS5L)** as an openframe analog-slot IP.
 
-> Status: **proposal / feasibility** stage. See
-> [`../chipalooza/proposal/sg13g2-ringpll-proposal.md`](../chipalooza/proposal/sg13g2-ringpll-proposal.md).
+> Status: **proposal / feasibility** stage. See [`doc/proposal.md`](doc/proposal.md).
 
 ## What it is
 
@@ -38,7 +39,7 @@ control-status bus.
 
 IHP open flow: **xschem / ngspice / magic / netgen / klayout** + **LibreLane**
 for digital, with **Vyges Loom** (`vyges-drc` / `-lvs` / `-extract` / `-sta-si`)
-as independent sign-off. ngspice must support **OSDI v0.4** (the SG13G2 PSP103
-models) — use IIC-OSIC-TOOLS or ngspice ≥ 43.
+as independent sign-off. ngspice must support **OSDI v0.4** (the IHP PSP103
+models — SG13CMOS5L shares them with SG13G2) — use IIC-OSIC-TOOLS or ngspice ≥ 43.
 
 Apache-2.0.
