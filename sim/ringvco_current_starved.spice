@@ -1,0 +1,52 @@
+* Current-starved ring VCO — IHP SG13CMOS5L (SG13G2), 3.3V HV devices
+* Per-stage head-pMOS + tail-nMOS current starving. A vc-controlled nmos +
+* pmos-diode reference generates pbias; nbias = vc. Rising VCTRL raises both
+* head & tail currents -> wide tuning (vs the supply-starved sanity ring).
+* Toolchain: ngspice OSDI v0.4 (IIC-OSIC-TOOLS ngspice-46).
+* STATUS: WIP. Topology is correct (per-stage head/tail starving + bias mirror);
+* it needs the usual analog device-sizing / bias-point iteration to start
+* reliably and lock in the tuning range across corners. The supply-starved
+* ringvco_feasibility.spice already proves the process frequency capability.
+.param VCTRL=1.5
+.lib PDKROOT/libs.tech/ngspice/models/cornerMOShv.lib mos_tt
+
+VDD vdd 0 3.3
+VC  vc  0 {VCTRL}
+
+* bias reference: vc-controlled nmos pulls Iref; pmos diode -> pbias (pb)
+Mnr pb vc  0   0   sg13_hv_nmos w=2u l=0.5u
+Mpr pb pb  vdd vdd sg13_hv_pmos w=4u l=0.5u
+
+* current-starved inverter: head pmos (gate=pbias), tail nmos (gate=nbias)
+.subckt csinv in out pbias nbias
+Xhp vp  pbias vdd vdd sg13_hv_pmos w=8u l=0.5u
+Xp  out in    vp  vdd sg13_hv_pmos w=8u l=0.5u
+Xn  out in    vn  0   sg13_hv_nmos w=4u l=0.5u
+Xtl vn  nbias 0   0   sg13_hv_nmos w=4u l=0.5u
+.ends
+
+Xi1 n5 n1 pb vc csinv
+Xi2 n1 n2 pb vc csinv
+Xi3 n2 n3 pb vc csinv
+Xi4 n3 n4 pb vc csinv
+Xi5 n4 n5 pb vc csinv
+
+C1 n1 0 5f
+C2 n2 0 5f
+C3 n3 0 5f
+C4 n4 0 5f
+C5 n5 0 5f
+
+Ikick n1 0 PULSE(0 500u 0 20p 20p 300p 0)
+
+.control
+tran 5p 400n
+let vmx = maximum(v(n1))
+let vmn = minimum(v(n1))
+print vmx vmn
+meas tran p1 WHEN v(n1)=1.65 RISE=5
+meas tran p2 WHEN v(n1)=1.65 RISE=6
+let freq = 1/(p2-p1)
+print freq
+.endc
+.end
