@@ -51,32 +51,40 @@ current-starved ring-VCO, ÷N divider, lock detector, and a thin digital wrapper
 for the control/status interface (synthesized via LibreLane).
 
 **SG13CMOS5L process notes that shape the design:**
-- **No MiM capacitors.** The charge-pump **loop-filter capacitor is realized as
-  MOM (metal-finger) and/or poly cap** within the 5-metal stack — sized in the
-  proposal-window feasibility work. This is the single most process-specific
-  design decision and is called out explicitly.
-- **5-level metal (4 thin + 1 thick).** Layout, the loop-filter MOM cap, and slot
-  routing are all planned within 5 metals.
+- **No MiM capacitors + a small slot.** The charge-pump loop-filter cap is
+  **MOM (metal-finger) and/or poly** in the 5-metal stack. With the harness slot
+  at **~520 × 250 µm** (per the organizer), a large loop cap will not fit, so the
+  loop is designed around a **small cap**: a higher-impedance loop filter and, if
+  needed, a **digital-assisted / dual-path lock** (coarse digital acquisition +
+  fine analog trim) to keep the MOM cap tiny while preserving lock time and
+  jitter. This is the central schematic decision, sized in the schematic window.
+- **5-level metal (4 thin + 1 thick).** Layout, the MOM cap, and slot routing are
+  all planned within 5 metals and the small-slot footprint.
 - **All-CMOS devices** (`sg13_hv` 3.3 V for the analog core; `sg13_lv` 1.2 V for
   digital) — shared with SG13G2, so device models are common (see §7).
 
 ## 4. I/O and test ports
 
-| Signal | Dir | Domain | Purpose |
-|---|---|---|---|
-| `ref_clk` | in | pad (digital-drive) | reference clock (~10–50 MHz) |
-| `clk_out` | out | pad (digital-drive) | multiplied output clock |
-| `enable` | in | control bus | PLL enable / power-gate handshake |
-| `N[k-1:0]` | in | control bus | ÷N divider select |
-| `lock` | out | status bus | digital lock indicator |
-| `vbias_v` / `vbias_i` | in | analog (bias) | bandgap-referenced V/I bias from harness |
-| `vctrl_test` | out | analog (mux'd) | **test port:** VCO control voltage (observability) |
-| `clk_div_test` | out | control bus | **test port:** divided-down clock for lock/jitter capture |
-| `VDD33` / `VDD12` / `VSS` | — | supply | 3.3 V analog / 1.2 V digital / ground |
+Per the organizer, the proposal must list I/O and mark **dedicated vs muxable**
+so pins can be allotted around the padframe (budget: ~2 dedicated **or** ~4
+shared pins per project). Our request: **2 dedicated** (clean clocks) + the rest
+on the shared control bus / muxable analog.
 
-Analog pins are shared through the harness analog mux; pad↔project series
-resistance tolerance for `vctrl_test`/bias will be stated so mux switches can be
-sized. No sole-pin access is requested.
+| Signal | Dir | Domain | Pad allocation | Purpose |
+|---|---|---|---|---|
+| `ref_clk` | in | digital-drive pad | **dedicated** | reference clock (~10–50 MHz) — clean edge required |
+| `clk_out` | out | digital-drive pad | **dedicated** | multiplied output — up to ~800 MHz; **cannot go through a mux** |
+| `enable` | in | control bus | per-project (power-up/enable) | PLL enable / power-gate handshake |
+| `N[k-1:0]` | in | control bus | shared bus | ÷N divider select |
+| `lock` | out | status bus | shared bus | digital lock indicator |
+| `ibias` / `vbias` | in | analog (bias) | shared (harness refs) | iDAC current + vref voltage bias (see §6) |
+| `vctrl_test` | out | analog | **muxable** (shared analog) | test port: VCO control voltage (observability) |
+| `clk_div_test` | out | control bus | shared bus | test port: divided-down clock for freq/lock/jitter capture |
+| `VDD33` / `VDD12` / `VSS` | — | supply | harness | 3.3 V analog / 1.2 V digital / ground |
+
+`vctrl_test`/bias tolerate the analog-mux series resistance (value TBD from the
+organizer); `ref_clk`/`clk_out` are the only pins we ask to be **dedicated**. No
+sole-pin analog access is requested.
 
 ## 5. Target specification
 
@@ -96,21 +104,47 @@ mid-design will be submitted for approval per the rules.
 
 ## 6. Harness integration (openframe slot)
 
-Authored as an `openframe_user_project`-style analog cell fitting one of the 16
-pallet slots:
+Authored as an `openframe_user_project`-style analog cell fitting a **~520 × 250 µm**
+slot:
 
-- **Power:** 3.3 V from the pallet's pMOS power switch (enable-gated); 1.2 V for
-  the digital wrapper.
-- **Bias:** consumes the harness's **bandgap-referenced voltage + current** rails
-  for charge-pump / VCO bias — no on-slot bandgap needed (per the resource list:
-  1.2 V bandgap, up to 2 bias voltages + 2 current sources).
-- **Digital bus:** `enable`, `N[..]`, `lock`, and the test taps over the harness
-  control/status interface (≤16 digital control/test signals available).
-- **Analog/clock I/O:** `ref_clk` / `clk_out` / `vctrl_test` via the configurable
-  pads (per the harness `config.txt`).
+- **Power:** 3.3 V from the slot's auto-drawn (waffle) pMOS power switch
+  (enable-gated); 1.2 V for the digital wrapper. Our VCO + charge-pump current
+  draw will be stated so the switch is sized (organizer: it can be made as large
+  as needed).
+- **Bias — mapped to the harness references:** the charge-pump current is drawn
+  from the harness **5-bit current-reference iDAC (50 nA–10.32 µA, 32 values / 4
+  scales)**; VCO/CP operating points are set from the **voltage reference** (low
+  0.3–2.4 V / 0.3 V steps; high 0.4–3.2 V / 0.4 V steps). **No on-slot bandgap
+  needed** — the design programs directly off these.
+- **Digital control/status:** over the harness **SPI bus** (currently 128-bit
+  control + 128-bit status; ~16 bits/project going forward). We use a small
+  field: `enable`, `N[..]` (÷N), `lock`, plus the divided test-clock tap (§4/§9).
+- **Analog/clock I/O:** `ref_clk` / `clk_out` on **dedicated** pads;
+  `vctrl_test`/bias on shared/muxable pads (§4).
 
-*(Slot footprint/pinout is TBD upstream; the design is parameterized to target
-the footprint once the template repo publishes it.)*
+*(Exact slot footprint/pinout finalizes with the template repo; the design is
+parameterized to the ~520 × 250 µm budget.)*
+
+### Proposed control/status contract (the organizer invited interface ideas)
+
+Our block needs a small, self-describing field on the shared bus; we propose a
+minimal per-project **register map** that any project can adopt:
+
+| Field | Bits | Dir | Meaning |
+|---|---|---|---|
+| `EN` | 1 | ctrl | enable / power-up handshake |
+| `NDIV` | 6 | ctrl | ÷N select (1–64) |
+| `IBIAS_SEL` | 5 | ctrl | iDAC current-scale select (maps to the harness 5-bit iDAC) |
+| `TEST_SEL` | 2 | ctrl | route `clk_div_test` / `vctrl_test` observability |
+| `LOCK` | 1 | status | lock detect |
+| `ALIVE` / `FCODE` | 8 | status | VCO alive + coarse frequency code (for capture) |
+
+Two design principles we'd advocate for the harness contract generally: **(1) a
+tiny machine-readable `key: value` register description per project** (so
+top-level integration + the sequencer are auto-generated, not hand-wired), and
+**(2) a divided/observable clock tap per project** so lock/jitter are measurable
+through a low-bandwidth path. Both are cheap and make the whole pallet
+self-documenting — an area where Vyges can contribute tooling.
 
 ## 7. Feasibility — demonstrated, and valid for SG13CMOS5L
 
@@ -147,12 +181,15 @@ shuttle date is fixed — earlier = more downstream design time).
 
 ## 9. Test plan (validation by measurement)
 
-- **Bench:** dev board with the shuttle die; supply the 3.3 V/1.2 V rails and
-  bandgap-referenced bias; drive `ref_clk` from a signal generator across
+- **Bench:** QFN-64 packaged part (organizer's preferred path) on a dev board
+  (Caravel-dev-board-like, USB-to-SPI); supply the 3.3 V/1.2 V rails, program the
+  iDAC/vref bias over SPI; drive `ref_clk` from a signal generator across
   10–50 MHz; sweep `N[..]`.
-- **Frequency/range:** measure `clk_out` (and `clk_div_test`) on a
-  counter/scope across ÷N settings; verify 100–800 MHz coverage over the
-  commercial temperature range.
+- **Frequency/range:** the **divided `clk_div_test`** is the primary, reliable
+  measurement path — QFN package bandwidth makes a clean ~800 MHz `clk_out`
+  capture unreliable, so we observe the divided clock on a counter/scope across
+  ÷N and reconstruct the output frequency; the dedicated `clk_out` pad is a
+  best-effort direct check. Verify 100–800 MHz coverage over temperature.
 - **Lock:** capture lock time and `lock` assertion vs `ref_clk` step; observe
   `vctrl_test` settling via the analog mux.
 - **Jitter:** period/cycle-to-cycle jitter from `clk_out` on a real-time scope /
