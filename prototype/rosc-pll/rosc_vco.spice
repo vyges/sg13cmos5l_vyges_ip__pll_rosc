@@ -1,0 +1,47 @@
+* sg13cmos5l current-starved ring-oscillator VCO — simple prototype (the PLL's core)
+* 7 CMOS inverter stages in a loop; a control voltage (vctrl) starves the stage
+* current -> sets the delay -> sets the oscillation frequency. This is the VCO.
+.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+
+.param VDDV=1.2
+.param WINV=2u  LINV=0.13u
+.param WSTV=1u  LSTV=0.13u
+
+Vdd   vdd   0 {VDDV}
+Vctrl vctrl 0 0.6
+
+* --- bias: mirror vctrl's tail current up to a PMOS head bias vbp ---
+XMpr vbp vbp   vdd vdd sg13_lv_pmos w={WSTV} l={LSTV} ng=1 m=1
+XMnr vbp vctrl 0   0   sg13_lv_nmos w={WSTV} l={LSTV} ng=1 m=1
+
+* --- one current-starved inverter stage ---
+.subckt cs_inv in out vdd vbp vctrl
+XMps nph vbp   vdd vdd sg13_lv_pmos w={WSTV} l={LSTV} ng=1 m=1
+XMpu out in    nph vdd sg13_lv_pmos w={WINV} l={LINV} ng=1 m=1
+XMnd out in    npl 0   sg13_lv_nmos w={WINV} l={LINV} ng=1 m=1
+XMns npl vctrl 0   0   sg13_lv_nmos w={WSTV} l={LSTV} ng=1 m=1
+.ends
+
+* --- 7-stage ring ---
+X1 n1 n2 vdd vbp vctrl cs_inv
+X2 n2 n3 vdd vbp vctrl cs_inv
+X3 n3 n4 vdd vbp vctrl cs_inv
+X4 n4 n5 vdd vbp vctrl cs_inv
+X5 n5 n6 vdd vbp vctrl cs_inv
+X6 n6 n7 vdd vbp vctrl cs_inv
+X7 n7 n1 vdd vbp vctrl cs_inv
+
+.ic v(n1)=0
+
+.control
+  tran 2p 60n uic
+  * does it swing? (rail-to-rail => oscillating)
+  meas tran vmax MAX v(n1) from=10n to=60n
+  meas tran vmin MIN v(n1) from=10n to=60n
+  * 10 periods from rising 0.6V crossings, after startup
+  meas tran per10 TRIG v(n1) VAL=0.6 RISE=2 TARG v(n1) VAL=0.6 RISE=12
+  let freq = 10/per10
+  print vmax vmin per10 freq
+  wrdata /work/n1.csv v(n1)
+.endc
+.end

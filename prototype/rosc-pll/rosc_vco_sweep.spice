@@ -1,0 +1,41 @@
+* sg13cmos5l current-starved ring-osc VCO — tuning curve (freq vs control voltage)
+.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+
+.param VDDV=1.2
+.param WINV=2u  LINV=0.13u
+.param WSTV=1u  LSTV=0.13u
+
+Vdd   vdd   0 {VDDV}
+Vctrl vctrl 0 0.6
+
+XMpr vbp vbp   vdd vdd sg13_lv_pmos w={WSTV} l={LSTV} ng=1 m=1
+XMnr vbp vctrl 0   0   sg13_lv_nmos w={WSTV} l={LSTV} ng=1 m=1
+
+.subckt cs_inv in out vdd vbp vctrl
+XMps nph vbp   vdd vdd sg13_lv_pmos w={WSTV} l={LSTV} ng=1 m=1
+XMpu out in    nph vdd sg13_lv_pmos w={WINV} l={LINV} ng=1 m=1
+XMnd out in    npl 0   sg13_lv_nmos w={WINV} l={LINV} ng=1 m=1
+XMns npl vctrl 0   0   sg13_lv_nmos w={WSTV} l={LSTV} ng=1 m=1
+.ends
+
+X1 n1 n2 vdd vbp vctrl cs_inv
+X2 n2 n3 vdd vbp vctrl cs_inv
+X3 n3 n4 vdd vbp vctrl cs_inv
+X4 n4 n5 vdd vbp vctrl cs_inv
+X5 n5 n6 vdd vbp vctrl cs_inv
+X6 n6 n7 vdd vbp vctrl cs_inv
+X7 n7 n1 vdd vbp vctrl cs_inv
+
+.ic v(n1)=0
+
+.control
+  foreach vc 0.45 0.50 0.60 0.70 0.80 0.90 1.00 1.10 1.20
+    alter Vctrl = $vc
+    tran 2p 150n uic
+    meas tran per TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=4
+    let freq = 1/per
+    echo "SWEEP vctrl=$vc"
+    print freq
+  end
+.endc
+.end

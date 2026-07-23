@@ -1,0 +1,24 @@
+* sg13cmos5l divide-by-16 (÷N) — 4 cascaded toggle FFs from the stdcell DFF.
+* Fed 160 MHz (the VCO's locked freq) -> output 10 MHz (the PLL reference). This is
+* the feedback divider of the PLL, built from real characterized standard cells.
+.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+.include /foss/pdks/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/spice/sg13cmos5l_stdcell.spice
+
+Vdd  vdd 0 1.2
+* active-low reset: hold low 1.2ns to init all FFs, then release high
+Vrb  rstb 0 PWL(0 0  1.2n 0  1.3n 1.2  1 1.2)
+* 160 MHz input clock (period 6.25 ns, 100 ps edges)
+Vclk clk 0 PULSE(0 1.2 0 100p 100p 3.025n 6.25n)
+
+* toggle-FF chain: D = Q_N of the same FF; each stage divides by 2
+* port order: Q Q_N CLK D RESET_B VDD VSS
+Xd1 q1 q1b clk q1b rstb vdd 0 sg13cmos5l_dfrbp_1
+Xd2 q2 q2b q1  q2b rstb vdd 0 sg13cmos5l_dfrbp_1
+Xd3 q3 q3b q2  q3b rstb vdd 0 sg13cmos5l_dfrbp_1
+Xd4 q4 q4b q3  q4b rstb vdd 0 sg13cmos5l_dfrbp_1
+
+.control
+  tran 20p 500n uic
+  wrdata /work/div16.csv v(clk) v(q1) v(q2) v(q3) v(q4)
+.endc
+.end

@@ -1,0 +1,28 @@
+* sg13cmos5l phase-frequency detector (PFD) — 2 DFFs + NAND reset, from stdcells.
+* ref leads div by 20 ns -> PFD asserts UP (div is late -> speed the VCO up).
+* NOTE: a tri-state PFD needs a clean power-on reset, else it can latch into the
+* wrong state at t=0 (the flop misses the very first edge). Here POR (porb) forces
+* both DFFs reset for 5 ns, then the reset path is the usual NAND(up,dn).
+.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+.include /foss/pdks/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/spice/sg13cmos5l_stdcell.spice
+
+Vdd  vdd 0 1.2
+Vref ref  0 PULSE(0 1.2 10n 100p 100p 3n 100n)
+Vdiv div  0 PULSE(0 1.2 30n 100p 100p 3n 100n)
+Vpor porb 0 PWL(0 0  5n 0  5.5n 1.2  1 1.2)
+
+* two edge-triggered DFFs, D tied high, reset together (port: Q Q_N CLK D RESET_B VDD VSS)
+Xup up upn ref vdd rstb vdd 0 sg13cmos5l_dfrbp_1
+Xdn dn dnn div vdd rstb vdd 0 sg13cmos5l_dfrbp_1
+* reset = NAND(up,dn) gated by power-on reset:  rstb = NAND(up,dn) AND porb
+Xnand nout up dn vdd 0 sg13cmos5l_nand2_1
+Xand  rstb nout porb vdd 0 sg13cmos5l_and2_1
+
+.control
+  tran 20p 500n uic
+  meas tran up_avg AVG v(up) from=150n to=450n
+  meas tran dn_avg AVG v(dn) from=150n to=450n
+  print up_avg dn_avg
+  wrdata /work/pfd.csv v(ref) v(div) v(up) v(dn)
+.endc
+.end

@@ -1,0 +1,43 @@
+* Behavioral type-II charge-pump PLL — phase-domain LOCK demo.
+* VCO = the MEASURED sg13cmos5l ring-osc tuning curve (cubic fit), clamped to its
+* valid band. fref=10MHz, N=16 -> target VCO 160MHz (vctrl_lock ~0.589V).
+* Shows acquisition: vctrl ramps up, phase error transient decays to 0 = LOCK.
+.param PI=3.141592653589793
+.param fref=10e6
+.param N=16
+* cubic fit f_vco(v) = a3 v^3 + a2 v^2 + a1 v + a0  (Hz), from the 9-pt sweep
+.param a3=-4.220183e9
+.param a2=9.721367e9
+.param a1=-5.589080e9
+.param a0=9.417235e8
+* type-II loop filter + charge pump (Icp within the shared iDAC range)
+.param Icp=5e-6
+.param Rz=6.8e3
+.param C1=180e-12
+.param C2=18e-12
+
+* VCO frequency from vctrl (clamped to the fit's valid band 0.4..1.2, floored at 0)
+Bfv fvco 0 V = max(0, a3*(min(max(v(vctrl),0.4),1.2))**3 + a2*(min(max(v(vctrl),0.4),1.2))**2 + a1*(min(max(v(vctrl),0.4),1.2)) + a0)
+
+* phase error (rad) = integral of 2*pi*(fref - fvco/N)   [avoids large-number subtraction]
+Gperr 0 perr value = {2*PI*(fref - v(fvco)/N)}
+Cperr perr 0 1
+Rlp   perr 0 1e15
+
+* charge pump: I = Icp/(2*pi) * perr, injected into the loop filter node vctrl
+Gcp 0 vctrl value = {Icp/(2*PI) * v(perr)}
+* type-II loop filter: (Rz + C1) to gnd, plus C2 ripple cap
+Rz vctrl nz {Rz}
+C1 nz 0 {C1}
+C2 vctrl 0 {C2}
+
+.ic v(vctrl)=0.40 v(perr)=0
+
+.control
+  tran 10n 40u uic
+  meas tran vfin  FIND v(vctrl) AT=38u
+  meas tran perr_fin FIND v(perr) AT=38u
+  print vfin perr_fin
+  wrdata /work/pll_lock.csv v(vctrl) v(perr) fvco
+.endc
+.end

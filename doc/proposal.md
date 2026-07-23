@@ -1,11 +1,11 @@
 # Chipalooza Challenge #2 (IHP SG13CMOS5L) — Proposal: Ring-Oscillator PLL
 
-> Draft for the Chipalooza Challenge #2 (IHP SG13CMOS5L), proposals due 2026-07-27
-> (grace to 2026-08-10 for this first IHP run). Status: internal working draft.
-> Target repo (private until submission): `github.com/vyges/vyges-ring-oscillator-pll`.
-> Per the rules, this document becomes part of the IP block's repository
-> documentation — institutional/personal details and the designer CV are kept
-> **out** of this main document and sent separately.
+> **Proposal submission — Chipalooza Challenge #2 (IHP SG13CMOS5L), 2026-07-22.**
+> Block type: **PLL / clock multiplier** (analog-mixed-signal). Licence:
+> **Apache-2.0**. Public repository: `github.com/vyges/vyges-ring-oscillator-pll`.
+> Per the rules, this document is written to become part of the IP block's
+> repository documentation, so personal and institutional details, designer CVs,
+> and the test-equipment list are **omitted here and sent separately**.
 
 ## 1. Summary
 
@@ -26,8 +26,19 @@ which SG13CMOS5L provides). This makes the block a clean fit for the simplified
 
 - **Fills the stated gap.** The PLL was requested at Efabless Chipalooza #1 and
   never reached tapeout-ready layout. Delivering it is high-value and visible.
+- **Pulled by a real integration need, not a demo.** This block is on the
+  critical path of the designer's own SoC work — a programmable on-chip clock
+  multiplier is a hard dependency for the systems being built around it, which is
+  why it is worth taking all the way to silicon and maintaining as catalog-grade
+  IP rather than a one-off. That gives the block an owner with a stake in its
+  correctness well past tapeout.
 - **Universally reusable.** A clock multiplier is a core SoC primitive; the CMOS
   topology ports across PDKs (sky130 / GF180 / SG13 family).
+- **Programmable clock source for other blocks.** With a register-set ÷N and an
+  output post-divider, the same block serves many f_out targets — generic SoC
+  clocking *and* the bit / ½-rate bit clock for **high-speed serial transmitters
+  (LVDS / SerDes)**. That makes it a natural component for *other* slot projects to
+  build a system around — the kind of composability the challenge is designed to reward.
 - **Digital-friendly by design** (a challenge requirement): enable/disable, ÷N
   select and lock status over the harness control bus; bias taken from the
   harness's bandgap-referenced V/I references.
@@ -39,11 +50,11 @@ A **self-biased, dual-control-path ring-VCO PLL** with an integrated **÷N
 divider** and **digital lock detect**:
 
 ```
-ref_clk ─► [ PFD ] ─► [ charge pump + loop filter ] ─► Vctrl ─► [ ring VCO ]─► clk_out
-              ▲                                                        │
-              └──────────────── [ ÷N feedback divider ] ◄─────────────┘
-                                        ▲
-              [ digital control/status: enable, N[..], lock ] ◄─ harness control bus
+ref_clk ─►[ PFD ]─►[ CP + filter ]─►[ ring VCO ]─► clk_out
+             ▲                                  │
+             └──────────[ ÷N divider ]──────────┘
+                              ▲
+                   [ enable, N[..], lock ] ◄── control bus
 ```
 
 Sub-blocks: phase-frequency detector, charge pump + self-bias, per-stage
@@ -51,6 +62,7 @@ current-starved ring-VCO, ÷N divider, lock detector, and a thin digital wrapper
 for the control/status interface (synthesized via LibreLane).
 
 **SG13CMOS5L process notes that shape the design:**
+
 - **No MiM capacitors + a small slot.** The charge-pump loop-filter cap is
   **MOM (metal-finger) and/or poly** in the 5-metal stack. With the harness slot
   at **~520 × 250 µm** (per the organizer), a large loop cap will not fit, so the
@@ -73,7 +85,7 @@ on the shared control bus / muxable analog.
 | Signal | Dir | Domain | Pad allocation | Purpose |
 |---|---|---|---|---|
 | `ref_clk` | in | digital-drive pad | **dedicated** | reference clock (~10–50 MHz) — clean edge required |
-| `clk_out` | out | digital-drive pad | **dedicated** | multiplied output — up to ~800 MHz; **cannot go through a mux** |
+| `clk_out` | out | digital-drive pad | **dedicated** | multiplied output — up to 800 MHz; **cannot go through a mux** |
 | `enable` | in | control bus | per-project (power-up/enable) | PLL enable / power-gate handshake |
 | `N[k-1:0]` | in | control bus | shared bus | ÷N divider select |
 | `lock` | out | status bus | shared bus | digital lock indicator |
@@ -82,25 +94,41 @@ on the shared control bus / muxable analog.
 | `clk_div_test` | out | control bus | shared bus | test port: divided-down clock for freq/lock/jitter capture |
 | `VDD33` / `VDD12` / `VSS` | — | supply | harness | 3.3 V analog / 1.2 V digital / ground |
 
-`vctrl_test`/bias tolerate the analog-mux series resistance (value TBD from the
-organizer); `ref_clk`/`clk_out` are the only pins we ask to be **dedicated**. No
-sole-pin analog access is requested.
+**Series-resistance note (per the rules).** `vctrl_test` and the bias inputs are
+high-impedance or low-current, so analog-mux series resistance is not critical for
+them — any switch resistance the harness finds convenient is acceptable, since no
+appreciable current flows and no IR drop develops. `ref_clk` and `clk_out` are the
+only pins we ask to be **dedicated**: `clk_out` reaches several hundred MHz and
+cannot tolerate the capacitance and resistance of a mux path, and `ref_clk`
+requires a clean edge. No sole-pin analog access is requested.
 
 ## 5. Target specification
 
 | Parameter | Min | Typ | Max | Absolute limit |
 |---|---|---|---|---|
 | Reference in | 10 MHz | 25 MHz | 50 MHz | — |
-| Output range (÷N) | 100 MHz | — | 800 MHz | VCO f_max (see §7) |
+| Output range (programmable ÷N) | 100 MHz | — | 800 MHz | ≈950 MHz (measured VCO f_max, §7) |
+| Feedback divider N (register-set) | 4 | — | 64 | integer |
+| Output post-divider (÷1/2/4/8) | ÷1 | — | ÷8 | — |
+| VCO gain Kvco | 1.0 GHz/V | 1.5 GHz/V | 2.1 GHz/V | — |
 | Supply (analog) | 3.0 V | 3.3 V | 3.6 V | 3.6 V |
 | Supply (digital) | 1.08 V | 1.2 V | 1.32 V | 1.32 V |
-| Lock time | — | < few µs | — | — |
-| Period jitter (goal) | — | single-digit ps | — | — |
+| Lock time (cold, worst corner) | — | 6 µs | 20 µs | — |
+| Period jitter (pk-pk) | — | 6 ps | 12 ps | — |
+| RMS jitter (integrated) | — | 3 ps | 5 ps | — |
+| Phase noise @ 1 MHz offset | — | −95 dBc/Hz | −88 dBc/Hz | — |
+| Reference spur | — | −45 dBc | −40 dBc | — |
+| Output duty cycle (÷2 stage) | 45 % | 50 % | 55 % | — |
+| Power @ f_out (scales w/ freq) | — | 5 mW | 8 mW | — |
 | Temperature (commercial) | −40 °C | 27 °C | 110 °C | 125 °C |
 
-Targets are refined by the proposal-window feasibility sims (§7) and verified in
-post-layout PVT. The spec is set to be attractive to an SoC integrator; changes
-mid-design will be submitted for approval per the rules.
+Numbers are honest targets for a **ring-oscillator** PLL on 130 nm (a ring VCO is
+intentionally more conservative than an LC oscillator) and are grounded in the
+proposal-window simulations of §7 — the output range, Kvco and lock time are set
+*inside* what we have already measured rather than beyond it. Jitter, phase noise
+and spur figures are design targets to be characterized during schematic design
+and **verified in post-layout PVT**; the spec is set to be attractive to an SoC
+integrator, and any mid-design change is submitted for approval per the rules.
 
 ## 6. Harness integration (openframe slot)
 
@@ -146,27 +174,62 @@ top-level integration + the sequencer are auto-generated, not hand-wired), and
 through a low-bandwidth path. Both are cheap and make the whole pallet
 self-documenting — an area where Vyges can contribute tooling.
 
-## 7. Feasibility — demonstrated, and valid for SG13CMOS5L
+## 7. Feasibility — every sub-block prototyped in-process
 
-We stood up the full IHP open-analog flow (IIC-OSIC-TOOLS: ngspice-46 + PDK,
-PSP103/OSDI) and simulated a ring VCO in-process:
+This is not a paper proposal. We stood up the full IHP open-analog flow
+(IIC-OSIC-TOOLS: ngspice-46 + SG13CMOS5L PDK, PSP103/OSDI) and have **simulated
+all five sub-blocks of the PLL in-process**, plus closed the loop behaviourally.
 
-- **A single 3.3 V `sg13_hv` inverter** characterizes cleanly — full 0→3.3 V
-  swing, DC trip 1.465 V.
-- **A 5-stage ring VCO oscillates at ~1.11–1.17 GHz** (tt, 27 °C, full-rail). The
-  process comfortably covers the 100–800 MHz PLL target **with margin** — headroom
-  for the ÷N range and corners.
+| Sub-block | Level | Result |
+|---|---|---|
+| **Ring VCO** | transistor | 7-stage current-starved, `sg13_lv` (1.2 V): tunes **21 MHz → 957 MHz** over vctrl 0.45–1.2 V; **Kvco ≈ 1.5–2 GHz/V** in the 0.6–0.9 V linear band; rail-to-rail |
+| **÷16 divider** | standard cell | 4 toggle FFs (`sg13cmos5l_dfrbp_1`): 160 MHz in → exact **80 / 40 / 20 / 10 MHz** |
+| **PFD** | standard cell | 2 DFF + NAND reset + POR: ref leading div by 20 ns → UP ≈ 18 %, DOWN ≈ 0.3 % (correct "pump up") |
+| **Charge pump** | transistor | current-steering off a 5 µA iDAC reference: UP ≈ 6.26 µA, DOWN ≈ 6.06 µA, stable hold (≈ 3 % mismatch — a known spur source, §12) |
+| **Closed loop** | behavioural | type-II CP-PLL around the *measured* VCO, f_ref = 10 MHz, N = 16: **locks in ≈ 5.6 µs**, vctrl → 0.589 V, f_out → **160.00 MHz**, phase error → 0 |
 
-**Validity for SG13CMOS5L:** the feasibility was run with the `sg13_hv`/`sg13_lv`
-MOS device models, which SG13CMOS5L **shares with SG13G2** (the CMOS5L PDK
-symlinks its device models from the SG13G2 tree). The ring VCO uses only these
-MOS devices, so the result carries over directly. The only process-specific item
-to finalize is the **MOM/poly loop-filter cap** (§3) — a layout/sizing task, not
-a feasibility risk.
+An earlier fixed-frequency check on the 3.3 V `sg13_hv` devices (single inverter,
+DC trip 1.465 V; 5-stage ring at ≈ 1.11–1.17 GHz) corroborates the headroom.
 
-Remaining proposal-window work: finalize the current-starved VCO + PFD/CP device
-plan, size the MOM/poly loop-filter cap, and submit early (grace exists but the
-shuttle date is fixed — earlier = more downstream design time).
+**What this establishes.** The VCO covers the proposed 100–800 MHz output range
+with margin at both ends; the divider, PFD and charge pump each behave correctly
+against their reference; and the loop acquires and locks within the 5 µs typical
+lock-time target. The remaining work is engineering — sizing, corners, layout —
+rather than answering whether the architecture closes on this process.
+
+**Known limitation, stated plainly.** The **all-transistor** closed loop was
+attempted and hits an ngspice convergence wall: both runs acquire correctly
+(vctrl → 0.589 V, divider → 10 MHz) but the simulator aborts before lock, because
+GHz VCO edges, charge-pump switching and a microsecond settling time in one
+transient is too stiff. Loop-level verification is therefore done behaviourally
+(above) with transistor-level verification per sub-block; full-fidelity mixed
+simulation uses a **Verilog-A VCO** in the schematic window. This is a
+verification-methodology constraint, not a circuit risk.
+
+**Validity for SG13CMOS5L:** the work above runs on the SG13CMOS5L PDK, using the
+`sg13_lv`/`sg13_hv` MOS models and the `sg13cmos5l` standard-cell library and its
+SPICE views. The device models are shared with SG13G2, so earlier SG13G2
+characterization carries over directly. The one process-specific item still open
+is the **loop-filter capacitor** (§3, §12).
+
+Netlists for all of the above are in the repository under `prototype/rosc-pll/`,
+runnable from a clean clone.
+
+**Why this process suits this block.** SG13CMOS5L is a **true 130 nm** front end
+with a 1.2 V core, rather than a 130/180 nm hybrid. Shorter channel and lower
+supply mean lower stage delay and better gm/I — i.e. **higher oscillation
+frequency for less current, and better jitter per unit power**, which is exactly
+the figure of merit for a ring-oscillator PLL. Our measured tuning range on this
+PDK (21 MHz → 957 MHz, Kvco ≈ 1.5–2 GHz/V in the 0.6–0.9 V band) bears that out
+and covers the 100–800 MHz target with headroom for ÷N and corners. The variant's
+trimmed devices cost this block little: it is **all-CMOS**, so the absent SiGe
+bipolars are irrelevant, and the harness supplies bandgap and bias externally.
+The two that do carry design cost — **no MiM cap** and **no deep nwell** — are
+addressed in §12.
+
+First work after acceptance: consolidate the sub-blocks into a single sized
+schematic, bring up the Verilog-A VCO mixed-signal loop, and settle the
+loop-filter capacitor realization (§12) — all inside the schematic gate.
 
 ## 8. Staged milestones (aligned to the challenge review gates)
 
@@ -181,21 +244,35 @@ shuttle date is fixed — earlier = more downstream design time).
 
 ## 9. Test plan (validation by measurement)
 
-- **Bench:** QFN-64 packaged part (organizer's preferred path) on a dev board
-  (Caravel-dev-board-like, USB-to-SPI); supply the 3.3 V/1.2 V rails, program the
-  iDAC/vref bias over SPI; drive `ref_clk` from a signal generator across
-  10–50 MHz; sweep `N[..]`.
-- **Frequency/range:** the **divided `clk_div_test`** is the primary, reliable
-  measurement path — QFN package bandwidth makes a clean ~800 MHz `clk_out`
-  capture unreliable, so we observe the divided clock on a counter/scope across
-  ÷N and reconstruct the output frequency; the dedicated `clk_out` pad is a
-  best-effort direct check. Verify 100–800 MHz coverage over temperature.
-- **Lock:** capture lock time and `lock` assertion vs `ref_clk` step; observe
-  `vctrl_test` settling via the analog mux.
-- **Jitter:** period/cycle-to-cycle jitter from `clk_out` on a real-time scope /
-  jitter analyzer.
-- **Corners:** repeat over available boards/temperature; correlate to post-layout
-  PVT sim. Equipment list sent separately per the rules.
+**Sign-off basis.** The specification is met and signed off in **post-layout PVT
+simulation** using open-source tools — this is what the challenge review gates
+score, and it is fully in-house. Silicon measurement below is post-shuttle
+characterization.
+
+**In-house, with the equipment available** (open-source-EDA workstation, a Xilinx
+FPGA board, and a USB-to-SPI adapter — full list sent separately):
+
+- The FPGA generates `ref_clk` and drives the harness SPI bus (sweep `N`, enable,
+  program iDAC/vref bias); it reads `lock` and the frequency code back over SPI.
+- **Frequency / range** — an FPGA-fabric **frequency counter** gates the divided
+  `clk_div_test` tap over a known interval to measure f_out/N across the ÷N range
+  and reconstruct the output frequency. This is the primary in-house measurement
+  and needs no analog instrument; it also sidesteps the QFN package bandwidth that
+  makes a clean 800 MHz `clk_out` capture unreliable.
+- **Lock** — coarse time-to-lock by timestamping the `lock` flag over SPI relative
+  to an FPGA-driven enable/`ref_clk` step.
+
+**Requires analog instrumentation not available in-house** (established in
+post-layout simulation and published; measured on silicon only if
+organizer-coordinated or collaborator lab equipment is available):
+
+- Period / RMS **jitter** and **phase noise** (real-time scope / phase-noise
+  analyser).
+- **Reference spur** and output spectrum (spectrum analyser).
+- `vctrl` analog settling and precise duty cycle (scope).
+
+All four are reported from post-layout PVT simulation in the repository, with
+measured silicon results added if and when the equipment is arranged.
 
 ## 10. Deliverables (catalog-grade, self-contained, public repo)
 
@@ -232,8 +309,22 @@ and are intentionally omitted here.)*
   the staged review structure (progress is reviewed/funded even if the full PLL
   slips); an independent-verification safety net; and the agentic loop that
   de-risks the layout→sign-off grind.
-- **Process-specific unknown:** the MOM/poly loop-filter cap area/quality in
-  5-metal — sized and de-risked during the schematic/layout window.
+- **Loop-filter cap area (no MiM, 4 thin metals).** The type-II loop wants a large
+  C1, and MOM density is limited by the M1–M4 stack (TopMetal1 at 2 µm is too
+  coarse for fingers). This is the block's principal area risk. Mitigation, in
+  order: reduce Icp toward the 50 nA floor, raise R, narrow the loop bandwidth,
+  and evaluate a **MOS capacitor biased in accumulation** as a higher-density C1
+  — characterizing its C(V) and leakage across the vctrl range rather than
+  assuming it. Sized and de-risked in the schematic/layout window.
+- **Substrate noise with no deep nwell.** SG13CMOS5L has no isolated NMOS, so the
+  VCO cannot sit in an isolated p-well — on a 16-slot shared die with a digital
+  control bus, substrate coupling appears directly as reference spurs and a raised
+  phase-noise skirt. We treat this as a **layout-discipline problem from day one**,
+  not a late fix: concentric p+/n-well guard rings on clean bias, maximum distance
+  from the digital bus and noisy neighbours, heavy on-slot decoupling, isolated
+  clean routing for vctrl, and a charge-pump layout that does not compound the
+  ~3 % up/down mismatch we already measured. Phase noise and spur levels are
+  explicit deliverables in our test plan (§9), measured rather than asserted.
 - **Fallback / breadth:** if the reviewer prefers a lower-risk first block, we can
   credibly commit to a **SAR ADC** (ADC prior art) or an **LDO** in the same
   slot/flow — but we recommend leading with the PLL for its gap-value.

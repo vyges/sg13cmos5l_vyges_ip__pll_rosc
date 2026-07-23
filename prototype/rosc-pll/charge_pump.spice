@@ -1,0 +1,45 @@
+* sg13cmos5l charge pump — current-steering, biased from a 5uA reference (the iDAC).
+* UP high -> source Icp into vctrl (charge up); DOWN high -> sink Icp (charge down);
+* both off -> hold. Test: UP pulse then DOWN pulse onto a 20pF loop-filter cap.
+.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+
+Vdd vdd 0 1.2
+
+* --- 5uA reference (stands in for the shared iDAC) -> vbn (nmos) and vbp (pmos) ---
+Ibias 0 vbn DC 5u
+XMn0 vbn vbn 0   0   sg13_lv_nmos w=2u l=0.5u ng=1 m=1     ; nmos diode: sets vbn
+XMn1 vbp vbn 0   0   sg13_lv_nmos w=2u l=0.5u ng=1 m=1     ; mirror -> pulls 5uA thru pmos diode
+XMp0 vbp vbp vdd vdd sg13_lv_pmos w=4u l=0.5u ng=1 m=1     ; pmos diode: sets vbp
+
+* --- charge-pump source/sink mirrors ---
+XMpsrc a vbp vdd vdd sg13_lv_pmos w=4u l=0.5u ng=1 m=1     ; sources 5uA at node a
+XMnsnk b vbn 0   0   sg13_lv_nmos w=2u l=0.5u ng=1 m=1     ; sinks   5uA at node b
+
+* --- switches to vctrl (UPb-controlled pmos on top, DN-controlled nmos on bottom) ---
+XMpi  upb up  vdd vdd sg13_lv_pmos w=2u l=0.13u ng=1 m=1   ; local inverter: upb = NOT up
+XMni  upb up  0   0   sg13_lv_nmos w=1u l=0.13u ng=1 m=1
+XMswup vctrl upb a   vdd sg13_lv_pmos w=4u l=0.13u ng=1 m=1 ; on when up high
+XMswdn vctrl dn  b   0   sg13_lv_nmos w=2u l=0.13u ng=1 m=1 ; on when dn high
+
+* loop-filter cap (standalone test load)
+Cf vctrl 0 20p
+
+* stimulus: UP high 1..2us (charge), DOWN high 3..4us (discharge)
+Vup up 0 PWL(0 0  0.99u 0  1u 1.2  2u 1.2  2.01u 0  10 0)
+Vdn dn 0 PWL(0 0  2.99u 0  3u 1.2  4u 1.2  4.01u 0  10 0)
+
+.ic v(vctrl)=0.6
+
+.control
+  tran 1n 5u uic
+  meas tran v_start FIND v(vctrl) AT=0.9u
+  meas tran v_up    FIND v(vctrl) AT=2.0u
+  meas tran v_hold  FIND v(vctrl) AT=2.9u
+  meas tran v_dn    FIND v(vctrl) AT=4.0u
+  let icp_up = 20e-12*(v_up - v_start)/1e-6
+  let icp_dn = 20e-12*(v_hold - v_dn)/1e-6
+  print v_start v_up v_hold v_dn
+  print icp_up icp_dn
+  wrdata /work/cp.csv v(vctrl) v(up) v(dn)
+.endc
+.end
