@@ -1,3 +1,5 @@
+<img src="vyges-logo.svg" alt="Vyges" class="logo" height="40">
+
 # Chipalooza Challenge #2 (IHP SG13CMOS5L) — Proposal: Ring-Oscillator PLL
 
 > **Proposal submission — Chipalooza Challenge #2 (IHP SG13CMOS5L), 2026-07-22.**
