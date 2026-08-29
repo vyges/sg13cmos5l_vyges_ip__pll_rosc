@@ -42,7 +42,7 @@ docker run --rm --entrypoint bash \
 `d g s b`, params `w`/`l`); 1.2 V core devices are `sg13_lv_*`. Include the
 typical corner and load the OSDI model:
 
-```
+```text
 * in a .spiceinit next to the deck (or $HOME):
 osdi /foss/pdks/ihp-sg13g2/libs.tech/ngspice/osdi/psp103.osdi
 
@@ -64,7 +64,7 @@ Measure frequency from two mid-rail rising crossings after startup
 
 ## 2. Full IP flow (per the openframe harness)
 
-```
+```text
 schematic ── xschem ────────────────────► .sch / .sym
     │  simulate ── ngspice ──────────────► tuning / lock / jitter (this doc §1)
     ▼
@@ -76,6 +76,7 @@ verify ─── netgen (LVS) · klayout (DRC) ─► sign-off
 ```
 
 Notes from the harness README:
+
 - Analog blocks live as **schematics**, not verilog; the wrapper instances an
   `openframe_user_project` cell (keep it a separate hierarchy level).
 - Digital sub-blocks: run through LibreLane, pull `.pnl.v` (post-fill, powered)
@@ -84,15 +85,22 @@ Notes from the harness README:
 
 ## 3. Vyges Loom — independent sign-off (trust-but-verify)
 
-Alongside the PDK's magic/netgen/klayout, run Loom as a second, independent check:
+Alongside the PDK's magic/netgen/klayout, run [Vyges Loom](https://vyges.com/products/loom)
+as a second, independent check. Each engine exits non-zero on a violation, so they run as
+build gates rather than as reports someone has to read.
+Install: <https://docs.vyges.com/installation.html>.
 
-| Loom tool | Check |
-|---|---|
-| `vyges-drc`     | geometric DRC (GDS + rule deck → JSON) |
-| `vyges-lvs`     | layout-vs-schematic (colour-refinement compare) |
-| `vyges-extract` | RC / SPEF extraction |
-| `vyges-sta-si`  | wrapper/divider timing |
-| `vyges-gds-view`| layered render + violation overlay |
+| Loom engine | Why we run it | Stage |
+| --- | --- | --- |
+| `vyges loom lvs` | Compares two netlists by graph isomorphism, independent of net names — catches a connectivity change that the drawing does not show. | schematic, and again vs layout |
+| `vyges loom meas` | Extracts a scalar from a simulated sweep or capture: gain, bandwidth, phase margin, spectral SNR/THD. | once the AC and jitter benches exist |
+| `vyges loom extract` | RC parasitics from layout (DEF/GDS → SPEF) to re-simulate against. | after layout |
+| `vyges loom drc` | Geometric DRC (GDS + rule deck → JSON). | sign-off |
+| `vyges loom sta-si` | Timing on the digital wrapper and divider. | once the wrapper exists |
+| `vyges loom gds-view` | Layered render with violation overlay. | layout review |
+
+Commands actually run against this block, with their results, are in
+[`implementation.md`](implementation.md).
 
 ## 4. This IP's sims
 
