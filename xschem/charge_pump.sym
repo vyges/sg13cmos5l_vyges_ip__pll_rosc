@@ -1,0 +1,33 @@
+v {xschem version=3.4.8RC file_version=1.3}
+G {}
+K {type=subcircuit
+format="@name @pinlist @symname"
+template="name=x1"
+}
+V {}
+S {}
+E {}
+L 4 -165 -160 165 -160 {}
+L 4 165 -160 165 160 {}
+L 4 165 160 -165 160 {}
+L 4 -165 160 -165 -160 {}
+L 4 -165 -80 -175 -80 {}
+B 5 -177.5 -82.5 -172.5 -77.5 {name=up dir=in}
+T {up} -157 -88 0 0 0.25 0.25 {}
+L 4 -165 0 -175 0 {}
+B 5 -177.5 -2.5 -172.5 2.5 {name=dn dir=in}
+T {dn} -157 -8 0 0 0.25 0.25 {}
+L 4 -165 80 -175 80 {}
+B 5 -177.5 77.5 -172.5 82.5 {name=ibias dir=in}
+T {ibias} -157 72 0 0 0.25 0.25 {}
+L 4 165 0 175 0 {}
+B 5 172.5 -2.5 177.5 2.5 {name=vctrl dir=inout}
+T {vctrl} 122 -8 0 0 0.25 0.25 {}
+L 4 0 -160 0 -170 {}
+B 5 -2.5 -172.5 2.5 -167.5 {name=vdd dir=inout}
+T {vdd} 5 -155 0 0 0.25 0.25 {}
+L 4 0 160 0 170 {}
+B 5 -2.5 167.5 2.5 172.5 {name=vss dir=inout}
+T {vss} 5 142 0 0 0.25 0.25 {}
+T {@name} -165 -185 0 0 0.3 0.3 {}
+T {charge_pump} -157 -12 0 0 0.3 0.3 {layer=6}

@@ -1,0 +1,7 @@
+# xschemrc — sg13cmos5l_vyges_ip__pll_rosc
+# Sources the PDK's own rc (which sets XSCHEM_LIBRARY_PATH to the sg13cmos5l_pr /
+# sg13cmos5l_stdcells symbol libraries and the generic devices library), then adds
+# this design directory so the local cells resolve by bare name.
+source /foss/pdks/ihp-sg13cmos5l/libs.tech/xschem/xschemrc
+append XSCHEM_LIBRARY_PATH :[file dirname [info script]]
+set netlist_dir [file dirname [info script]]/../sim/netlist
