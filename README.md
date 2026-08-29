@@ -20,11 +20,22 @@ one openframe pallet slot: 3.3 V from the slot power switch, bias from the
 harness V/I references, and `enable` / ÷N-select / `lock` over the digital
 control-status bus.
 
-| Parameter | Preliminary target |
-| --- | --- |
-| Reference in | ~10–50 MHz |
-| Output | ~100–800 MHz (÷N programmable) |
-| Supply | 3.3 V |
+Measured on the schematic hierarchy; the loop figures come from a closed-loop run with
+every block real except the VCO, which is behavioural and matched to the measured curve.
+
+| Parameter | Measured | Specification |
+| --- | --- | --- |
+| Reference in | 16–50 MHz usable | 10–50 MHz |
+| Output, typical corner | 115–737 MHz | 100–1000 MHz |
+| Output, guaranteed over PVT | ceiling **600 MHz** | 1000 MHz |
+| Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) | N = 4…64 |
+| Lock time | ~5 µs | 20 µs max |
+| Phase margin, worst over PVT | 45.6° (ff/−40 °C, N=8) | 45° min |
+| Loop filter | Rz 80.8 kΩ, Cz 9.21 pF (63 × 63 µm) | — |
+
+⚠️ The 1 GHz output ceiling is **not** met: the loaded ring reaches 737 MHz at the typical
+corner and 600 MHz at the slow corner with the control voltage already at the supply rail.
+See [`doc/implementation.md`](doc/implementation.md).
 
 ## Layout
 

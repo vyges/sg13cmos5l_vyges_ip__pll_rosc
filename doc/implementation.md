@@ -14,7 +14,7 @@ schematic that realises it.
 | `charge_pump` | Current-steering pump, mirrored from the harness bias line | [SVG](schematics/charge_pump.svg) |
 | `loop_filter` | Type-II RC filter — the baseline | [SVG](schematics/loop_filter.svg) |
 | `loop_filter_lownoise` | Dual-path small-capacitor alternative | [SVG](schematics/loop_filter_lownoise.svg) |
-| `divn` | Programmable feedback divider, ÷2 ÷4 ÷8 ÷16 | [SVG](schematics/divn.svg) |
+| `divn` | Programmable feedback divider, ÷2 ÷4 ÷8 ÷16 (only ÷8 and ÷16 usable — see below) | [SVG](schematics/divn.svg) |
 | `pll_rosc` | Top level | [SVG](schematics/pll_rosc.svg) |
 
 ## VCO tuning curve — measured on the loaded ring
@@ -126,9 +126,9 @@ stops being uniform. A first cut with a large buffer on a single stage measurabl
 the ring, which is what prompted the matched-load arrangement.
 
 The consequence for the specification is that **the published 21–957 MHz tuning range was
-characterised on a configuration that cannot be shipped**, and the curve must be
-re-measured with the tap in place — and, if the low-noise filter is adopted, over the
-restricted control range that its MOS capacitor imposes.
+characterised on a configuration that cannot be shipped**. It has since been re-measured
+with the tap in place — see the tuning curve above — giving 115–737 MHz at the typical
+corner and a 600 MHz ceiling across PVT.
 
 ## Verification with Vyges Loom
 
