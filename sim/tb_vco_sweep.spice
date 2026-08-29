@@ -1,0 +1,77 @@
+* tb_vco_sweep -- ring VCO tuning curve
+*
+* 20 ps steps over 600 ns: fine enough for a ~1 GHz edge (50 points/period) and long
+* enough to capture four periods at the bottom of the tuning range. A 2 ps step was the
+* first attempt and simply wasted an order of magnitude of runtime., WITH the output tap and matched stage loading.
+*
+* The published 21-957 MHz range was characterised on a bare unloaded ring, which is not a
+* configuration that can be shipped: something has to tap the output. This sweep uses the
+* real cell, so the numbers can be used for loop design.
+*
+* The resistor model's body terminal is the global substrate node `sub!`. Unless it is
+* declared global AND tied, it floats, the matrix is singular, and ngspice quietly
+* abandons its DC strategies and falls back to a transient operating point -- returning
+* numbers that look plausible and are not solutions.
+.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerRES.lib res_typ
+.include /foss/pdks/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/spice/sg13cmos5l_stdcell.spice
+.global sub!
+.include ../sim/netlist/rosc_vco.spice
+
+Vdd   vdd   0 1.2
+Vss   vss   0 0
+Vsub  sub!  0 0
+Vctrl vctrl 0 0.6
+.ic v(n1)=0
+
+.control
+  alter Vctrl dc = 0.4
+  tran 20p 600n uic
+  echo "VCTRL 0.40"
+  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  meas tran vhi MAX v(n1) FROM=100n TO=600n
+  meas tran vlo MIN v(n1) FROM=100n TO=600n
+  alter Vctrl dc = 0.5
+  tran 20p 600n uic
+  echo "VCTRL 0.50"
+  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  meas tran vhi MAX v(n1) FROM=100n TO=600n
+  meas tran vlo MIN v(n1) FROM=100n TO=600n
+  alter Vctrl dc = 0.6
+  tran 20p 600n uic
+  echo "VCTRL 0.60"
+  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  meas tran vhi MAX v(n1) FROM=100n TO=600n
+  meas tran vlo MIN v(n1) FROM=100n TO=600n
+  alter Vctrl dc = 0.7
+  tran 20p 600n uic
+  echo "VCTRL 0.70"
+  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  meas tran vhi MAX v(n1) FROM=100n TO=600n
+  meas tran vlo MIN v(n1) FROM=100n TO=600n
+  alter Vctrl dc = 0.8
+  tran 20p 600n uic
+  echo "VCTRL 0.80"
+  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  meas tran vhi MAX v(n1) FROM=100n TO=600n
+  meas tran vlo MIN v(n1) FROM=100n TO=600n
+  alter Vctrl dc = 0.9
+  tran 20p 600n uic
+  echo "VCTRL 0.90"
+  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  meas tran vhi MAX v(n1) FROM=100n TO=600n
+  meas tran vlo MIN v(n1) FROM=100n TO=600n
+  alter Vctrl dc = 1.0
+  tran 20p 600n uic
+  echo "VCTRL 1.00"
+  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  meas tran vhi MAX v(n1) FROM=100n TO=600n
+  meas tran vlo MIN v(n1) FROM=100n TO=600n
+  alter Vctrl dc = 1.1
+  tran 20p 600n uic
+  echo "VCTRL 1.10"
+  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  meas tran vhi MAX v(n1) FROM=100n TO=600n
+  meas tran vlo MIN v(n1) FROM=100n TO=600n
+.endc
+.end
