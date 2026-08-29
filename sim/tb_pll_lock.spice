@@ -1,0 +1,77 @@
+* tb_pll_lock -- closed-loop acquisition, mixed level.
+*
+* Everything in the loop is the real cell -- PFD, charge pump, loop filter, divider --
+* except the VCO, which is behavioural. That is deliberate, not a shortcut: a
+* transistor-level ring has to be integrated at picosecond steps while the loop settles
+* over tens of microseconds, which is seven orders of magnitude apart. A run of the full
+* transistor loop reached 18 ns of a 30 us target. Loop dynamics are what this bench is
+* for, and the behavioural VCO is matched to the MEASURED tuning curve of the real ring.
+*
+* VCO model: f(vctrl) = F0 + KVCO*(vctrl - VC0), taken from tb_vco_sweep on the loaded
+* ring around the N=16 / 256 MHz operating point, which is the highest-Kvco corner and so
+* the most aggressive loop gain among the selectable settings.
+*
+* Phase is integrated by a capacitor driven by a current equal to the instantaneous
+* frequency, so v(ph) is the cycle count; the output is a square wave off its fraction.
+.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerRES.lib res_typ
+.include /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cap_mfringe.lib
+.include /foss/pdks/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/spice/sg13cmos5l_stdcell.spice
+.global sub!
+* pll_cells.spice holds the real .subckt definitions, extracted from the top-level
+* netlist. Including a sub-cell netlisted as TOP does not work: xschem comments out its
+* own .subckt line, so the devices land at top scope instead of defining a subcircuit.
+.include pll_cells.spice
+
+.param F0=256.6e6 KVCO=1653e6 VC0=0.70
+
+Vdd  vdd  0 1.2
+Vss  vss  0 0
+Vsub sub! 0 0
+Ibias 0 ibias DC 1u
+
+Vref ref 0 PULSE(0 1.2 5n 200p 200p 3n 62.5n)
+Vpor  porb 0 PWL(0 0 20n 0 21n 1.2 1 1.2)
+Vrstb rstb 0 PWL(0 0 20n 0 21n 1.2 1 1.2)
+Vn0 nsel0 0 1.2
+Vn1 nsel1 0 1.2
+
+* --- behavioural VCO: phase integrator + square-wave slicer ---
+* CLAMPED. A bare linear Kvco model goes NEGATIVE below vctrl ~0.545 V, and a negative
+* frequency makes the phase integrator run backwards -- the divider then speeds up as
+* vctrl falls, which is positive feedback that exists only in the model. The real ring
+* saturates instead. Clamping to the measured band keeps the model physical wherever the
+* loop wanders during acquisition.
+Gph  0 ph  cur = 'min(max(F0 + KVCO*(V(vctrl) - VC0), 20e6), 760e6)'
+Cph  ph 0 1
+Rph  ph 0 1e12
+* A hard slicer (tanh with high gain) makes this stiff: the solver is forced to resolve
+* every VCO edge at picosecond scale and a 40 us run managed 46 ns. A plain sine still
+* drives the divider's first flop rail to rail and integrates far more cheaply.
+Bvco vco_out 0 V = '0.6 + 0.6*sin(6.283185307*V(ph))'
+
+* --- the real blocks ---
+Xpfd ref div_out porb up dn vdd vss pfd
+Xcp  up dn ibias vctrl vdd vss charge_pump
+Xlf  vctrl vss loop_filter
+Xdiv vco_out rstb nsel0 nsel1 div_out vdd vss divn
+
+* start below the lock point but inside the valid tuning band, so this is a real
+* pull-in rather than a excursion through a region the model cannot represent
+.ic v(ph)=0 v(vctrl)=0.60
+
+.control
+  * The designed loop bandwidth is ~1.2 MHz at this corner, so acquisition happens in a
+  * few microseconds; 8 us covers it without paying for 40 us of locked steady state.
+  tran 100p 8u uic
+  meas tran vc1u FIND v(vctrl) AT=1u
+  meas tran vc2u FIND v(vctrl) AT=2u
+  meas tran vc4u FIND v(vctrl) AT=4u
+  meas tran vc6u FIND v(vctrl) AT=6u
+  meas tran vc78 FIND v(vctrl) AT=7.8u
+  * locked output frequency, from the phase integrator over the last 10 us
+  meas tran ph6u FIND v(ph) AT=30u
+  meas tran ph78 FIND v(ph) AT=7.8u
+  wrdata /work/sim/lock.csv v(vctrl)
+.endc
+.end

@@ -194,12 +194,69 @@ The gate-level engines — `power`, `sta-si`, `cdc`, `lec` — need a Verilog ne
 Liberty timing and switching activity, which an analog block does not have. `em-ir` and
 `thermal` need layout and a power map. None apply to this block at this stage.
 
+## Closed-loop acquisition
+
+`sim/tb_pll_lock.spice` runs the loop at N = 16 with a 16 MHz reference — 256 MHz out,
+the bottom of the band and the **highest-Kvco corner**, so the most aggressive loop gain
+among the selectable settings.
+
+Everything in the loop is the real cell — phase detector, charge pump, filter, divider —
+except the VCO, which is behavioural and matched to the measured tuning curve. That is
+deliberate. A transistor-level ring must be integrated at picosecond steps while the loop
+settles over microseconds, seven orders of magnitude apart; a full transistor run reached
+18 ns of a 30 µs target. Loop dynamics are what this bench is for.
+
+| time | vctrl |
+| --- | --- |
+| 1 µs | 0.297 V |
+| 2 µs | 0.463 V |
+| 4 µs | 0.716 V |
+| 6 µs | 0.698 V |
+| 7.8 µs | **0.6998 V** |
+
+**The loop acquires and locks in roughly 5 µs**, settling at the control voltage that
+produces 256 MHz, with a small overshoot and no ringing — the response of a loop with
+around 57° of phase margin. The specification allows 20 µs.
+
+## PVT
+
+`sim/run_pvt.sh` measures the tuning curve at three process corners, three temperatures
+and the two control voltages that bracket the high-gain end, then evaluates the designed
+filter against the local Kvco at each. For a PLL that is the corner question: loop gain is
+proportional to Kvco, so the corner that moves the tuning curve is the corner that moves
+phase margin.
+
+| corner | f @ 0.7 V | f @ 1.2 V | Kvco | PM (N=16) | PM (N=8) |
+| --- | --- | --- | --- | --- | --- |
+| ff/−40 °C | 320 MHz | 904 MHz | 1989 MHz/V | 55.6° | **45.6°** |
+| ff/27 °C | 380 MHz | 894 MHz | 1863 MHz/V | 56.3° | 46.7° |
+| ff/110 °C | 431 MHz | 875 MHz | 1606 MHz/V | 57.6° | 49.0° |
+| tt/−40 °C | 202 MHz | 740 MHz | 1682 MHz/V | 57.2° | 48.3° |
+| tt/27 °C | 256 MHz | 735 MHz | 1649 MHz/V | 57.4° | 48.6° |
+| tt/110 °C | 312 MHz | 727 MHz | 1475 MHz/V | 58.2° | 50.3° |
+| ss/−40 °C | 121 MHz | 613 MHz | 1387 MHz/V | 58.6° | 51.2° |
+| ss/27 °C | 162 MHz | 605 MHz | 1407 MHz/V | 58.5° | 51.0° |
+| ss/110 °C | 212 MHz | 600 MHz | 1313 MHz/V | 58.8° | 52.0° |
+
+**Worst-case phase margin is 45.6°, at ff/−40 °C with N = 8**, against a 45° minimum. It
+passes, but with little room — the ff corner raises Kvco to 1989 MHz/V and N = 8 doubles
+the loop gain again, so that combination is the one to watch if anything else in the loop
+changes.
+
+⚠️ **The output ceiling across PVT is 600 MHz**, set by the slow corner with the control
+voltage already at the 1.2 V rail. Against a specification of 1 GHz that is a substantial
+shortfall, and it is a *hard* limit rather than a margin: there is no more control range to
+give. At the typical corner the ring reaches 735 MHz.
+
+The floor moves the other way — 431 MHz at ff/110 °C against 121 MHz at ss/−40 °C for the
+same control voltage — so the band that is guaranteed at **every** corner without
+recalibration is much narrower than the band at any single one. A trim on the VCO bias, or
+accepting a per-part calibration, is what would recover it.
+
 ## Not in this revision
 
 Stated here rather than left to be discovered:
 
-- **Closed-loop lock simulation** of the transistor-level hierarchy.
-- **PVT corner sweeps.** Only the typical corner has been run.
 - **Monte-Carlo of the loop transfer function** over capacitor ratio error.
 - **Full integer-N divider.** The specification asks for N = 4…64; this revision provides
   the four binary taps of the existing chain. Extending it is additive — a loadable
