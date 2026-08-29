@@ -1,0 +1,24 @@
+sg13cmos5l_vyges_ip__pll_rosc
+Copyright 2026 Vyges
+
+This product includes software developed at Vyges (https://vyges.com).
+
+Licensed under the Apache License, Version 2.0. See LICENSE for the full text.
+
+--------------------------------------------------------------------------------
+Third-party attribution
+--------------------------------------------------------------------------------
+
+This design targets the IHP Open Source PDK for the SG13CMOS5L process.
+Device models, symbol libraries and standard cells referenced by the schematics
+and testbenches in this repository are supplied by that PDK and are the work of
+the IHP PDK Authors, licensed under the Apache License, Version 2.0.
+
+  IHP Open Source PDK -- https://github.com/IHP-GmbH/IHP-Open-PDK
+  Copyright 2023 IHP PDK Authors, Apache-2.0
+
+No PDK source is redistributed here; the schematics reference it by path.
+
+Simulation, netlisting and verification use open-source EDA tools (xschem,
+ngspice, magic, netgen, KLayout), each under its own license and not
+redistributed in this repository.
