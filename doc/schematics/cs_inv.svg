@@ -1,108 +1,108 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1052" height="975" viewBox="-800 -575 1052 975">
-<rect x="-800.0" y="-575.0" width="1052.0" height="975.0" fill="#ffffff"/>
-<line x1="20.0" y1="-370.0" x2="20.0" y2="-330.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="-20.0" y1="-400.0" x2="-70.0" y2="-400.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="-430.0" x2="20.0" y2="-470.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="-400.0" x2="170.0" y2="-400.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="-150.0" x2="20.0" y2="-110.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="-20.0" y1="-180.0" x2="-70.0" y2="-180.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="-210.0" x2="20.0" y2="-250.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="-180.0" x2="170.0" y2="-180.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="40.0" x2="20.0" y2="0.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="-20.0" y1="70.0" x2="-70.0" y2="70.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="100.0" x2="20.0" y2="140.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="70.0" x2="170.0" y2="70.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="260.0" x2="20.0" y2="220.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="-20.0" y1="290.0" x2="-70.0" y2="290.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="320.0" x2="20.0" y2="360.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="290.0" x2="170.0" y2="290.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
-<line x1="7.5" y1="-422.5" x2="7.5" y2="-377.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="-430.0" x2="20.0" y2="-417.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="-382.5" x2="20.0" y2="-370.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="2.5" y1="-415.0" x2="2.5" y2="-385.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="7.5" y1="-382.5" x2="20.0" y2="-382.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="7.5" y1="-417.5" x2="20.0" y2="-417.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="-20.0" y1="-400.0" x2="2.0" y2="-400.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<polygon points="12.5,-420.0 7.5,-417.5 12.5,-415.0 12.5,-420.0" fill="#1a202c"/>
-<polygon points="15.0,-402.5 20.0,-400.0 15.0,-397.5 15.0,-402.5" fill="#1a202c"/>
-<text x="-30.0" y="-438.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Mps</text>
-<text x="-30.0" y="-425.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="9.5" fill="#4a5568">W=1u L=0.13u</text>
-<circle cx="20.0" cy="-330.0" r="2.6" fill="#c05621"/>
-<text x="27.0" y="-325.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">nph</text>
-<circle cx="-70.0" cy="-400.0" r="2.6" fill="#c05621"/>
-<text x="-77.0" y="-395.5" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vbp</text>
-<circle cx="20.0" cy="-470.0" r="2.6" fill="#c05621"/>
-<text x="27.0" y="-465.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vdd</text>
-<circle cx="170.0" cy="-400.0" r="2.6" fill="#c05621"/>
-<text x="177.0" y="-395.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vdd</text>
-<line x1="7.5" y1="-202.5" x2="7.5" y2="-157.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="-210.0" x2="20.0" y2="-197.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="-162.5" x2="20.0" y2="-150.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="2.5" y1="-195.0" x2="2.5" y2="-165.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="7.5" y1="-162.5" x2="20.0" y2="-162.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="7.5" y1="-197.5" x2="20.0" y2="-197.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="-20.0" y1="-180.0" x2="2.0" y2="-180.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<polygon points="12.5,-200.0 7.5,-197.5 12.5,-195.0 12.5,-200.0" fill="#1a202c"/>
-<polygon points="15.0,-182.5 20.0,-180.0 15.0,-177.5 15.0,-182.5" fill="#1a202c"/>
-<text x="-30.0" y="-218.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Mpu</text>
-<text x="-30.0" y="-205.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="9.5" fill="#4a5568">W=2u L=0.13u</text>
-<circle cx="20.0" cy="-110.0" r="2.6" fill="#c05621"/>
-<text x="27.0" y="-105.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">out</text>
-<circle cx="-70.0" cy="-180.0" r="2.6" fill="#c05621"/>
-<text x="-77.0" y="-175.5" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">in</text>
-<circle cx="20.0" cy="-250.0" r="2.6" fill="#c05621"/>
-<text x="27.0" y="-245.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">nph</text>
-<circle cx="170.0" cy="-180.0" r="2.6" fill="#c05621"/>
-<text x="177.0" y="-175.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vdd</text>
-<line x1="7.5" y1="47.5" x2="7.5" y2="92.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="40.0" x2="20.0" y2="52.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="87.5" x2="20.0" y2="100.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="2.5" y1="55.0" x2="2.5" y2="85.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="7.5" y1="87.5" x2="20.0" y2="87.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="7.5" y1="52.5" x2="20.0" y2="52.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="-20.0" y1="70.0" x2="2.0" y2="70.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<polygon points="15.0,90.0 20.0,87.5 15.0,85.0 15.0,90.0" fill="#1a202c"/>
-<polygon points="20.0,72.5 15.0,70.0 20.0,67.5 20.0,72.5" fill="#1a202c"/>
-<text x="-30.0" y="32.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Mnd</text>
-<text x="-30.0" y="45.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="9.5" fill="#4a5568">W=2u L=0.13u</text>
-<circle cx="20.0" cy="0.0" r="2.6" fill="#c05621"/>
-<text x="27.0" y="4.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">out</text>
-<circle cx="-70.0" cy="70.0" r="2.6" fill="#c05621"/>
-<text x="-77.0" y="74.5" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">in</text>
-<circle cx="20.0" cy="140.0" r="2.6" fill="#c05621"/>
-<text x="27.0" y="144.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">npl</text>
-<circle cx="170.0" cy="70.0" r="2.6" fill="#c05621"/>
-<text x="177.0" y="74.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vss</text>
-<line x1="7.5" y1="267.5" x2="7.5" y2="312.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="260.0" x2="20.0" y2="272.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="20.0" y1="307.5" x2="20.0" y2="320.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="2.5" y1="275.0" x2="2.5" y2="305.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="7.5" y1="307.5" x2="20.0" y2="307.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="7.5" y1="272.5" x2="20.0" y2="272.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<line x1="-20.0" y1="290.0" x2="2.0" y2="290.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
-<polygon points="15.0,310.0 20.0,307.5 15.0,305.0 15.0,310.0" fill="#1a202c"/>
-<polygon points="20.0,292.5 15.0,290.0 20.0,287.5 20.0,292.5" fill="#1a202c"/>
-<text x="-30.0" y="252.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Mns</text>
-<text x="-30.0" y="265.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="9.5" fill="#4a5568">W=1u L=0.13u</text>
-<circle cx="20.0" cy="220.0" r="2.6" fill="#c05621"/>
-<text x="27.0" y="224.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">npl</text>
-<circle cx="-70.0" cy="290.0" r="2.6" fill="#c05621"/>
-<text x="-77.0" y="294.5" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vctrl</text>
-<circle cx="20.0" cy="360.0" r="2.6" fill="#c05621"/>
-<text x="27.0" y="364.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vss</text>
-<circle cx="170.0" cy="290.0" r="2.6" fill="#c05621"/>
-<text x="177.0" y="294.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vss</text>
-<circle cx="-760.0" cy="-360.0" r="2.6" fill="#c05621"/>
-<text x="-753.0" y="-355.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">in</text>
-<circle cx="-760.0" cy="-300.0" r="2.6" fill="#c05621"/>
-<text x="-753.0" y="-295.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">out</text>
-<circle cx="-760.0" cy="-240.0" r="2.6" fill="#c05621"/>
-<text x="-753.0" y="-235.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vbp</text>
-<circle cx="-760.0" cy="-180.0" r="2.6" fill="#c05621"/>
-<text x="-753.0" y="-175.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vctrl</text>
-<circle cx="-760.0" cy="-120.0" r="2.6" fill="#c05621"/>
-<text x="-753.0" y="-115.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vdd</text>
-<circle cx="-760.0" cy="-60.0" r="2.6" fill="#c05621"/>
-<text x="-753.0" y="-55.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vss</text>
-<text x="-760.0" y="-535.0" font-family="Helvetica,Arial,sans-serif" font-size="17.0" font-weight="bold" fill="#1a202c">cs_inv -- current-starved inverter stage</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="632" height="785" viewBox="-460 -475 632 785">
+<rect x="-460.0" y="-475.0" width="632.0" height="785.0" fill="#ffffff"/>
+<line x1="20.0" y1="-270.0" x2="20.0" y2="-180.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="-120.0" x2="20.0" y2="-80.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="-80.0" x2="20.0" y2="-20.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="-20.0" x2="20.0" y2="20.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="80.0" x2="20.0" y2="130.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="130.0" x2="20.0" y2="170.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="-20.0" y1="-150.0" x2="-85.0" y2="-150.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="-85.0" y1="-150.0" x2="-90.0" y2="-150.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="-90.0" y1="-150.0" x2="-90.0" y2="50.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="-90.0" y1="50.0" x2="-85.0" y2="50.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="-85.0" y1="50.0" x2="-20.0" y2="50.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="-20.0" y1="-300.0" x2="-70.0" y2="-300.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="-330.0" x2="20.0" y2="-370.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="-300.0" x2="90.0" y2="-300.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="-150.0" x2="90.0" y2="-150.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="50.0" x2="90.0" y2="50.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="-20.0" y1="200.0" x2="-70.0" y2="200.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="230.0" x2="20.0" y2="270.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="200.0" x2="90.0" y2="200.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="-20.0" y1="-150.0" x2="-70.0" y2="-150.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="20.0" x2="20.0" y2="-20.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="-20.0" y1="-300.0" x2="-70.0" y2="-300.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="-20.0" y1="200.0" x2="-70.0" y2="200.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<circle cx="20.0" cy="-20.0" r="3.2" fill="#2b6cb0"/>
+<circle cx="20.0" cy="-270.0" r="2.6" fill="#c05621"/>
+<text x="27.0" y="-265.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">nph</text>
+<circle cx="20.0" cy="-120.0" r="2.6" fill="#c05621"/>
+<text x="27.0" y="-115.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">out</text>
+<circle cx="20.0" cy="80.0" r="2.6" fill="#c05621"/>
+<text x="27.0" y="84.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">npl</text>
+<circle cx="-20.0" cy="-150.0" r="2.6" fill="#c05621"/>
+<text x="-13.0" y="-145.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">in</text>
+<line x1="7.5" y1="-322.5" x2="7.5" y2="-277.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="-330.0" x2="20.0" y2="-317.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="-282.5" x2="20.0" y2="-270.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="2.5" y1="-315.0" x2="2.5" y2="-285.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="7.5" y1="-282.5" x2="20.0" y2="-282.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="7.5" y1="-317.5" x2="20.0" y2="-317.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-20.0" y1="-300.0" x2="2.0" y2="-300.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<polygon points="12.5,-320.0 7.5,-317.5 12.5,-315.0 12.5,-320.0" fill="#1a202c"/>
+<polygon points="15.0,-302.5 20.0,-300.0 15.0,-297.5 15.0,-302.5" fill="#1a202c"/>
+<text x="-30.0" y="-338.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Mps</text>
+<text x="-30.0" y="-325.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="9.5" fill="#4a5568">W=1u L=0.13u</text>
+<circle cx="-70.0" cy="-300.0" r="2.6" fill="#c05621"/>
+<text x="-77.0" y="-295.5" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vbp</text>
+<circle cx="20.0" cy="-370.0" r="2.6" fill="#c05621"/>
+<text x="27.0" y="-365.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vdd</text>
+<circle cx="90.0" cy="-300.0" r="2.6" fill="#c05621"/>
+<text x="97.0" y="-295.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vdd</text>
+<line x1="7.5" y1="-172.5" x2="7.5" y2="-127.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="-180.0" x2="20.0" y2="-167.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="-132.5" x2="20.0" y2="-120.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="2.5" y1="-165.0" x2="2.5" y2="-135.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="7.5" y1="-132.5" x2="20.0" y2="-132.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="7.5" y1="-167.5" x2="20.0" y2="-167.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-20.0" y1="-150.0" x2="2.0" y2="-150.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<polygon points="12.5,-170.0 7.5,-167.5 12.5,-165.0 12.5,-170.0" fill="#1a202c"/>
+<polygon points="15.0,-152.5 20.0,-150.0 15.0,-147.5 15.0,-152.5" fill="#1a202c"/>
+<text x="-30.0" y="-188.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Mpu</text>
+<text x="-30.0" y="-175.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="9.5" fill="#4a5568">W=2u L=0.13u</text>
+<circle cx="90.0" cy="-150.0" r="2.6" fill="#c05621"/>
+<text x="97.0" y="-145.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vdd</text>
+<line x1="7.5" y1="27.5" x2="7.5" y2="72.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="20.0" x2="20.0" y2="32.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="67.5" x2="20.0" y2="80.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="2.5" y1="35.0" x2="2.5" y2="65.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="7.5" y1="67.5" x2="20.0" y2="67.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="7.5" y1="32.5" x2="20.0" y2="32.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-20.0" y1="50.0" x2="2.0" y2="50.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<polygon points="15.0,70.0 20.0,67.5 15.0,65.0 15.0,70.0" fill="#1a202c"/>
+<polygon points="20.0,52.5 15.0,50.0 20.0,47.5 20.0,52.5" fill="#1a202c"/>
+<text x="-30.0" y="12.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Mnd</text>
+<text x="-30.0" y="25.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="9.5" fill="#4a5568">W=2u L=0.13u</text>
+<circle cx="90.0" cy="50.0" r="2.6" fill="#c05621"/>
+<text x="97.0" y="54.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vss</text>
+<line x1="7.5" y1="177.5" x2="7.5" y2="222.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="170.0" x2="20.0" y2="182.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="20.0" y1="217.5" x2="20.0" y2="230.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="2.5" y1="185.0" x2="2.5" y2="215.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="7.5" y1="217.5" x2="20.0" y2="217.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="7.5" y1="182.5" x2="20.0" y2="182.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-20.0" y1="200.0" x2="2.0" y2="200.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<polygon points="15.0,220.0 20.0,217.5 15.0,215.0 15.0,220.0" fill="#1a202c"/>
+<polygon points="20.0,202.5 15.0,200.0 20.0,197.5 20.0,202.5" fill="#1a202c"/>
+<text x="-30.0" y="162.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Mns</text>
+<text x="-30.0" y="175.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="9.5" fill="#4a5568">W=1u L=0.13u</text>
+<circle cx="-70.0" cy="200.0" r="2.6" fill="#c05621"/>
+<text x="-77.0" y="204.5" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vctrl</text>
+<circle cx="20.0" cy="270.0" r="2.6" fill="#c05621"/>
+<text x="27.0" y="274.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vss</text>
+<circle cx="90.0" cy="200.0" r="2.6" fill="#c05621"/>
+<text x="97.0" y="204.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vss</text>
+<circle cx="-70.0" cy="-150.0" r="2.6" fill="#c05621"/>
+<text x="-77.0" y="-145.5" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">in</text>
+<circle cx="20.0" cy="-20.0" r="2.6" fill="#c05621"/>
+<text x="27.0" y="-15.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">out</text>
+<circle cx="-70.0" cy="-300.0" r="2.6" fill="#c05621"/>
+<text x="-77.0" y="-295.5" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vbp</text>
+<circle cx="-70.0" cy="200.0" r="2.6" fill="#c05621"/>
+<text x="-77.0" y="204.5" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vctrl</text>
+<circle cx="-420.0" cy="-200.0" r="2.6" fill="#c05621"/>
+<text x="-413.0" y="-195.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vdd</text>
+<circle cx="-420.0" cy="-140.0" r="2.6" fill="#c05621"/>
+<text x="-413.0" y="-135.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vss</text>
+<text x="-420.0" y="-435.0" font-family="Helvetica,Arial,sans-serif" font-size="17.0" font-weight="bold" fill="#1a202c">cs_inv -- current-starved inverter stage</text>
 </svg>

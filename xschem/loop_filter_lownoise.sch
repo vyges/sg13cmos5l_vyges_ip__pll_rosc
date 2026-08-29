@@ -22,31 +22,35 @@ Ratio error moves loop SHAPE (peaking, lock time, jitter transfer) rather than n
 it is settled by a Monte-Carlo of the closed-loop response over mismatch -- budgeting
 phase margin rather than chasing MOM matching. Vary the MOS and MOM capacitors
 INDEPENDENTLY there: a mixed-type divider mismatches systematically, not as a pair.} -460 -110 0 0 0.25 0.25 {layer=15}
+N -20 -110 -20 -200 {lab=vctrl}
+N -20 -200 340 -200 {lab=vctrl}
+N 340 -200 340 -180 {lab=vctrl}
+N 340 -180 340 -140 {lab=vctrl}
+N 380 160 445 160 {lab=propn}
+N 445 160 480 160 {lab=propn}
+N 480 160 520 160 {lab=propn}
+N 600 160 720 160 {lab=vprop}
+N 720 160 720 -15 {lab=vprop}
+N 720 -15 340 -15 {lab=vprop}
+N 340 -15 340 -80 {lab=vprop}
+C {devices/lab_pin.sym} -20 -110 0 0 {name=l_net_vctrl sig_type=std_logic lab=vctrl}
+C {devices/lab_pin.sym} 380 160 0 0 {name=l_net_propn sig_type=std_logic lab=propn}
+C {devices/lab_pin.sym} 600 160 0 0 {name=l_net_vprop sig_type=std_logic lab=vprop}
 C {sg13cmos5l_pr/sg13_hv_nmos.sym} 0 -110 0 0 {name=Mcint l=2.25u w=50u ng=1 m=20 model=sg13_hv_nmos spiceprefix=X}
 N 20 -140 20 -180 {lab=vss}
 C {devices/lab_pin.sym} 20 -180 0 0 {name=l_Mcint_D sig_type=std_logic lab=vss}
-N -20 -110 -70 -110 {lab=vctrl}
-C {devices/lab_pin.sym} -70 -110 0 1 {name=l_Mcint_G sig_type=std_logic lab=vctrl}
 N 20 -80 20 -40 {lab=vss}
 C {devices/lab_pin.sym} 20 -40 0 0 {name=l_Mcint_S sig_type=std_logic lab=vss}
-N 20 -110 170 -110 {lab=vss}
-C {devices/lab_pin.sym} 170 -110 0 0 {name=l_Mcint_B sig_type=std_logic lab=vss}
-C {sg13cmos5l_pr/cap_mfringe.sym} 540 -110 0 0 {name=Cser model=cap_mfringe w=10u l=10u mmin=1 mmax=4 spiceprefix=X}
-N 540 -140 540 -180 {lab=vctrl}
-C {devices/lab_pin.sym} 540 -180 0 0 {name=l_Cser_c1 sig_type=std_logic lab=vctrl}
-N 540 -80 540 -40 {lab=vprop}
-C {devices/lab_pin.sym} 540 -40 0 0 {name=l_Cser_c2 sig_type=std_logic lab=vprop}
-C {sg13cmos5l_stdcells/sg13cmos5l_inv_1.sym} 540 250 0 0 {name=Xd1 VDD=vdd VSS=vss prefix=sg13cmos5l_}
-N 500 250 450 250 {lab=pd_prop}
-C {devices/lab_pin.sym} 450 250 0 1 {name=l_Xd1_A sig_type=std_logic lab=pd_prop}
-N 580 250 730 250 {lab=propn}
-C {devices/lab_pin.sym} 730 250 0 0 {name=l_Xd1_Y sig_type=std_logic lab=propn}
-C {sg13cmos5l_stdcells/sg13cmos5l_inv_1.sym} 940 250 0 0 {name=Xd2 VDD=vdd VSS=vss prefix=sg13cmos5l_}
-N 900 250 850 250 {lab=propn}
-C {devices/lab_pin.sym} 850 250 0 1 {name=l_Xd2_A sig_type=std_logic lab=propn}
-N 980 250 1130 250 {lab=vprop}
-C {devices/lab_pin.sym} 1130 250 0 0 {name=l_Xd2_Y sig_type=std_logic lab=vprop}
-C {devices/iopin.sym} -1010 -430 0 0 {name=p_vctrl lab=vctrl}
-C {devices/ipin.sym} -1010 -370 0 0 {name=p_pd_prop lab=pd_prop}
-C {devices/iopin.sym} -1010 -310 0 0 {name=p_vdd lab=vdd}
-C {devices/iopin.sym} -1010 -250 0 0 {name=p_vss lab=vss}
+N 20 -110 90 -110 {lab=vss}
+C {devices/lab_pin.sym} 90 -110 0 0 {name=l_Mcint_B sig_type=std_logic lab=vss}
+C {sg13cmos5l_pr/cap_mfringe.sym} 340 -110 0 0 {name=Cser model=cap_mfringe w=10u l=10u mmin=1 mmax=4 spiceprefix=X}
+C {sg13cmos5l_stdcells/sg13cmos5l_inv_1.sym} 340 160 0 0 {name=Xd1 VDD=vdd VSS=vss prefix=sg13cmos5l_}
+N 300 160 250 160 {lab=pd_prop}
+C {devices/lab_pin.sym} 250 160 0 1 {name=l_Xd1_A sig_type=std_logic lab=pd_prop}
+C {sg13cmos5l_stdcells/sg13cmos5l_inv_1.sym} 560 160 0 0 {name=Xd2 VDD=vdd VSS=vss prefix=sg13cmos5l_}
+N -20 -110 -70 -110 {lab=vctrl}
+C {devices/iopin.sym} -70 -110 0 1 {name=p_vctrl lab=vctrl}
+N 300 160 250 160 {lab=pd_prop}
+C {devices/ipin.sym} 250 160 0 1 {name=p_pd_prop lab=pd_prop}
+C {devices/iopin.sym} -560 -240 0 0 {name=p_vdd lab=vdd}
+C {devices/iopin.sym} -560 -180 0 0 {name=p_vss lab=vss}
