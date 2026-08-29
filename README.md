@@ -42,9 +42,15 @@ control-status bus.
 ## Toolchain
 
 IHP open flow: **xschem / ngspice / magic / netgen / klayout** + **LibreLane**
-for digital, with **Vyges Loom** (`vyges-drc` / `-lvs` / `-extract` / `-sta-si`)
-as independent sign-off. ngspice must support **OSDI v0.4** (the IHP PSP103
-models — SG13CMOS5L shares them with SG13G2) — use IIC-OSIC-TOOLS or ngspice ≥ 43.
+for digital. ngspice must support **OSDI v0.4** (the IHP PSP103 models —
+SG13CMOS5L shares them with SG13G2) — use IIC-OSIC-TOOLS or ngspice ≥ 43.
+
+[**Vyges Loom**](https://vyges.com/products/loom) provides independent sign-off
+alongside it — `vyges loom lvs` gates connectivity against a known-good netlist,
+`vyges loom extract` supplies parasitics once there is layout, and `vyges loom meas`
+measures swept transfers. Each exits non-zero on a violation, so they run as build
+gates. Install: <https://docs.vyges.com/installation.html>. Commands and results are
+in [`doc/implementation.md`](doc/implementation.md).
 
 ## Reproducing the results
 
