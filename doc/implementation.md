@@ -263,6 +263,79 @@ same control voltage — so the band that is guaranteed at **every** corner with
 recalibration is much narrower than the band at any single one. A trim on the VCO bias, or
 accepting a per-part calibration, is what would recover it.
 
+## Against the proposal
+
+| Parameter | Proposal | Measured | |
+| --- | --- | --- | --- |
+| Reference in | 10–50 MHz | 16–50 MHz usable | ⚠️ narrowed |
+| **Output range** | **100–800 MHz** | 115–737 MHz typical, **600 MHz ceiling over PVT** | ❌ |
+| **Feedback divider N** | **4–64, register-set** | ÷2 ÷4 ÷8 ÷16; only ÷8 and ÷16 usable | ❌ |
+| **Output post-divider ÷1/2/4/8** | required | **not implemented** | ❌ |
+| Kvco | 1.0–2.1 GHz/V | 0.35–1.65 GHz/V | ⚠️ below the stated minimum at high control voltage |
+| Supply, digital | 1.08–1.32 V | 1.2 V | ✅ |
+| Supply, analog | 3.0–3.6 V | **not used** — the block is entirely 1.2 V | ℹ️ simplification, see below |
+| Lock time | 6 µs typ, 20 max | **~5 µs** | ✅ |
+| Phase margin | — | 45.6° worst over PVT | ✅ |
+| Temperature | −40 to 110 °C | all 9 corners | ✅ |
+| **Period jitter** | 6 ps typ, 12 max | **not measured** | ❌ |
+| **RMS jitter** | 3 ps typ, 5 max | **not measured** | ❌ |
+| **Phase noise @ 1 MHz** | −95 dBc/Hz | **not measured** | ❌ |
+| **Reference spur** | −45 dBc | **not measured** | ❌ |
+| **Output duty cycle** | 45–55 % | **not measured** | ❌ |
+| **Power @ f_out** | 5 mW typ, 8 max | **not measured** | ❌ |
+| **Digital lock detect** | promised in §1 | **not implemented** | ❌ |
+
+**The analog supply is not used, and that is a simplification rather than a gap.** The
+proposal assumed a 3.3 V analog rail for the oscillator and bias; the implementation runs
+the ring, phase detector, charge pump and divider entirely from the 1.2 V digital rail. One
+fewer supply to route into the slot, and it should be stated to the integrator rather than
+left as a surprise.
+
+**What the failures have in common** is that four of the six unmeasured lines — jitter,
+phase noise, spur, duty cycle — need a long transient on the locked loop, which is exactly
+the simulation that is expensive here. The lock run is behavioural for that reason. Getting
+these needs either a much faster transistor-level setup or accepting behavioural numbers
+and saying so.
+
+## Slot requirements — pins, power and clocks
+
+For scoping pin allocation. This is the **implemented** port list.
+
+```text
+.subckt pll_rosc  ref porb rstb nsel0 nsel1 ibias vco_out vdd vss
+```
+
+### Pads required
+
+| Signal | Kind | Requirement |
+| --- | --- | --- |
+| `ref` | clock in | Reference, **16–50 MHz**. Needs a clean edge; a shared analog mux is acceptable electrically but any added jitter appears directly at the output multiplied by N. |
+| `vco_out` | clock out | **Up to 737 MHz.** This is the demanding one: a shared mux path will not carry it intact, so it wants a **dedicated pad with a proper output buffer**, and the board side needs a controlled-impedance route. If only a muxed pad is available, we would add an on-slot divider and characterise a lower output frequency instead. |
+
+**Two pads, one of them a genuine high-frequency output.** That is the block's main ask.
+
+### Harness resources (shared, no pads)
+
+| Signal | From the harness |
+| --- | --- |
+| `vdd` | **1.2 V.** The whole block runs from it — no 3.3 V analog rail is needed. |
+| `ibias` | Bias current. **The loop is designed around Icp = 1 µA**, mirrored 1:1, so this is a requirement on the harness bias rather than an internal size. |
+| `vss` | Ground. |
+
+### Control bits (register field, no pads)
+
+| Bits | Direction | |
+| --- | --- | --- |
+| 4 | control | `nsel[1:0]` divider select (2), `porb` phase-detector power-on reset (1), `rstb` divider reset (1) |
+| 0 | status | none — **lock detect is not implemented**, so there is nothing to report yet |
+
+### Clocks
+
+| | |
+| --- | --- |
+| In | `ref`, 16–50 MHz |
+| Out | `vco_out`, up to 737 MHz typical, 600 MHz guaranteed over PVT |
+
 ## Not in this revision
 
 Stated here rather than left to be discovered:
