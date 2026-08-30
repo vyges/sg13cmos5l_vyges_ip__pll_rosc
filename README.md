@@ -42,6 +42,7 @@ See [`doc/implementation.md`](doc/implementation.md).
 [`doc/implementation.md`](doc/implementation.md) carries two sections written for scoping
 this block into a slot:
 
+- **Assumptions** — the process, slot supply and harness resources the design rests on. One is load-bearing and unconfirmed: the block runs from 1.2 V and the slot supply is 3.3 V.
 - **Slot requirements** — pads, harness resources, control bits and clocks. Two pads, one
   of them an up-to-737 MHz output that needs a dedicated path; the block runs entirely
   from 1.2 V, with **no 3.3 V analog rail required**.

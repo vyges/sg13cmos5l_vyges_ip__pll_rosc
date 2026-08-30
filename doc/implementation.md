@@ -4,6 +4,71 @@ What is actually built, what it measures, and what is deliberately not in this
 revision. The design intent is in [`proposal.md`](proposal.md); this file records the
 schematic that realises it.
 
+## Assumptions
+
+Everything below is an assumption the design rests on, with what it is based on. They are
+stated here so a reviewer can check them against the harness rather than discover a
+mismatch in the schematic. **Two are known to be unconfirmed and are marked.**
+
+### Process
+
+| | |
+| --- | --- |
+| PDK | IHP Open Source PDK, `ihp-sg13cmos5l` v0.2.0, commit `9f614c48` |
+| Source | <https://github.com/IHP-GmbH/ihp-sg13cmos5l> |
+| lv devices | maximum Vds **1.5 V** (`cornerMOSlv.lib`) |
+| hv devices | maximum Vds **3.3 V** (`cornerMOShv.lib`) |
+| Standard cells | characterised **1.08 – 1.65 V**. They are 1.2/1.5 V core cells and **cannot be operated from 3.3 V.** |
+| Passives | `rhigh` 1360 Ω/sq, `rppd` 260, `rsil` 7; `cap_mfringe` at 0.67 + (mmax−mmin)×0.55 fF/µm², so 2.32 fF/µm² on an M1–M4 stack |
+| No MiM capacitor | correct for this process — the CMOS5L overlay deliberately omits `capacitors_mod.lib` |
+
+### Slot supply — the one to check first
+
+> "Each pallet has an identical footprint. **It gets its 3.3V power supply from a pMOS power
+> switch**, and is given pins to connect to the digital interface of the harness (control and
+> status lines), regulated voltage bias signals, and regulated current bias signals."
+>
+> — `sg13cmos5l_ocd_openframe/README`, the openframe harness this block targets
+
+So the slot has **one supply, 3.3 V**. ⚠️ **A 1.2 V rail is assumed available and this is
+NOT confirmed.** The harness's own digital controller is built from 1.2 V standard cells, so
+the rail exists on the die; whether it is distributed to the pallets is the open question.
+
+### Harness resources assumed
+
+| Resource | Assumed | Basis |
+| --- | --- | --- |
+| `vin` / slot supply | 3.3 V through an enable-gated pMOS switch | harness README |
+| Bandgap reference | 1.2 V | harness bandgap, `bandgap*` nets |
+| Bias current | see the block-specific note below | harness `ibias1_250n`, `ibias1u_*`, `ibias2_1u` nets — i.e. **250 nA and 1 µA sources** |
+| Control / status | a register field on the harness SPI bus, at standard-cell logic levels | harness README |
+
+### Simulation
+
+| | |
+| --- | --- |
+| Corners | `cornerMOShv/lv.lib` (tt, ss, ff) with `cornerRES.lib` paired pessimistically (`res_typ`, `res_wcs`, `res_bcs`) |
+| Temperature | −40, 27, 110 °C |
+| Supply | 3.0, 3.3, 3.6 V |
+| Tools | xschem 3.4.8RC, ngspice-46, in an IIC-OSIC-TOOLS-derived container |
+| Not covered | Monte-Carlo mismatch, and post-layout parasitics — both after layout |
+
+### Block-specific
+
+⚠️ **The entire block runs from 1.2 V, and the slot supply is 3.3 V.** The ring oscillator,
+phase detector, charge pump and divider are all lv devices and 1.2 V standard cells. This is
+the single largest open assumption in the design: if no 1.2 V rail reaches the pallet, the
+block has no supply. The proposal's specification table listed "Supply (digital)
+1.08–1.32 V" as a given, and that is the assumption in question.
+
+Rebuilding in hv devices at 3.3 V is possible but is not a port: the ring's delay per stage,
+and therefore the entire tuning curve and every loop number derived from it, is a function
+of the supply.
+
+✅ **`Icp` = 1 µA matches what the harness provides** (`ibias1u_*`). The loop was designed
+around a small charge-pump current for filter-area reasons, and that happens to line up with
+the available bias rather than requiring a new one.
+
 ## Cell hierarchy
 
 | Cell | What it does | Schematic |
