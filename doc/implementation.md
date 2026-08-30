@@ -411,3 +411,39 @@ Stated here rather than left to be discovered:
   down-counter in place of the ripple chain — and does not disturb the phase detector,
   charge pump or filter.
 - **Lock detect.**
+- **Output post-divider ÷1/2/4/8.**
+
+## Work remaining, in the order it should be done
+
+1. **Decide what to do about the 1 GHz specification.** The ring reaches 737 MHz typical
+   and 600 MHz at the slow corner with the control voltage already at the rail, so this
+   is not a tuning problem. The options are a shorter ring (five stages rather than seven,
+   which costs phase-noise margin), a faster stage at higher current, or declaring a lower
+   maximum. All three are specification changes and belong to the review, not to a later
+   silent revision.
+2. **Extend the divider to the full N = 4…64.** Purely additive, and it makes the ÷2 and
+   ÷4 cases usable, which is what narrows the reference range today.
+3. **The four unmeasured dynamic specifications** — period and RMS jitter, phase noise,
+   reference spur — plus duty cycle and power. These share one blocker: they need a long
+   transient on the locked loop, which is why the acquisition run is behavioural. Deciding
+   *how* to get them is the real item: a faster transistor-level setup, or behavioural
+   numbers stated as such.
+4. **Lock detect and the output post-divider**, both additive digital.
+5. **Monte-Carlo the loop transfer function** over capacitor ratio error, varying the MOS
+   and MOM capacitors independently — a mixed-type divider mismatches systematically
+   rather than as a pair.
+
+## Questions that need answers before layout
+
+1. **Is 600 MHz guaranteed acceptable, against a specification of 1 GHz?** See item 1.
+   This is the block's largest gap and the cheapest to resolve by conversation rather
+   than by silicon.
+2. **Is a 1.2 V rail distributed to the pallets?** The entire block runs from 1.2 V and
+   the slot supply is 3.3 V. If no low rail is distributed, this block needs a regulator
+   in front of it — which is a substantially different block. This is shared with the LDO
+   and is the single largest unknown for both.
+3. **Are behavioural numbers acceptable for jitter, phase noise and spur** at the
+   schematic gate, with transistor-level figures to follow at layout? See item 3.
+4. **What reference frequency will actually be supplied?** The usable range narrows to
+   16–50 MHz because only ÷8 and ÷16 are usable today; item 2 removes that constraint if
+   the answer needs it.
