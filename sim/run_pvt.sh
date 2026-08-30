@@ -12,10 +12,16 @@ mkdir -p pvt
 : > pvt/vco.txt
 for corner in tt ss ff; do
   case $corner in
-    tt) mos=mos_tt; res=res_typ ;;
-    ss) mos=mos_ss; res=res_wcs ;;
-    ff) mos=mos_ff; res=res_bcs ;;
+    tt) mos=mos_tt ;;
+    ss) mos=mos_ss ;;
+    ff) mos=mos_ff ;;
   esac
+  # res_typ only: this sweep measures the VCO tuning curve, and the ring's frequency does
+  # not depend on rhigh -- nothing in the oscillator is a poly resistor. The resistor corner
+  # enters through the LOOP FILTER instead, where Rz sets the zero, and that is swept
+  # analytically against these Kvco values in the reporting script. Pairing a resistor
+  # corner with the MOS corner here would have implied a dependence that does not exist.
+  res=res_typ
   for temp in -40 27 110; do
     for vc in 0.70 0.80 1.20; do
       sed -e "s|@MOS@|$mos|g" -e "s|@RES@|$res|g" -e "s|@TEMP@|$temp|g" \

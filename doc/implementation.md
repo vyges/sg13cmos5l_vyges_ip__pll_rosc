@@ -297,9 +297,10 @@ around 57° of phase margin. The specification allows 20 µs.
 
 `sim/run_pvt.sh` measures the tuning curve at three process corners, three temperatures
 and the two control voltages that bracket the high-gain end, then evaluates the designed
-filter against the local Kvco at each. For a PLL that is the corner question: loop gain is
-proportional to Kvco, so the corner that moves the tuning curve is the corner that moves
-phase margin.
+filter against the local Kvco at each. Loop gain is proportional to Kvco, so the corner
+that moves the tuning curve moves phase margin — but it is not the only one that does, and
+treating it as such is what made the number below wrong for a while. The loop-filter
+resistor is the other, and it turns out to matter more.
 
 | corner | f @ 0.7 V | f @ 1.2 V | Kvco | PM (N=16) | PM (N=8) |
 | --- | --- | --- | --- | --- | --- |
@@ -313,10 +314,30 @@ phase margin.
 | ss/27 °C | 162 MHz | 605 MHz | 1407 MHz/V | 58.5° | 51.0° |
 | ss/110 °C | 212 MHz | 600 MHz | 1313 MHz/V | 58.8° | 52.0° |
 
-**Worst-case phase margin is 45.6°, at ff/−40 °C with N = 8**, against a 45° minimum. It
-passes, but with little room — the ff corner raises Kvco to 1989 MHz/V and N = 8 doubles
-the loop gain again, so that combination is the one to watch if anything else in the loop
-changes.
+⚠️ **These figures hold `Rz` at its nominal 80.8 kΩ at every corner, and that is wrong.**
+`Rz` is an `rhigh` poly resistor whose corners on this PDK pin are ±25 %, and it sets both
+the loop zero and the filter's high-frequency gain. Sweeping it against the same measured
+Kvco values:
+
+| `rhigh` corner | `Rz` | ff/−40 °C, N=8 | ff/27 °C, N=8 | tt/27 °C, N=8 |
+| --- | --- | --- | --- | --- |
+| res_bcs, 1020 Ω/sq | 60.6 kΩ | 54.2° | 55.0° | 56.3° |
+| res_typ, 1360 Ω/sq | 80.8 kΩ | 45.6° | 46.7° | 48.6° |
+| res_wcs upstream, 1560 Ω/sq | 92.7 kΩ | 41.2° | 42.2° | 44.2° |
+| res_wcs, 1700 Ω/sq | 101.0 kΩ | **38.4°** | 39.4° | 41.4° |
+
+**Worst-case phase margin is 38.4°, at ff/−40 °C with N = 8 and worst-case sheet
+resistance — against a 45° minimum. The loop does not meet its phase-margin
+specification.** The previously reported 45.6° was the typical-sheet column of this table.
+
+Raising `Rz` lowers the zero, which alone would help, but it raises the filter's
+high-frequency gain and pushes crossover up faster — so a worst-case sheet loses margin
+net. Note this is the **opposite direction** to the LDO, where the same resistor in a
+nulling role fails at *both* extremes for different reasons. The direction is not
+guessable from the role of the resistor; it has to be swept, and it now is, on every run.
+
+N = 16 passes at every resistor corner, worst case 49.5°. **The exposure is N = 8**, where
+the loop gain is doubled.
 
 ⚠️ **The output ceiling across PVT is 600 MHz**, set by the slow corner with the control
 voltage already at the 1.2 V rail. Against a specification of 1 GHz that is a substantial
@@ -340,7 +361,7 @@ accepting a per-part calibration, is what would recover it.
 | Supply, digital | 1.08–1.32 V | 1.2 V | ✅ |
 | Supply, analog | 3.0–3.6 V | **not used** — the block is entirely 1.2 V | ℹ️ simplification, see below |
 | Lock time | 6 µs typ, 20 max | **~5 µs** | ✅ |
-| Phase margin | — | 45.6° worst over PVT | ✅ |
+| Phase margin | — | **38.4° worst, Kvco × resistor corner, N = 8** | ❌ |
 | Temperature | −40 to 110 °C | all 9 corners | ✅ |
 | **Period jitter** | 6 ps typ, 12 max | **not measured** | ❌ |
 | **RMS jitter** | 3 ps typ, 5 max | **not measured** | ❌ |
@@ -415,35 +436,49 @@ Stated here rather than left to be discovered:
 
 ## Work remaining, in the order it should be done
 
-1. **Decide what to do about the 1 GHz specification.** The ring reaches 737 MHz typical
+1. **Close the loop phase margin at N = 8.** 38.4° against a 45° minimum, at ff/−40 °C
+   with worst-case sheet resistance. `Cz` is 9.21 pF and 3.1 % of the slot, so the
+   obvious lever — a larger `Cz` with a proportionally smaller `Rz`, holding the zero
+   while cutting the filter's high-frequency gain — costs area, and the area budget is
+   what set 9.21 pF in the first place. Restricting the divider to N ≥ 16 also closes it
+   (worst case 49.5°) but narrows the reference range, which is already narrow. This is a
+   trade for the review.
+2. **Decide what to do about the 1 GHz specification.** The ring reaches 737 MHz typical
    and 600 MHz at the slow corner with the control voltage already at the rail, so this
    is not a tuning problem. The options are a shorter ring (five stages rather than seven,
    which costs phase-noise margin), a faster stage at higher current, or declaring a lower
    maximum. All three are specification changes and belong to the review, not to a later
    silent revision.
-2. **Extend the divider to the full N = 4…64.** Purely additive, and it makes the ÷2 and
+3. **Extend the divider to the full N = 4…64.** Purely additive, and it makes the ÷2 and
    ÷4 cases usable, which is what narrows the reference range today.
-3. **The four unmeasured dynamic specifications** — period and RMS jitter, phase noise,
+4. **The four unmeasured dynamic specifications** — period and RMS jitter, phase noise,
    reference spur — plus duty cycle and power. These share one blocker: they need a long
    transient on the locked loop, which is why the acquisition run is behavioural. Deciding
    *how* to get them is the real item: a faster transistor-level setup, or behavioural
    numbers stated as such.
-4. **Lock detect and the output post-divider**, both additive digital.
-5. **Monte-Carlo the loop transfer function** over capacitor ratio error, varying the MOS
+5. **Lock detect and the output post-divider**, both additive digital.
+6. **Monte-Carlo the loop transfer function** over capacitor ratio error, varying the MOS
    and MOM capacitors independently — a mixed-type divider mismatches systematically
    rather than as a pair.
 
 ## Questions that need answers before layout
 
-1. **Is 600 MHz guaranteed acceptable, against a specification of 1 GHz?** See item 1.
-   This is the block's largest gap and the cheapest to resolve by conversation rather
-   than by silicon.
-2. **Is a 1.2 V rail distributed to the pallets?** The entire block runs from 1.2 V and
+1. **Is 600 MHz guaranteed acceptable, against a specification of 1 GHz?** The block's
+   largest gap, and the cheapest to resolve by conversation rather than by silicon.
+2. **Is N ≥ 16 an acceptable restriction?** It closes the phase-margin gap outright —
+   49.5° worst case against 38.4° at N = 8 — at the cost of narrowing the usable
+   reference range. Cheaper than any circuit change if the answer is yes.
+3. **Should this design be re-pinned for the PDK's `rhigh` corner fix?** Upstream commit
+   `4b7d7422` (2026-08-07, on `main` only, not in any release) narrows the `rhigh`
+   corners from ±25 % to ±14.7 %, which moves this block's worst case from 38.4° to
+   41.2°. It does not close the gap here, and it is worth +3.7° to +8.1° to the LDO,
+   which shares the resistor. **The decision is shared between both blocks.**
+4. **Is a 1.2 V rail distributed to the pallets?** The entire block runs from 1.2 V and
    the slot supply is 3.3 V. If no low rail is distributed, this block needs a regulator
    in front of it — which is a substantially different block. This is shared with the LDO
    and is the single largest unknown for both.
-3. **Are behavioural numbers acceptable for jitter, phase noise and spur** at the
+5. **Are behavioural numbers acceptable for jitter, phase noise and spur** at the
    schematic gate, with transistor-level figures to follow at layout? See item 3.
-4. **What reference frequency will actually be supplied?** The usable range narrows to
+6. **What reference frequency will actually be supplied?** The usable range narrows to
    16–50 MHz because only ÷8 and ÷16 are usable today; item 2 removes that constraint if
    the answer needs it.
