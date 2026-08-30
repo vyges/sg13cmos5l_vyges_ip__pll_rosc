@@ -142,7 +142,7 @@ connectivity fault cheap: it is a one-line fix now and a re-layout later.
 
 | Engine | Why we run it | Stage |
 | --- | --- | --- |
-| `vyges loom lvs` | Compares two netlists by graph isomorphism, independent of net names — so a schematic edit that silently changes connectivity fails instead of surviving to silicon. | now, and again against layout at sign-off |
+| `vyges loom lvs` | Compares two netlists by graph isomorphism, independent of net names, **and compares device sizing** — so an edit that changes connectivity *or* re-sizes a component fails instead of surviving to silicon. | now, and again against layout at sign-off |
 | `vyges loom extract` | Parasitics from layout (DEF/GDS → SPEF) to re-simulate against. The ring's stage delay, and so Kvco, is set by loading — which is exactly what extraction adds. | after layout |
 | `vyges loom meas` | Extracts a scalar from a simulated sweep (gain, bandwidth, phase margin, or spectral SNR/THD). | once closed-loop and jitter benches exist |
 
@@ -174,9 +174,19 @@ Against an unchanged netlist — the whole hierarchy, phase detector through div
   the two netlists are structurally equivalent (verified by explicit isomorphism).
 ```
 
-Exit status 0. Shorting the charge pump's `up` and `dn` inputs together and re-running
-gives `LVS MISMATCH` and exit status 3 — verified, because a gate that cannot fail is not
-a gate.
+Exit status 0. Two deliberate-failure checks, because a gate that cannot fail is not a
+gate: shorting the charge pump's `up` and `dn` inputs together gives `LVS MISMATCH` and
+exit 3, and so does re-sizing the loop-filter components while leaving the topology
+untouched — the second names each device and its two values:
+
+```text
+  device parameter mismatch (topology matches):
+    X Xlf/XRz: l layout 0.0000569 vs schematic 0.000035
+    X Xlf/XCz: w layout 0.000063  vs schematic 0.000093
+```
+
+ℹ️ Device-sizing comparison needs a build newer than v0.1.33; that release compares
+topology only and returns a clean MATCH across a complete re-sizing.
 
 **This is worth having here specifically.** Routing the eight cells introduced six
 connectivity faults that the rendered schematics looked entirely correct with: ring hops
