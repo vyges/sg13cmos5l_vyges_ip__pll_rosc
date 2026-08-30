@@ -24,54 +24,105 @@ Vsub  sub!  0 0
 Vctrl vctrl 0 0.6
 .ic v(n1)=0
 
+* The tuning curve is measured over four whole periods (rise 3 to rise 7), so the
+* transient has to be long enough to CONTAIN four periods at the control voltage being
+* swept -- and the ring is slowest at the bottom of the range. A flat 600 ns window made
+* the 0.40 V point report "out of interval": the ring was oscillating with a full 1.23 V
+* swing, the window simply did not hold enough edges. The window is per-point for that
+* reason; it is a property of the measurement, not of the circuit.
+*
+* Below the start-up threshold a ring genuinely does not oscillate, and that threshold is
+* a RESULT -- it sets the bottom of the usable tuning range. Swing is measured first
+* because MAX/MIN always succeed, and the period is attempted only where there is an
+* oscillation to measure. A bare `failed!` then means a bug, never physics.
 .control
   alter Vctrl dc = 0.4
-  tran 20p 600n uic
+  tran 20p 4u uic
   echo "VCTRL 0.40"
-  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
-  meas tran vhi MAX v(n1) FROM=100n TO=600n
-  meas tran vlo MIN v(n1) FROM=100n TO=600n
+  meas tran vhi MAX v(n1) FROM=500n TO=4u
+  meas tran vlo MIN v(n1) FROM=500n TO=4u
+  let sw = vhi - vlo
+  if sw > 0.4
+    meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  else
+    echo "VCTRL 0.40 NO-OSCILLATION swing=$&sw"
+  end
   alter Vctrl dc = 0.5
-  tran 20p 600n uic
+  tran 20p 2u uic
   echo "VCTRL 0.50"
-  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
-  meas tran vhi MAX v(n1) FROM=100n TO=600n
-  meas tran vlo MIN v(n1) FROM=100n TO=600n
+  meas tran vhi MAX v(n1) FROM=300n TO=2u
+  meas tran vlo MIN v(n1) FROM=300n TO=2u
+  let sw = vhi - vlo
+  if sw > 0.4
+    meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  else
+    echo "VCTRL 0.50 NO-OSCILLATION swing=$&sw"
+  end
   alter Vctrl dc = 0.6
   tran 20p 600n uic
   echo "VCTRL 0.60"
-  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
   meas tran vhi MAX v(n1) FROM=100n TO=600n
   meas tran vlo MIN v(n1) FROM=100n TO=600n
+  let sw = vhi - vlo
+  if sw > 0.4
+    meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  else
+    echo "VCTRL 0.60 NO-OSCILLATION swing=$&sw"
+  end
   alter Vctrl dc = 0.7
   tran 20p 600n uic
   echo "VCTRL 0.70"
-  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
   meas tran vhi MAX v(n1) FROM=100n TO=600n
   meas tran vlo MIN v(n1) FROM=100n TO=600n
+  let sw = vhi - vlo
+  if sw > 0.4
+    meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  else
+    echo "VCTRL 0.70 NO-OSCILLATION swing=$&sw"
+  end
   alter Vctrl dc = 0.8
   tran 20p 600n uic
   echo "VCTRL 0.80"
-  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
   meas tran vhi MAX v(n1) FROM=100n TO=600n
   meas tran vlo MIN v(n1) FROM=100n TO=600n
+  let sw = vhi - vlo
+  if sw > 0.4
+    meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  else
+    echo "VCTRL 0.80 NO-OSCILLATION swing=$&sw"
+  end
   alter Vctrl dc = 0.9
   tran 20p 600n uic
   echo "VCTRL 0.90"
-  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
   meas tran vhi MAX v(n1) FROM=100n TO=600n
   meas tran vlo MIN v(n1) FROM=100n TO=600n
+  let sw = vhi - vlo
+  if sw > 0.4
+    meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  else
+    echo "VCTRL 0.90 NO-OSCILLATION swing=$&sw"
+  end
   alter Vctrl dc = 1.0
   tran 20p 600n uic
   echo "VCTRL 1.00"
-  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
   meas tran vhi MAX v(n1) FROM=100n TO=600n
   meas tran vlo MIN v(n1) FROM=100n TO=600n
+  let sw = vhi - vlo
+  if sw > 0.4
+    meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  else
+    echo "VCTRL 1.00 NO-OSCILLATION swing=$&sw"
+  end
   alter Vctrl dc = 1.1
   tran 20p 600n uic
   echo "VCTRL 1.10"
-  meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
   meas tran vhi MAX v(n1) FROM=100n TO=600n
   meas tran vlo MIN v(n1) FROM=100n TO=600n
+  let sw = vhi - vlo
+  if sw > 0.4
+    meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  else
+    echo "VCTRL 1.10 NO-OSCILLATION swing=$&sw"
+  end
 .endc
 .end

@@ -70,7 +70,10 @@ Xdiv vco_out rstb nsel0 nsel1 div_out vdd vss divn
   meas tran vc6u FIND v(vctrl) AT=6u
   meas tran vc78 FIND v(vctrl) AT=7.8u
   * locked output frequency, from the phase integrator over the last 10 us
-  meas tran ph6u FIND v(ph) AT=30u
+* AT=30u here was a leftover from an earlier 30 us target while the transient stops at
+* 8 us. ngspice reported "out of interval", left ph6u unset, and the run still exited 0 --
+* the exact shape of failure the reporting script exists to catch. The name is the spec.
+  meas tran ph6u FIND v(ph) AT=6u
   meas tran ph78 FIND v(ph) AT=7.8u
   wrdata /work/sim/lock.csv v(vctrl)
 .endc
