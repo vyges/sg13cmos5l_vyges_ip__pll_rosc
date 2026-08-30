@@ -4,6 +4,39 @@ What is actually built, what it measures, and what is deliberately not in this
 revision. The design intent is in [`proposal.md`](proposal.md); this file records the
 schematic that realises it.
 
+## PDK pin
+
+Every measured number in this document is scoped to this PDK state. Quote it with any
+result taken from here.
+
+⚠️ **The PDK is two repositories, not one, and both are needed.** `ihp-sg13cmos5l` is an
+overlay: most of its ngspice model files are symlinks into a sibling `ihp-sg13g2`
+checkout. The models that decide this block's results resolve to the *second* tree.
+
+| | repository | commit |
+| --- | --- | --- |
+| overlay | [`IHP-GmbH/ihp-sg13cmos5l`](https://github.com/IHP-GmbH/ihp-sg13cmos5l) | `9f614c48af6a97a47c541030e6a1e2f5e2819d79` |
+| base | [`IHP-GmbH/IHP-Open-PDK`](https://github.com/IHP-GmbH/IHP-Open-PDK) (sg13g2) | `144f811cdffda49b71d28f64e8a92b697b61cf06` |
+
+Content hashes of the model files actually read, so the pin is verifiable without git
+history — the PDK in the simulation container is a flat tree with no `.git`:
+
+| model file | sha256 (first 16) | comes from |
+| --- | --- | --- |
+| `cornerMOShv.lib` | `5a1f862dc304fdfe` | sg13g2 |
+| `cornerMOSlv.lib` | `03d505847c880d23` | sg13g2 |
+| `cornerRES.lib` | `a18170ecf22f739e` | sg13g2 |
+| `cap_mfringe.lib` | `17a72bc1dd82c554` | sg13cmos5l |
+
+`tools/report.py` prints this block above every set of results, so a number cannot be
+quoted without the pin that produced it.
+
+ℹ️ **Our `pdk-store` mirror does not currently cover both trees.**
+`vyges-tools/ihp-sg13cmos5l` is pinned at `v0.2.0` and carries the same symlinks, whose
+targets are absent — so it cannot supply the MOS or resistor corner models on its own. The
+sibling `ihp-sg13g2` needs pinning alongside it before that mirror can reproduce these
+results.
+
 ## Assumptions
 
 Everything below is an assumption the design rests on, with what it is based on. They are
