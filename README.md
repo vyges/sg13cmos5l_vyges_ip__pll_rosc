@@ -37,6 +37,17 @@ every block real except the VCO, which is behavioural and matched to the measure
 corner and 600 MHz at the slow corner with the control voltage already at the supply rail.
 See [`doc/implementation.md`](doc/implementation.md).
 
+## For the integrator
+
+[`doc/implementation.md`](doc/implementation.md) carries two sections written for scoping
+this block into a slot:
+
+- **Slot requirements** — pads, harness resources, control bits and clocks. Two pads, one
+  of them an up-to-737 MHz output that needs a dedicated path; the block runs entirely
+  from 1.2 V, with **no 3.3 V analog rail required**.
+- **Against the proposal** — every specification line with what the schematic measures,
+  including the output range and divider range that fall short.
+
 ## Layout
 
 | Dir | Contents |
