@@ -43,7 +43,7 @@ N 20 -80 20 -40 {lab=vss}
 C {devices/lab_pin.sym} 20 -40 0 0 {name=l_Mcint_S sig_type=std_logic lab=vss}
 N 20 -110 90 -110 {lab=vss}
 C {devices/lab_pin.sym} 90 -110 0 0 {name=l_Mcint_B sig_type=std_logic lab=vss}
-C {sg13cmos5l_pr/cap_mfringe.sym} 340 -110 0 0 {name=Cser model=cap_mfringe w=10u l=10u mmin=1 mmax=4 spiceprefix=X}
+C {sg13cmos5l_pr/cap_cmomf.sym} 340 -110 0 0 {name=Cser model=cap_cmomf w=10u l=10u mmin=1 mmax=4 spiceprefix=X}
 C {sg13cmos5l_stdcells/sg13cmos5l_inv_1.sym} 340 160 0 0 {name=Xd1 VDD=vdd VSS=vss prefix=sg13cmos5l_}
 N 300 160 250 160 {lab=pd_prop}
 C {devices/lab_pin.sym} 250 160 0 1 {name=l_Xd1_A sig_type=std_logic lab=pd_prop}

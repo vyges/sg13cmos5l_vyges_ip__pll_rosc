@@ -21,8 +21,8 @@ C {devices/lab_pin.sym} 0 -220 0 0 {name=l_net_nz sig_type=std_logic lab=nz}
 C {devices/lab_pin.sym} 0 -280 0 0 {name=l_net_vctrl sig_type=std_logic lab=vctrl}
 C {devices/lab_pin.sym} 0 -50 0 0 {name=l_net_vss sig_type=std_logic lab=vss}
 C {sg13cmos5l_pr/rhigh.sym} 0 -250 0 0 {name=Rz w=1u l=56.9u model=rhigh body=sub! b=0 m=1 mm_ok=1 spiceprefix=X}
-C {sg13cmos5l_pr/cap_mfringe.sym} 0 -80 0 0 {name=Cz model=cap_mfringe w=63u l=63u mmin=1 mmax=4 spiceprefix=X}
-C {sg13cmos5l_pr/cap_mfringe.sym} 260 -80 0 0 {name=Cp model=cap_mfringe w=18u l=18u mmin=1 mmax=4 spiceprefix=X}
+C {sg13cmos5l_pr/cap_cmomf.sym} 0 -80 0 0 {name=Cz model=cap_cmomf w=63u l=63u mmin=1 mmax=4 spiceprefix=X}
+C {sg13cmos5l_pr/cap_cmomf.sym} 260 -80 0 0 {name=Cp model=cap_cmomf w=18u l=18u mmin=1 mmax=4 spiceprefix=X}
 N 0 -280 0 -320 {lab=vctrl}
 C {devices/iopin.sym} 0 -320 0 0 {name=p_vctrl lab=vctrl}
 C {devices/iopin.sym} -400 -200 0 0 {name=p_vss lab=vss}

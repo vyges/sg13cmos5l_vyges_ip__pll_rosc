@@ -15,7 +15,7 @@
 * frequency, so v(ph) is the cycle count; the output is a square wave off its fraction.
 .lib $PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
 .lib $PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerRES.lib res_typ
-.include $PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models/cap_mfringe.lib
+.include $PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models/cap_cmomf.lib
 .include $PDK_ROOT/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/spice/sg13cmos5l_stdcell.spice
 .global sub!
 * pll_cells.spice holds the real .subckt definitions, extracted from the top-level

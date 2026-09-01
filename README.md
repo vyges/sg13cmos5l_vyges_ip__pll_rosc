@@ -29,21 +29,28 @@ every block real except the VCO, which is behavioural and matched to the measure
 | Output, typical corner | 115–737 MHz ❌ | 100–800 MHz |
 | Output, guaranteed over PVT | ceiling **600 MHz** ❌ | 800 MHz |
 | Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) ❌ | N = 4…64 |
-| Lock time | ~5 µs ✅ | 20 µs max |
-| Phase margin, N = 16 | 49.5° ✅ | 45° min |
-| **Phase margin, N = 8** | **38.4°** ❌ (ff / −40 °C / worst-case sheet) | 45° min |
-| Loop filter | Rz 80.8 kΩ, Cz 9.21 pF (63 × 63 µm) | — |
+| Lock time | ~4 µs ✅ | 20 µs max |
+| Phase margin, N = 16 | 54.1° ✅ | 45° min |
+| Phase margin, N = 8 | 49.3° ✅ (ff / −40 °C / worst-case sheet) | 45° min |
+| Loop filter | Rz 80.77 kΩ, Cz 5.11 pF (63 × 63 µm) | — |
 
-⚠️ **What is not met, stated here rather than left to be found.** Three measured
+⚠️ **What is not met, stated here rather than left to be found.** Two measured
 specifications fall short: the **output range** — the loaded ring tops out at 737 MHz
 typical and 600 MHz at the slow corner, with the control voltage already at the supply
-rail, so 800 MHz is a hard limit and not a margin; the **divider range**, since only ÷8
-and ÷16 are usable against a specified 10–50 MHz reference; and **phase margin at N = 8**,
-38.4° against a 45° minimum once the `rhigh` corner is swept rather than held at nominal
-(N = 16 passes at every resistor corner). Six further specifications — period and RMS
-jitter, phase noise, reference spur, duty cycle and power — are **not measured**, all for
-the one reason given in [`doc/implementation.md`](doc/implementation.md). Lock detect and
-the output post-divider are **not implemented**.
+rail, so 800 MHz is a hard limit and not a margin; and the **divider range**, since only ÷8
+and ÷16 are usable against a specified 10–50 MHz reference. Six further specifications —
+period and RMS jitter, phase noise, reference spur, duty cycle and power — are **not
+measured**, all for the one reason given in
+[`doc/implementation.md`](doc/implementation.md). Lock detect and the output post-divider
+are **not implemented**.
+
+✅ **Phase margin at N = 8 now passes**, at 49.3° where this table read 38.4°. Nothing in
+the block changed: it was re-pinned to IHP-Open-PDK `dev@ab1510c`, where base and overlay
+live in one tree. Two changes in that pin both helped — the `rhigh` corner re-alignment
+(+4.1°) and, worth more than twice as much, the MoM capacitor's rename `cap_mfringe` →
+`cap_cmomf` with its density recalibrated 2.32 → 1.287 fF/µm² (+9.4°), which drops `Cz` to
+5.11 pF at the same drawn size and raises the loop zero. ⚠️ **Read that second one as a
+warning too**: a device model moved a specification by 9.4° under a finished schematic.
 
 ## For the integrator
 
@@ -86,10 +93,27 @@ in [`doc/implementation.md`](doc/implementation.md).
 ## Reproducing the results
 
 `sim/run.sh` netlists the schematic hierarchy and runs every testbench from a clean
-clone. It needs xschem, ngspice, and **both** IHP PDKs under one root: the
-`ihp-sg13cmos5l` overlay for the models and stdcells, and the `ihp-sg13g2` base for the
-compiled OSDI models. That root is `$PDK_ROOT`, which defaults to `/foss/pdks` (what
-IIC-OSIC-TOOLS sets), so pass `PDK_ROOT=/your/pdks` to run against a checkout anywhere
-else; `$PDK` names the base directory and defaults to `ihp-sg13g2`.
+clone. It needs xschem, ngspice, and the IHP PDK — **one checkout now covers both halves**,
+since upstream merged the `ihp-sg13cmos5l` overlay into IHP-Open-PDK:
+
+```sh
+git clone --branch dev --recurse-submodules https://github.com/IHP-GmbH/IHP-Open-PDK.git
+git -C IHP-Open-PDK checkout ab1510cbdcbd61fe82e24ec28179c02ea7083299
+PDK_ROOT=$PWD/IHP-Open-PDK python3 IHP-Open-PDK/ihp-sg13g2/libs.tech/ngspice/install.py
+PDK_ROOT=$PWD/IHP-Open-PDK PDK=ihp-sg13cmos5l sh sim/run.sh
+```
+
+`--recurse-submodules` is not optional, and `install.py` compiles the Verilog-A models
+(`psp103`, `psp103_nqs`, `r3_cmc`, `mosvar`) that ship as sources rather than binaries.
+
+⚠️ **One upstream gap to work around.** Both `.spiceinit` files load all six OSDI models
+from `$PDK_ROOT/$PDK/libs.tech/ngspice/osdi/`, but `install.py` writes its four only into
+`ihp-sg13g2`, while `ihp-sg13cmos5l` ships only the other two (`cap_cmomf`, `cap_cmomi`)
+prebuilt. Neither directory holds all six, so whichever `$PDK` you select the elaboration
+fails on the missing pair. Symlink the two sets into each other after installing.
+
+`$PDK_ROOT` defaults to `/foss/pdks` (what IIC-OSIC-TOOLS sets) and `$PDK` to
+`ihp-sg13g2`, so the bundled PDK still works — but it is the *old* two-repository pin and
+will not reproduce the numbers above.
 
 Apache-2.0. See [`NOTICE`](NOTICE) for attribution.
