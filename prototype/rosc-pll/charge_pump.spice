@@ -1,7 +1,7 @@
 * sg13cmos5l charge pump — current-steering, biased from a 5uA reference (the iDAC).
 * UP high -> source Icp into vctrl (charge up); DOWN high -> sink Icp (charge down);
 * both off -> hold. Test: UP pulse then DOWN pulse onto a 20pF loop-filter cap.
-.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+.lib $PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
 
 Vdd vdd 0 1.2
 

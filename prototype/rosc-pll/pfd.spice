@@ -3,8 +3,8 @@
 * NOTE: a tri-state PFD needs a clean power-on reset, else it can latch into the
 * wrong state at t=0 (the flop misses the very first edge). Here POR (porb) forces
 * both DFFs reset for 5 ns, then the reset path is the usual NAND(up,dn).
-.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
-.include /foss/pdks/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/spice/sg13cmos5l_stdcell.spice
+.lib $PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+.include $PDK_ROOT/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/spice/sg13cmos5l_stdcell.spice
 
 Vdd  vdd 0 1.2
 Vref ref  0 PULSE(0 1.2 10n 100p 100p 3n 100n)

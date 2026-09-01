@@ -86,6 +86,10 @@ in [`doc/implementation.md`](doc/implementation.md).
 ## Reproducing the results
 
 `sim/run.sh` netlists the schematic hierarchy and runs every testbench from a clean
-clone. It needs xschem, ngspice and the `ihp-sg13cmos5l` PDK at `/foss/pdks`.
+clone. It needs xschem, ngspice, and **both** IHP PDKs under one root: the
+`ihp-sg13cmos5l` overlay for the models and stdcells, and the `ihp-sg13g2` base for the
+compiled OSDI models. That root is `$PDK_ROOT`, which defaults to `/foss/pdks` (what
+IIC-OSIC-TOOLS sets), so pass `PDK_ROOT=/your/pdks` to run against a checkout anywhere
+else; `$PDK` names the base directory and defaults to `ihp-sg13g2`.
 
 Apache-2.0. See [`NOTICE`](NOTICE) for attribution.

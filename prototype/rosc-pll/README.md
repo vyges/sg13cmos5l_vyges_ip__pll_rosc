@@ -23,8 +23,9 @@ docker run --rm -v $PWD:/work --entrypoint bash \
 ```
 
 Models resolve via `.lib …/cornerMOSlv.lib mos_tt` (typ corner); the divider also
-`.include`s `sg13cmos5l_stdcell.spice`. Paths inside the netlists assume the
-container's `/foss/pdks/ihp-sg13cmos5l`.
+`.include`s `sg13cmos5l_stdcell.spice`. Paths inside the netlists go through
+`$PDK_ROOT/ihp-sg13cmos5l` — the container exports `PDK_ROOT=/foss/pdks`, so the command
+above needs nothing extra; elsewhere, export `PDK_ROOT` first.
 
 **Status — all five blocks:** VCO ✅ (transistor) · ÷16 divider ✅ (cells) ·
 PFD ✅ (cells) · charge pump ✅ (transistor) · loop filter (passive) ·

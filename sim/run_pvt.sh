@@ -7,7 +7,23 @@
 # that sets the phase-margin worst case.
 set -e
 cd "$(dirname "$0")"
-M=/foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models
+# PDK location -- see sim/run.sh for why BOTH the overlay and the base are needed.
+# Exported because the generated deck reaches the stdcell library through $PDK_ROOT
+# directly, not through @M@.
+PDK_ROOT="${PDK_ROOT:-/foss/pdks}"
+PDK="${PDK:-ihp-sg13g2}"
+export PDK_ROOT PDK
+if [ -z "${SPICE_USERINIT_DIR:-}" ]; then
+  SPICE_USERINIT_DIR="$PDK_ROOT/$PDK/libs.tech/ngspice"
+  export SPICE_USERINIT_DIR
+fi
+for d in ihp-sg13cmos5l "$PDK"; do
+  if [ ! -d "$PDK_ROOT/$d" ]; then
+    echo "FAILED: no $d under PDK_ROOT=$PDK_ROOT (need the overlay AND the base)" >&2
+    exit 2
+  fi
+done
+M="$PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models"
 mkdir -p pvt
 : > pvt/vco.txt
 for corner in tt ss ff; do

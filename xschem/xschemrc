@@ -2,6 +2,10 @@
 # Sources the PDK's own rc (which sets XSCHEM_LIBRARY_PATH to the sg13cmos5l_pr /
 # sg13cmos5l_stdcells symbol libraries and the generic devices library), then adds
 # this design directory so the local cells resolve by bare name.
-source /foss/pdks/ihp-sg13cmos5l/libs.tech/xschem/xschemrc
+# PDK location: honour $PDK_ROOT if it is set, else the IIC-OSIC-TOOLS default.
+# Without this the netlist step is hard-wired to one container's layout, which is
+# the same breakage the testbenches had.
+set pdk_root [expr {[info exists env(PDK_ROOT)] ? $env(PDK_ROOT) : "/foss/pdks"}]
+source $pdk_root/ihp-sg13cmos5l/libs.tech/xschem/xschemrc
 append XSCHEM_LIBRARY_PATH :[file dirname [info script]]
 set netlist_dir [file dirname [info script]]/../sim/netlist

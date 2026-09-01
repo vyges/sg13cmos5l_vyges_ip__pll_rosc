@@ -1,7 +1,7 @@
 * sg13cmos5l current-starved ring-oscillator VCO — simple prototype (the PLL's core)
 * 7 CMOS inverter stages in a loop; a control voltage (vctrl) starves the stage
 * current -> sets the delay -> sets the oscillation frequency. This is the VCO.
-.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+.lib $PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
 
 .param VDDV=1.2
 .param WINV=2u  LINV=0.13u

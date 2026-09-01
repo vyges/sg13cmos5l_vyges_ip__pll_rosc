@@ -1,11 +1,45 @@
 #!/bin/sh
 # Reproduce every simulated number in this repository from a clean clone.
-# Needs xschem, ngspice and the ihp-sg13cmos5l PDK at /foss/pdks.
+# Needs xschem, ngspice and the ihp-sg13cmos5l PDK under $PDK_ROOT (default /foss/pdks).
 #
 #   sh sim/run.sh
 #
 # Exit status is the verdict: 0 every bench ran, non-zero one or more failed.
 cd "$(dirname "$0")/.." || exit 2
+
+# PDK location. Every testbench references `$PDK_ROOT` rather than a fixed path, and
+# ngspice expands environment variables in .include/.lib itself -- so this has to be
+# EXPORTED, not merely set, and it has to be the bare `$PDK_ROOT` form: ngspice reads
+# `${PDK_ROOT}` as a variable literally named `{PDK_ROOT}` and fails.
+#
+#   sh sim/run.sh                              # /foss/pdks, any IIC-OSIC-TOOLS container
+#   PDK_ROOT=/path/to/pdks sh sim/run.sh       # anywhere else
+#
+# 🔑 TWO PDKs have to sit under the same root, and this is not obvious from our netlists:
+# the models and stdcells come from the ihp-sg13cmos5l OVERLAY, but the compiled OSDI
+# models (psp103, r3_cmc, mosvar) come from the ihp-sg13g2 BASE. The overlay never names
+# the base -- the PDK's own .spiceinit does, as `$PDK_ROOT/$PDK`, and ngspice finds that
+# file through SPICE_USERINIT_DIR. Point PDK_ROOT at a tree holding only the overlay and
+# ngspice cannot load the OSDI libraries -- observed as `Error opening osdi lib
+# "$PDK_ROOT/ihp-sg13g2/.../psp103.osdi"` followed by every bench aborting. The check
+# below catches it first and says which PDK is missing.
+PDK_ROOT="${PDK_ROOT:-/foss/pdks}"
+PDK="${PDK:-ihp-sg13g2}"
+export PDK_ROOT PDK
+# Set only if the caller has not: outside IIC-OSIC-TOOLS nothing else points ngspice at
+# the .spiceinit that loads the OSDI libraries.
+if [ -z "${SPICE_USERINIT_DIR:-}" ]; then
+  SPICE_USERINIT_DIR="$PDK_ROOT/$PDK/libs.tech/ngspice"
+  export SPICE_USERINIT_DIR
+fi
+for d in ihp-sg13cmos5l "$PDK"; do
+  if [ ! -d "$PDK_ROOT/$d" ]; then
+    echo "FAILED: no $d under PDK_ROOT=$PDK_ROOT" >&2
+    echo "        PDK_ROOT must contain BOTH the ihp-sg13cmos5l overlay (models," >&2
+    echo "        stdcells) and the $PDK base (compiled OSDI models)" >&2
+    exit 2
+  fi
+done
 mkdir -p sim/netlist
 
 # ⚠️ No `set -e` around the netlist step: xschem returns non-zero on a perfectly clean

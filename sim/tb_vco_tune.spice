@@ -1,8 +1,8 @@
 * tb_vco_tune -- ring VCO oscillation and tuning, driven from the SCHEMATIC hierarchy.
 * Number to beat is the 2026-07-17 feasibility run on the flat netlist
 * (prototype/rosc-pll/rosc_vco.spice): 155.7 MHz at vctrl = 0.6 V, rail-to-rail swing.
-.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
-.include /foss/pdks/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/spice/sg13cmos5l_stdcell.spice
+.lib $PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+.include $PDK_ROOT/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/spice/sg13cmos5l_stdcell.spice
 .include ../sim/netlist/rosc_vco.spice
 
 Vdd   vdd   0 1.2

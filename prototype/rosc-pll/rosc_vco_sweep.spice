@@ -1,5 +1,5 @@
 * sg13cmos5l current-starved ring-osc VCO — tuning curve (freq vs control voltage)
-.lib /foss/pdks/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
+.lib $PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models/cornerMOSlv.lib mos_tt
 
 .param VDDV=1.2
 .param WINV=2u  LINV=0.13u
