@@ -80,7 +80,7 @@ the rail exists on the die; whether it is distributed to the pallets is the open
 
 | | |
 | --- | --- |
-| Corners | `cornerMOShv/lv.lib` (tt, ss, ff) with `cornerRES.lib` paired pessimistically (`res_typ`, `res_wcs`, `res_bcs`) |
+| Corners | `cornerMOShv/lv.lib` (tt, ss, ff) **crossed with** `cornerRES.lib` (`res_typ`, `res_bcs`, `res_wcs`) — swept **independently**, not paired. `Rz` is an `rhigh`, and holding it at nominal is exactly what made the phase-margin figure wrong for several revisions |
 | Temperature | −40, 27, 110 °C |
 | Supply | 3.0, 3.3, 3.6 V |
 | Tools | xschem 3.4.8RC, ngspice-46, in an IIC-OSIC-TOOLS-derived container |
@@ -153,8 +153,11 @@ the crossover in log frequency, centred on the geometric-mean loop gain.
 | Cz | 9.21 pF | `cap_mfringe`, 63 × 63 µm — **3.1 % of the slot** |
 | Cp | 0.75 pF | `cap_mfringe`, 18 × 18 µm |
 
-**Worst-case phase margin is 48.6°** across every selectable operating point, against a 45°
-minimum, and the crossover stays below f_ref/10 everywhere.
+**Worst-case phase margin is 48.6° across every selectable operating point _at the nominal
+resistor value_**, and the crossover stays below f_ref/10 everywhere. ⚠️ `Rz` is an `rhigh`
+whose corners on this PDK pin are ±25 %, and it sets both the loop zero and the filter's
+high-frequency gain: swept, **the worst case is 38.4° at N = 8**, which does not meet the
+45° minimum. See the PVT section. Do not quote 48.6° as the block's phase margin.
 
 `Icp = 1 µA` is a requirement on the harness bias rather than a device size here, since the
 charge pump mirrors 1:1. It is also the direction that shrinks the filter: required

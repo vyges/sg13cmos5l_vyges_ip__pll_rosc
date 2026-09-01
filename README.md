@@ -1,11 +1,11 @@
 # sg13cmos5l_vyges_ip__pll_rosc
 
 Ring-oscillator **PLL** for the IHP **SG13CMOS5L** process — a self-biased,
-dual-control-path ring-VCO PLL with an integrated ÷N feedback divider and
-digital lock detect. **All-CMOS** (no SiGe HBT / MiM cap / deep-N-well /
-Schottky — none of which SG13CMOS5L provides); the loop-filter cap is MOM/poly
-within the 5-metal stack. Built for the **Chipalooza Challenge #2 (IHP
-SG13CMOS5L)** as an openframe analog-slot IP.
+dual-control-path ring-VCO PLL with a register-selectable ÷N feedback divider.
+**All-CMOS** (no SiGe HBT / MiM cap / deep-N-well / Schottky — none of which
+SG13CMOS5L provides); the loop-filter cap is MOM/poly within the 5-metal stack.
+Built for the **Chipalooza Challenge #2 (IHP SG13CMOS5L)** as an openframe
+analog-slot IP.
 
 > Status: **schematic**. The full cell hierarchy is captured in xschem, netlists, and
 > simulates. See [`doc/implementation.md`](doc/implementation.md) for what is built and
@@ -26,16 +26,24 @@ every block real except the VCO, which is behavioural and matched to the measure
 | Parameter | Measured | Specification |
 | --- | --- | --- |
 | Reference in | 16–50 MHz usable | 10–50 MHz |
-| Output, typical corner | 115–737 MHz | 100–1000 MHz |
-| Output, guaranteed over PVT | ceiling **600 MHz** | 1000 MHz |
-| Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) | N = 4…64 |
-| Lock time | ~5 µs | 20 µs max |
-| Phase margin, worst over PVT | 45.6° (ff/−40 °C, N=8) | 45° min |
+| Output, typical corner | 115–737 MHz ❌ | 100–800 MHz |
+| Output, guaranteed over PVT | ceiling **600 MHz** ❌ | 800 MHz |
+| Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) ❌ | N = 4…64 |
+| Lock time | ~5 µs ✅ | 20 µs max |
+| Phase margin, N = 16 | 49.5° ✅ | 45° min |
+| **Phase margin, N = 8** | **38.4°** ❌ (ff / −40 °C / worst-case sheet) | 45° min |
 | Loop filter | Rz 80.8 kΩ, Cz 9.21 pF (63 × 63 µm) | — |
 
-⚠️ The 1 GHz output ceiling is **not** met: the loaded ring reaches 737 MHz at the typical
-corner and 600 MHz at the slow corner with the control voltage already at the supply rail.
-See [`doc/implementation.md`](doc/implementation.md).
+⚠️ **What is not met, stated here rather than left to be found.** Three measured
+specifications fall short: the **output range** — the loaded ring tops out at 737 MHz
+typical and 600 MHz at the slow corner, with the control voltage already at the supply
+rail, so 800 MHz is a hard limit and not a margin; the **divider range**, since only ÷8
+and ÷16 are usable against a specified 10–50 MHz reference; and **phase margin at N = 8**,
+38.4° against a 45° minimum once the `rhigh` corner is swept rather than held at nominal
+(N = 16 passes at every resistor corner). Six further specifications — period and RMS
+jitter, phase noise, reference spur, duty cycle and power — are **not measured**, all for
+the one reason given in [`doc/implementation.md`](doc/implementation.md). Lock detect and
+the output post-divider are **not implemented**.
 
 ## For the integrator
 
