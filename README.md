@@ -27,11 +27,11 @@ every block real except the VCO, which is behavioural and matched to the measure
 | --- | --- | --- |
 | Reference in | 16–50 MHz usable | 10–50 MHz |
 | Output, typical corner | 115–735 MHz ❌ | 100–800 MHz |
-| Output, guaranteed over PVT | ceiling **600 MHz** ❌ | 800 MHz |
+| Output, guaranteed over PVT | ceiling **359 MHz** ❌ (0.98 V rail; 600 MHz at 1.20 V, 807 MHz at 1.50 V) | 800 MHz |
 | Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) ❌ | N = 4…64 |
 | Lock time | ~4 µs ✅ | 20 µs max |
-| Phase margin, N = 16 | 54.1° ✅ | 45° min |
-| Phase margin, N = 8 | 49.3° ✅ (ff / −40 °C / worst-case sheet) | 45° min |
+| Phase margin, N = 16 | 48.3° ✅ (ss / 110 °C / 0.98 V / best-case sheet) | 45° min |
+| Phase margin, N = 8 | 47.2° ✅ (ff / −40 °C / 1.50 V / worst-case sheet) | 45° min |
 | Loop filter | Rz 80.77 kΩ, Cz 5.11 pF (63 × 63 µm) | — |
 
 ⚠️ **What is not met, stated here rather than left to be found.** Two measured

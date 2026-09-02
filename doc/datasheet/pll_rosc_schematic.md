@@ -7,9 +7,9 @@
 | VCO tuning range, low | MHz | any | 115.425 MHz | 115.425 MHz | any | 115.425 MHz | Pass ✅ |
 | VCO tuning range, high | MHz | 800.000 MHz | 735.336 MHz | 735.336 MHz | any | 735.336 MHz | Fail ❌ |
 | Lock time | us | any | 4.000 us | 4.000 us | 20.000 us | 4.000 us | Pass ✅ |
-| Output ceiling over PVT | MHz | 800.000 MHz | 599.500 MHz | 599.500 MHz | any | 599.500 MHz | Fail ❌ |
-| Phase margin, N = 8 | deg | 45.000 deg | 49.259 deg | 49.259 deg | any | 49.259 deg | Pass ✅ |
-| Phase margin, N = 16 | deg | 45.000 deg | 54.072 deg | 54.072 deg | any | 54.072 deg | Pass ✅ |
+| Output ceiling over PVT | MHz | 800.000 MHz | 359.200 MHz | 359.200 MHz | any | 359.200 MHz | Fail ❌ |
+| Phase margin, N = 8 | deg | 45.000 deg | 47.171 deg | 47.171 deg | any | 47.171 deg | Pass ✅ |
+| Phase margin, N = 16 | deg | 45.000 deg | 48.267 deg | 48.267 deg | any | 48.267 deg | Pass ✅ |
 | Area | um2 | any | ​ | ​ | 164300.000 um2 | ​ | Skip 🟧 |
 | Magic DRC | - | any | ​ | ​ | 0.000 | ​ | Skip 🟧 |
 | Netgen LVS | - | any | ​ | ​ | 0.000 | ​ | Skip 🟧 |

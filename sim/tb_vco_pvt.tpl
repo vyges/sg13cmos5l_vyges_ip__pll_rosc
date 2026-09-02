@@ -5,7 +5,11 @@
 .global sub!
 .include ../sim/netlist/rosc_vco.spice
 .temp @TEMP@
-Vdd   vdd   0 1.2
+* The supply is a SWEPT corner, not a constant. This block runs entirely from the 1.2 V
+* rail -- the proposal assumed a 3.3 V analog core, which the design moved away from -- and
+* until 2026-09-02 this bench pinned it at exactly 1.2 V, so 27 PVT corners never once
+* exercised the rail the whole circuit depends on.
+Vdd   vdd   0 @VDD@
 Vss   vss   0 0
 Vsub  sub!  0 0
 Vctrl vctrl 0 @VC@

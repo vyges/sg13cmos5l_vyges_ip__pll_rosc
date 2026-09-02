@@ -39,14 +39,20 @@ for corner in tt ss ff; do
   # corner with the MOS corner here would have implied a dependence that does not exist.
   res=res_typ
   for temp in -40 27 110; do
+   # Supply corners for the 1.2 V rail. Not the +/-10 % a digital rail would get: the
+   # reviewer's sketch at the 2026-09-01 review was ~0.98 / 1.2 / 1.5, which is what an
+   # on-slot pMOS power switch actually delivers into a varying load. The oscillator's
+   # frequency depends on it directly, so it belongs in the corner set.
+   for vdd in 0.98 1.20 1.50; do
     for vc in 0.70 0.80 1.20; do
-      sed -e "s|@MOS@|$mos|g" -e "s|@RES@|$res|g" -e "s|@TEMP@|$temp|g" \
+      sed -e "s|@MOS@|$mos|g" -e "s|@RES@|$res|g" -e "s|@TEMP@|$temp|g" -e "s|@VDD@|$vdd|g" \
           -e "s|@VC@|$vc|g" -e "s|@M@|$M|g" tb_vco_pvt.tpl > _v.spice
       ngspice -b _v.spice > _v.log 2>&1 || true
       p=$(grep -oE "^per4 *= *[0-9.e+-]+" _v.log | grep -oE "[0-9.e+-]+$")
       f=$(awk -v p="$p" 'BEGIN{ if (p+0>0) printf "%.4g", 4/p; else print "fail" }')
-      echo "$corner $temp $vc $f" >> pvt/vco.txt
+      echo "$corner $temp $vdd $vc $f" >> pvt/vco.txt
     done
+   done
   done
 done
 rm -f _v.spice _v.log

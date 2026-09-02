@@ -585,13 +585,46 @@ what a reader coming to it later needs.
 1. ⛔ **The reference range against the board oscillator.** 16–20 MHz was confirmed fine,
    but the intended board part feeds **~100 MHz into the pad** — the clock path is pad → one
    mux → user project, so it runs at pad speed. Either this block gains a pre-divider or the
-   reference range is confirmed wider. **There is an action on us**: send a link to a
-   suitable wide-range programmable oscillator. The board part is not chosen; a desolderable
-   fixed 10 MHz is the fallback.
-2. ⛔ **Restate the corner set in the 1.2 V domain.** The proposal's table sweeps
-   3.0/3.3/3.6 V, which is the wrong supply for a block that runs entirely from 1.2 V; the
-   suggested set is roughly 0.98 / 1.2 / 1.5 V. This applies to the top of the proposal
-   table as well as to the sweeps.
+   reference range is confirmed wider.
+
+   ✅ **Part identified**, which was the action on us: the **Si5351A** I²C clock generator,
+   8 kHz–160 MHz across three independent outputs, 3.3 V, on an Adafruit breakout —
+   **DigiKey 1528-1206-ND** ([Adafruit 2045](https://www.digikey.com/en/products/detail/adafruit-industries-llc/2045/5353666)).
+   It covers our 16–50 MHz reference range *and* the ~100 MHz the pad wants from the same
+   board, and it is programmed over I²C from a laptop through an FTDI cable — which is the
+   arrangement the review asked for. A desolderable fixed 10 MHz remains the fallback.
+
+   ⚠️ Identifying the part does not answer the question. Whether this block takes a
+   pre-divider or widens its reference range is still open, and a 160 MHz-capable source
+   makes the *wider range* option testable rather than deciding it.
+2. ✅ **Corner set restated in the 1.2 V domain — and it moved the headline number.** The
+   proposal swept 3.0/3.3/3.6 V, the wrong supply for a block that runs entirely from
+   1.2 V. Worse, `tb_vco_pvt.tpl` pinned the rail at exactly 1.2 V, so **27 PVT corners
+   never once exercised the supply the whole circuit depends on**. The sweep now crosses
+   0.98 / 1.20 / 1.50 V with process, temperature and control voltage — 81 points, no
+   failures.
+
+   ⛔ **The guaranteed ceiling was optimistic by 40 %.** It is set by the slowest corner,
+   and the slowest corner is at the bottom of the rail:
+
+   | rail | guaranteed ceiling | best corner |
+   | --- | --- | --- |
+   | 0.98 V | **359.2 MHz** | 656.0 MHz |
+   | 1.20 V | 599.5 MHz | 903.8 MHz |
+   | 1.50 V | 806.6 MHz | 1207.0 MHz |
+
+   The published **600 MHz was the 1.20 V figure** — true only for a rail with no
+   tolerance. At the reviewer's suggested range the block guarantees **359 MHz**. ℹ️ At the
+   top of the rail it clears the 800 MHz specification, so the shortfall is a supply
+   question as much as a device one: a tighter rail buys output range directly.
+
+   ⚠️ Phase margin also moved, and still passes: **47.2° at N = 8** (ff/−40 °C/1.50 V,
+   worst-case sheet) and **48.3° at N = 16** (ss/110 °C/0.98 V, best-case sheet). The two
+   worst corners remain *opposite* ones, now separated by supply as well — Kvco spans
+   877 to 2272 MHz/V across the extended set, a 2.6× range against 1.5× before.
+
+   ℹ️ `doc/proposal.md` keeps its 3.0/3.3/3.6 row: it is the historical record of what was
+   proposed, and what was proposed is part of why this took until now to catch.
 3. **Output ceiling.** 599.5 MHz guaranteed over PVT against a specified 800 MHz remains the
    block's headline miss, now accepted rather than resolved — see
    `doc/datasheet/pll_rosc_tuning_pvt.svg` for where the ceiling comes from.

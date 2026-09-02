@@ -146,12 +146,18 @@ def pvt_kvco():
     rows = {}
     for line in open(p):
         f = line.split()
-        if len(f) == 4 and f[3] != "fail":
-            rows[(f[0], f[1], f[2])] = float(f[3])
+        # `corner temp vdd vc freq` since 2026-09-02; `corner temp vc freq` before the
+        # supply became a swept corner. Both are read so an older sweep still reports.
+        if len(f) == 5 and f[4] != "fail":
+            rows[(f[0], f[1], f[2], f[3])] = float(f[4])
+        elif len(f) == 4 and f[3] != "fail":
+            rows[(f[0], f[1], "1.20", f[2])] = float(f[3])
     out = {}
-    for (corner, temp, vc) in list(rows):
-        if vc == "0.70" and (corner, temp, "0.80") in rows:
-            out[f"{corner}/{temp}C"] = (rows[(corner, temp, "0.80")] - rows[(corner, temp, vc)]) / 0.1
+    for (corner, temp, vdd, vc) in list(rows):
+        if vc == "0.70" and (corner, temp, vdd, "0.80") in rows:
+            lo = rows[(corner, temp, vdd, vc)]
+            hi = rows[(corner, temp, vdd, "0.80")]
+            out[f"{corner}/{temp}C/{vdd}V"] = (hi - lo) / 0.1
     return out
 
 
@@ -167,9 +173,13 @@ def pvt_ceiling():
     tops = {}
     for line in open(p):
         f = line.split()
-        if len(f) == 4 and f[3] != "fail":
-            key = (f[0], f[1])
-            tops[key] = max(tops.get(key, 0.0), float(f[3]))
+        if len(f) == 5 and f[4] != "fail":
+            key, freq = (f[0], f[1], f[2]), float(f[4])
+        elif len(f) == 4 and f[3] != "fail":
+            key, freq = (f[0], f[1], "1.20"), float(f[3])
+        else:
+            continue
+        tops[key] = max(tops.get(key, 0.0), freq)
     return min(tops.values()) if tops else None
 
 
@@ -530,8 +540,10 @@ def plot_tuning_pvt():
     rows = {}
     for line in open(p):
         f = line.split()
-        if len(f) == 4 and f[3] != "fail":
-            rows.setdefault((f[0], f[1]), []).append((float(f[2]), float(f[3]) / 1e6))
+        if len(f) == 5 and f[4] != "fail":
+            rows.setdefault((f[0], f[1], f[2]), []).append((float(f[3]), float(f[4]) / 1e6))
+        elif len(f) == 4 and f[3] != "fail":
+            rows.setdefault((f[0], f[1], "1.20"), []).append((float(f[2]), float(f[3]) / 1e6))
     body, px, py = _axes(70, 30, 620, 330, 0.7, 1.2, 0, 1000,
                          "control voltage (V)", "output frequency (MHz)",
                          "{:.1f}", "{:.0f}")
@@ -540,7 +552,7 @@ def plot_tuning_pvt():
     if ceiling:
         body += _limit_line(ceiling / 1e6, px, py, 70, 620,
                             f"{ceiling/1e6:.0f} MHz guaranteed", "#ea580c")
-    for (corner, temp), pts in sorted(rows.items()):
+    for (corner, temp, _vdd), pts in sorted(rows.items()):
         body += _series(sorted(pts), px, py, CORNER_COLOURS.get(corner, "#64748b"), 1.5)
     for i, (c, col) in enumerate(sorted(CORNER_COLOURS.items())):
         body += (f'<line x1="{500}" y1="{46+i*16}" x2="{524}" y2="{46+i*16}" stroke="{col}" '
