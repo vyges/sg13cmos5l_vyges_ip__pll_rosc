@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="650" height="380" viewBox="0 0 650 380" font-family="sans-serif" font-size="12">
+<title>Phase margin over corners</title>
+<rect width="650" height="380" fill="#ffffff"/>
+<rect x="70" y="30" width="550" height="300" fill="none" stroke="#334155" stroke-width="1"/>
+<line x1="70.0" y1="330" x2="70.0" y2="334" stroke="#334155"/>
+<text x="70.0" y="348" text-anchor="middle" fill="#334155">0</text>
+<line x1="180.0" y1="330" x2="180.0" y2="334" stroke="#334155"/>
+<text x="180.0" y="348" text-anchor="middle" fill="#334155">2</text>
+<line x1="180.0" y1="30" x2="180.0" y2="330" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="290.0" y1="330" x2="290.0" y2="334" stroke="#334155"/>
+<text x="290.0" y="348" text-anchor="middle" fill="#334155">3</text>
+<line x1="290.0" y1="30" x2="290.0" y2="330" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="400.0" y1="330" x2="400.0" y2="334" stroke="#334155"/>
+<text x="400.0" y="348" text-anchor="middle" fill="#334155">5</text>
+<line x1="400.0" y1="30" x2="400.0" y2="330" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="510.0" y1="330" x2="510.0" y2="334" stroke="#334155"/>
+<text x="510.0" y="348" text-anchor="middle" fill="#334155">6</text>
+<line x1="510.0" y1="30" x2="510.0" y2="330" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="620.0" y1="330" x2="620.0" y2="334" stroke="#334155"/>
+<text x="620.0" y="348" text-anchor="middle" fill="#334155">8</text>
+<line x1="620.0" y1="30" x2="620.0" y2="330" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="66" y1="330.0" x2="70" y2="330.0" stroke="#334155"/>
+<text x="62" y="334.0" text-anchor="end" fill="#334155">40</text>
+<line x1="66" y1="270.0" x2="70" y2="270.0" stroke="#334155"/>
+<text x="62" y="274.0" text-anchor="end" fill="#334155">45</text>
+<line x1="70" y1="270.0" x2="620" y2="270.0" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="66" y1="210.0" x2="70" y2="210.0" stroke="#334155"/>
+<text x="62" y="214.0" text-anchor="end" fill="#334155">50</text>
+<line x1="70" y1="210.0" x2="620" y2="210.0" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="66" y1="150.0" x2="70" y2="150.0" stroke="#334155"/>
+<text x="62" y="154.0" text-anchor="end" fill="#334155">55</text>
+<line x1="70" y1="150.0" x2="620" y2="150.0" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="66" y1="90.0" x2="70" y2="90.0" stroke="#334155"/>
+<text x="62" y="94.0" text-anchor="end" fill="#334155">60</text>
+<line x1="70" y1="90.0" x2="620" y2="90.0" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="66" y1="30.0" x2="70" y2="30.0" stroke="#334155"/>
+<text x="62" y="34.0" text-anchor="end" fill="#334155">65</text>
+<line x1="70" y1="30.0" x2="620" y2="30.0" stroke="#e2e8f0" stroke-width="1"/>
+<text x="345" y="368" text-anchor="middle" fill="#0f172a">Kvco corner (increasing gain →)</text>
+<text x="18" y="180" text-anchor="middle" fill="#0f172a" transform="rotate(-90 18 180)">phase margin (deg)</text>
+<line x1="70" y1="270.0" x2="620" y2="270.0" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="616" y="265.0" text-anchor="end" fill="#dc2626">45° specified</text>
+<path d="M70.0,99.2 L138.8,98.6 L207.5,98.6 L276.2,98.9 L345.0,100.6 L413.8,101.5 L482.5,102.3 L551.2,107.6 L620.0,112.2" fill="none" stroke="#dc2626" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M70.0,111.0 L138.8,115.4 L207.5,116.6 L276.2,121.0 L345.0,130.0 L413.8,133.1 L482.5,135.5 L551.2,148.9 L620.0,158.3" fill="none" stroke="#dc2626" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M70.0,150.1 L138.8,158.0 L207.5,160.2 L276.2,167.4 L345.0,181.2 L413.8,185.6 L482.5,189.0 L551.2,206.9 L620.0,218.9" fill="none" stroke="#dc2626" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M70.0,161.1 L138.8,153.1 L207.5,151.0 L276.2,144.5 L345.0,133.7 L413.8,130.6 L482.5,128.4 L551.2,118.0 L620.0,112.4" fill="none" stroke="#2563eb" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M70.0,113.7 L138.8,109.6 L207.5,108.6 L276.2,105.7 L345.0,101.7 L413.8,100.8 L482.5,100.2 L551.2,98.6 L620.0,98.9" fill="none" stroke="#2563eb" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M70.0,98.6 L138.8,98.9 L207.5,99.1 L276.2,100.0 L345.0,103.1 L413.8,104.3 L482.5,105.4 L551.2,112.2 L620.0,117.7" fill="none" stroke="#2563eb" stroke-width="1.2" stroke-linejoin="round"/>
+<line x1="500" y1="46" x2="524" y2="46" stroke="#dc2626" stroke-width="2"/><text x="530" y="50" fill="#334155">N = 8</text>
+<line x1="500" y1="62" x2="524" y2="62" stroke="#2563eb" stroke-width="2"/><text x="530" y="66" fill="#334155">N = 16</text>
+<text x="620" y="24" text-anchor="end" fill="#0f172a">three resistor corners per divider setting</text>
+</svg>

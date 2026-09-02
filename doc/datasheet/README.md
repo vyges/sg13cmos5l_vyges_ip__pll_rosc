@@ -43,6 +43,22 @@ geometry arithmetic cannot see. Scaling gives 92.7 kΩ instead of 96.64 kΩ, and
 phase margin. With the measured values this file reproduces the published corner table cell
 for cell — 58.1/58.5/59.0, 54.3/55.1/56.4, 49.3/50.3/52.0.
 
+## Plots
+
+Three, and each is drawn because a table cannot show what it shows:
+
+- **`pll_rosc_tuning.svg`** — the typical tuning curve against the 800 MHz line it misses.
+  The headline shortfall is a distance on this plot rather than a claim in a row.
+- **`pll_rosc_tuning_pvt.svg`** — all nine corner curves. The typical curve is not what the
+  part guarantees; drawing the spread shows where the 600 MHz ceiling comes from.
+- **`pll_rosc_phase_margin.svg`** — margin at every Kvco and resistor corner, for BOTH
+  divider settings, because their worst corners are opposite ones. A single-N plot would
+  suggest margin moves one way with corner, and it does not.
+
+They are emitted as hand-written SVG rather than through matplotlib: the block's tooling is
+stdlib-only, an SVG diffs and reviews like the rest of the repository, and no plotting
+library's version can quietly change what a published figure looks like.
+
 ## The check is the point
 
 `--check` parses the table in `README.md` and compares every published figure against the

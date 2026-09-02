@@ -15,3 +15,17 @@
 | Netgen LVS | - | any | ​ | ​ | 0.000 | ​ | Skip 🟧 |
 | KLayout DRC | - | any | ​ | ​ | 0.000 | ​ | Skip 🟧 |
 | Antenna violations | - | any | ​ | ​ | 0.000 | ​ | Skip 🟧 |
+
+## Plots
+
+### VCO tuning curve, typical corner
+
+![VCO tuning curve, typical corner](pll_rosc_tuning.svg)
+
+### VCO tuning over process and temperature
+
+![VCO tuning over process and temperature](pll_rosc_tuning_pvt.svg)
+
+### Phase margin over Kvco and resistor corners
+
+![Phase margin over Kvco and resistor corners](pll_rosc_phase_margin.svg)

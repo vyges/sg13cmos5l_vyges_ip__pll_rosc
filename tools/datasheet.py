@@ -308,6 +308,17 @@ def table(source):
     return "\n".join(out) + "\n"
 
 
+def plots_section(written):
+    """The figures, under the table. A table states a number; a plot shows the margin around
+    it, which is what a reader deciding whether to use the block actually needs."""
+    if not written:
+        return ""
+    out = ["", "## Plots", ""]
+    for slug, caption in written:
+        out += [f"### {caption}", "", f"![{caption}]({NAME}_{slug}.svg)", ""]
+    return "\n".join(out)
+
+
 # ------------------------------------------------------------------ published-figure check
 #
 # Which README table row each derived figure is published in. Only the LABELS are here; the
@@ -390,11 +401,173 @@ def main():
         return check()
     d = os.path.join(ROOT, "doc", "datasheet")
     os.makedirs(d, exist_ok=True)
+    written = []
+    for slug, fn, caption in PLOTS:
+        svg = fn()
+        if svg is None:
+            print(f"skipped plot {slug}: its inputs are absent")
+            continue
+        q = os.path.join(d, f"{NAME}_{slug}.svg")
+        open(q, "w").write(svg)
+        written.append((slug, caption))
+        print(f"wrote {os.path.relpath(q, ROOT)}")
     for source in ("schematic",):
         p = os.path.join(d, f"{NAME}_{source}.md")
-        open(p, "w").write(table(source))
+        open(p, "w").write(table(source) + plots_section(written))
         print(f"wrote {os.path.relpath(p, ROOT)}")
     return 0
+
+
+
+
+# ---------------------------------------------------------------- plots
+#
+# Plots are emitted as SVG by hand rather than through matplotlib. The block's tooling is
+# stdlib-only and staying that way matters more than the extra features would: an SVG is
+# text, so it diffs and reviews like the rest of the repository, and there is no plotting
+# library whose version can change what a published figure looks like.
+
+def _svg(w, h, body, title):
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" '
+            f'viewBox="0 0 {w} {h}" font-family="sans-serif" font-size="12">\n'
+            f'<title>{title}</title>\n'
+            f'<rect width="{w}" height="{h}" fill="#ffffff"/>\n' + body + '</svg>\n')
+
+
+def _axes(x0, y0, x1, y1, xlo, xhi, ylo, yhi, xlabel, ylabel, xfmt="{:g}", yfmt="{:g}"):
+    """Frame, ticks and labels. Returns (svg, project) where project maps data -> pixels."""
+    def px(x):
+        return x0 + (x - xlo) / (xhi - xlo) * (x1 - x0)
+
+    def py(y):
+        return y1 - (y - ylo) / (yhi - ylo) * (y1 - y0)
+
+    s = [f'<rect x="{x0}" y="{y0}" width="{x1-x0}" height="{y1-y0}" fill="none" '
+         f'stroke="#334155" stroke-width="1"/>']
+    for i in range(6):
+        v = xlo + (xhi - xlo) * i / 5
+        s.append(f'<line x1="{px(v):.1f}" y1="{y1}" x2="{px(v):.1f}" y2="{y1+4}" stroke="#334155"/>')
+        s.append(f'<text x="{px(v):.1f}" y="{y1+18}" text-anchor="middle" fill="#334155">'
+                 f'{xfmt.format(v)}</text>')
+        if i:
+            s.append(f'<line x1="{px(v):.1f}" y1="{y0}" x2="{px(v):.1f}" y2="{y1}" '
+                     f'stroke="#e2e8f0" stroke-width="1"/>')
+    for i in range(6):
+        v = ylo + (yhi - ylo) * i / 5
+        s.append(f'<line x1="{x0-4}" y1="{py(v):.1f}" x2="{x0}" y2="{py(v):.1f}" stroke="#334155"/>')
+        s.append(f'<text x="{x0-8}" y="{py(v)+4:.1f}" text-anchor="end" fill="#334155">'
+                 f'{yfmt.format(v)}</text>')
+        if i:
+            s.append(f'<line x1="{x0}" y1="{py(v):.1f}" x2="{x1}" y2="{py(v):.1f}" '
+                     f'stroke="#e2e8f0" stroke-width="1"/>')
+    s.append(f'<text x="{(x0+x1)/2:.0f}" y="{y1+38}" text-anchor="middle" fill="#0f172a">{xlabel}</text>')
+    s.append(f'<text x="18" y="{(y0+y1)/2:.0f}" text-anchor="middle" fill="#0f172a" '
+             f'transform="rotate(-90 18 {(y0+y1)/2:.0f})">{ylabel}</text>')
+    return "\n".join(s) + "\n", px, py
+
+
+def _series(pts, px, py, colour, width=2):
+    d = " ".join(f"{'M' if i == 0 else 'L'}{px(x):.1f},{py(y):.1f}" for i, (x, y) in enumerate(pts))
+    return (f'<path d="{d}" fill="none" stroke="{colour}" stroke-width="{width}" '
+            f'stroke-linejoin="round"/>\n')
+
+
+def _limit_line(val, px, py, x0, x1, label, colour="#dc2626"):
+    """A specification limit, drawn so a reader can see the margin rather than compute it."""
+    y = py(val)
+    return (f'<line x1="{x0}" y1="{y:.1f}" x2="{x1}" y2="{y:.1f}" stroke="{colour}" '
+            f'stroke-width="1.5" stroke-dasharray="6 4"/>\n'
+            f'<text x="{x1-4}" y="{y-5:.1f}" text-anchor="end" fill="{colour}">{label}</text>\n')
+
+
+CORNER_COLOURS = {"ss": "#2563eb", "tt": "#16a34a", "ff": "#dc2626"}
+
+
+def plot_tuning():
+    """The tt tuning curve, with the specification band it has to cover.
+
+    This is the plot the block is judged on: the curve's top is the tuning-range figure,
+    and the shortfall against 800 MHz is the block's headline miss. A reader should be able
+    to see the miss rather than take it on trust from a table.
+    """
+    pts = [(v, f / 1e6) for v, f in vco_curve() if f]
+    body, px, py = _axes(70, 30, 620, 330, 0.4, 1.2, 0, 900,
+                         "control voltage (V)", "output frequency (MHz)",
+                         "{:.1f}", "{:.0f}")
+    body += _limit_line(VCO_SPEC_HI_HZ / 1e6, px, py, 70, 620, "800 MHz specified")
+    body += _limit_line(VCO_SPEC_LO_HZ / 1e6, px, py, 70, 620, "100 MHz floor", "#64748b")
+    body += _series(pts, px, py, "#16a34a")
+    for v, f in pts:
+        body += f'<circle cx="{px(v):.1f}" cy="{py(f):.1f}" r="3" fill="#16a34a"/>\n'
+    top = max(f for _, f in pts)
+    body += (f'<text x="620" y="24" text-anchor="end" fill="#0f172a">tt, 27 °C — '
+             f'tops out at {top:.1f} MHz</text>\n')
+    return _svg(650, 380, body, "VCO tuning curve")
+
+
+def plot_tuning_pvt():
+    """The tuning curve at every process corner and temperature.
+
+    The typical curve is not what the part guarantees. Drawing all nine makes the spread
+    visible and shows where the guaranteed ceiling comes from -- the slowest corner's top,
+    not the typical one's.
+    """
+    p = os.path.join(ROOT, "sim", "pvt", "vco.txt")
+    if not os.path.isfile(p):
+        return None
+    rows = {}
+    for line in open(p):
+        f = line.split()
+        if len(f) == 4 and f[3] != "fail":
+            rows.setdefault((f[0], f[1]), []).append((float(f[2]), float(f[3]) / 1e6))
+    body, px, py = _axes(70, 30, 620, 330, 0.7, 1.2, 0, 1000,
+                         "control voltage (V)", "output frequency (MHz)",
+                         "{:.1f}", "{:.0f}")
+    body += _limit_line(VCO_SPEC_HI_HZ / 1e6, px, py, 70, 620, "800 MHz specified")
+    ceiling = pvt_ceiling()
+    if ceiling:
+        body += _limit_line(ceiling / 1e6, px, py, 70, 620,
+                            f"{ceiling/1e6:.0f} MHz guaranteed", "#ea580c")
+    for (corner, temp), pts in sorted(rows.items()):
+        body += _series(sorted(pts), px, py, CORNER_COLOURS.get(corner, "#64748b"), 1.5)
+    for i, (c, col) in enumerate(sorted(CORNER_COLOURS.items())):
+        body += (f'<line x1="{500}" y1="{46+i*16}" x2="{524}" y2="{46+i*16}" stroke="{col}" '
+                 f'stroke-width="2"/><text x="530" y="{50+i*16}" fill="#334155">{c}</text>\n')
+    return _svg(650, 380, body, "VCO tuning over PVT")
+
+
+def plot_phase_margin():
+    """Phase margin at every Kvco corner and resistor corner, per divider setting.
+
+    ⛔ Both divider settings are drawn because their worst corners are OPPOSITE ones: N=8
+    fails toward high Kvco and high Rz, N=16 toward low. A single-N plot would suggest the
+    margin moves one way with corner, and it does not.
+    """
+    kv = pvt_kvco()
+    if not kv:
+        return None
+    order = sorted(kv, key=lambda k: kv[k])
+    body, px, py = _axes(70, 30, 620, 330, 0, len(order) - 1, 40, 65,
+                         "Kvco corner (increasing gain →)", "phase margin (deg)",
+                         "{:.0f}", "{:.0f}")
+    body += _limit_line(45.0, px, py, 70, 620, "45° specified")
+    styles = {8: ("#dc2626", "N = 8"), 16: ("#2563eb", "N = 16")}
+    for n in DIVIDERS:
+        for sheet, rz in RZ_CORNERS:
+            pts = [(i, loop(rz, CZ, CP, ICP, kv[c], n)[1]) for i, c in enumerate(order)]
+            body += _series(pts, px, py, styles[n][0], 1.2)
+    for i, n in enumerate(DIVIDERS):
+        body += (f'<line x1="{500}" y1="{46+i*16}" x2="{524}" y2="{46+i*16}" '
+                 f'stroke="{styles[n][0]}" stroke-width="2"/>'
+                 f'<text x="530" y="{50+i*16}" fill="#334155">{styles[n][1]}</text>\n')
+    body += ('<text x="620" y="24" text-anchor="end" fill="#0f172a">three resistor corners '
+             'per divider setting</text>\n')
+    return _svg(650, 380, body, "Phase margin over corners")
+
+
+PLOTS = [("tuning", plot_tuning, "VCO tuning curve, typical corner"),
+         ("tuning_pvt", plot_tuning_pvt, "VCO tuning over process and temperature"),
+         ("phase_margin", plot_phase_margin, "Phase margin over Kvco and resistor corners")]
 
 
 if __name__ == "__main__":
