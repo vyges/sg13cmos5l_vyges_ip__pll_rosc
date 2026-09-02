@@ -17,12 +17,20 @@ cd "$(dirname "$0")/.." || exit 2
 #
 # 🔑 TWO PDKs have to sit under the same root, and this is not obvious from our netlists:
 # the models and stdcells come from the ihp-sg13cmos5l OVERLAY, but the compiled OSDI
-# models (psp103, r3_cmc, mosvar) come from the ihp-sg13g2 BASE. The overlay never names
-# the base -- the PDK's own .spiceinit does, as `$PDK_ROOT/$PDK`, and ngspice finds that
-# file through SPICE_USERINIT_DIR. Point PDK_ROOT at a tree holding only the overlay and
-# ngspice cannot load the OSDI libraries -- observed as `Error opening osdi lib
+# models (psp103, r3_cmc, mosvar) live in the ihp-sg13g2 BASE and reach the overlay as
+# symlinks. The PDK's own .spiceinit resolves them as `$PDK_ROOT/$PDK`, and ngspice finds
+# that file through SPICE_USERINIT_DIR. Point PDK_ROOT at a tree holding only the overlay
+# and those links dangle -- observed as `Error opening osdi lib
 # "$PDK_ROOT/ihp-sg13g2/.../psp103.osdi"` followed by every bench aborting. The check
 # below catches it first and says which PDK is missing.
+#
+# ℹ️ $PDK may be EITHER variant since the CMOS5L migration into IHP-Open-PDK (2026-09-01):
+# the overlay now carries all six OSDI files -- two of its own and four symlinked into the
+# base -- so they resolve whichever variant $PDK names, which is what upstream means by
+# "use $PDK to switch between the PDKs". Verified at dev@17dc8dc: PDK=ihp-sg13cmos5l runs
+# this suite with no OSDI errors and byte-identical measurements. It was NOT true before
+# the merge, when neither directory held all six. The default below stays on the base
+# because that is what every published number here was measured with.
 PDK_ROOT="${PDK_ROOT:-/foss/pdks}"
 PDK="${PDK:-ihp-sg13g2}"
 export PDK_ROOT PDK
