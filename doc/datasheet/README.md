@@ -76,3 +76,24 @@ control point clearing the 100 MHz floor, and the 0.1 V control grid cannot reso
 ring actually crosses it (34.4 MHz at 0.50 V, 115.4 at 0.60) — gating it would report a
 failure that belongs to the sampling, not the design. Lock time is resolved to the bench's
 sample grid and no finer.
+
+## Schematics
+
+`tools/sch2svg.py` renders `xschem/*.sch` to `doc/schematics/`, using the PDK's own symbol
+artwork cached in `sym_art.json` beside it:
+
+```bash
+python3 tools/sch2svg.py xschem/*.sch --out doc/schematics
+```
+
+It moved here from private tooling on 2026-09-02 for the same reason the numbers did: a
+published figure whose generator is private cannot be re-derived by the person reading it.
+
+⚠️ **It caught stale figures the moment it arrived.** The schematics changed in the
+`dev@ab1510c` re-pin on 2026-09-01 but the committed SVGs were last generated on 2026-08-29,
+so the published drawings showed the pre-re-pin circuit. Regenerated.
+
+ℹ️ **Not xschem's own SVG export.** That dumps the editor canvas — whatever zoom happened to
+be set — and in headless mode here it renders a fragment: for a 69-instance schematic it
+emitted 44 elements containing one instance, with `tkwait visibility .drw failed`. This
+renderer reads the `.sch` directly, so the picture cannot drift from the netlisted circuit.
