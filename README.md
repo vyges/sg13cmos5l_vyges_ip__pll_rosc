@@ -26,7 +26,7 @@ every block real except the VCO, which is behavioural and matched to the measure
 | Parameter | Measured | Specification |
 | --- | --- | --- |
 | Reference in | 16–50 MHz usable | 10–50 MHz |
-| Output, typical corner | 115–737 MHz ❌ | 100–800 MHz |
+| Output, typical corner | 115–735 MHz ❌ | 100–800 MHz |
 | Output, guaranteed over PVT | ceiling **600 MHz** ❌ | 800 MHz |
 | Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) ❌ | N = 4…64 |
 | Lock time | ~4 µs ✅ | 20 µs max |
@@ -35,7 +35,7 @@ every block real except the VCO, which is behavioural and matched to the measure
 | Loop filter | Rz 80.77 kΩ, Cz 5.11 pF (63 × 63 µm) | — |
 
 ⚠️ **What is not met, stated here rather than left to be found.** Two measured
-specifications fall short: the **output range** — the loaded ring tops out at 737 MHz
+specifications fall short: the **output range** — the loaded ring tops out at 735 MHz
 typical and 600 MHz at the slow corner, with the control voltage already at the supply
 rail, so 800 MHz is a hard limit and not a margin; and the **divider range**, since only ÷8
 and ÷16 are usable against a specified 10–50 MHz reference. Six further specifications —
@@ -59,7 +59,7 @@ this block into a slot:
 
 - **Assumptions** — the process, slot supply and harness resources the design rests on. One is load-bearing and unconfirmed: the block runs from 1.2 V and the slot supply is 3.3 V.
 - **Slot requirements** — pads, harness resources, control bits and clocks. Two pads, one
-  of them an up-to-737 MHz output that needs a dedicated path; the block runs entirely
+  of them an up-to-735 MHz output that needs a dedicated path; the block runs entirely
   from 1.2 V, with **no 3.3 V analog rail required**.
 - **Against the proposal** — every specification line with what the schematic measures,
   including the output range and divider range that fall short.

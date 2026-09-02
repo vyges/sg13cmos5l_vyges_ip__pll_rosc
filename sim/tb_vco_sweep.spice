@@ -124,5 +124,21 @@ Vctrl vctrl 0 0.6
   else
     echo "VCTRL 1.10 NO-OSCILLATION swing=$&sw"
   end
+
+* 1.20 V is the top of the control range -- the 1.2 V rail itself. It was missing, and the
+* band published as 115-737 MHz rested on a 737 MHz top measured somewhere this repository
+* does not contain: the sweep stopped at 1.10 V, which reads 700.7 MHz. A published figure
+* with no bench behind it cannot be re-derived, which is the failure this suite guards.
+  alter Vctrl dc = 1.2
+  tran 20p 600n uic
+  echo "VCTRL 1.20"
+  meas tran vhi MAX v(n1) FROM=100n TO=600n
+  meas tran vlo MIN v(n1) FROM=100n TO=600n
+  let sw = vhi - vlo
+  if sw > 0.4
+    meas tran per4 TRIG v(n1) VAL=0.6 RISE=3 TARG v(n1) VAL=0.6 RISE=7
+  else
+    echo "VCTRL 1.20 NO-OSCILLATION swing=$&sw"
+  end
 .endc
 .end

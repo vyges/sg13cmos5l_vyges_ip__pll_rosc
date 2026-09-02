@@ -130,17 +130,17 @@ on the real cell, with its output tap and matched per-stage dummy loads.
 | vctrl | f_out | local Kvco |
 | --- | --- | --- |
 | 0.60 V | 115.4 MHz | 1411 MHz/V |
-| 0.70 V | 256.6 MHz | 1653 MHz/V |
-| 0.80 V | 421.8 MHz | 1382 MHz/V |
-| 0.90 V | 560.0 MHz | 885 MHz/V |
-| 1.00 V | 648.5 MHz | 540 MHz/V |
-| 1.10 V | 702.5 MHz | 349 MHz/V |
-| 1.20 V | 737.4 MHz | — |
+| 0.70 V | 256.5 MHz | 1649 MHz/V |
+| 0.80 V | 421.4 MHz | 1375 MHz/V |
+| 0.90 V | 558.9 MHz | 881 MHz/V |
+| 1.00 V | 647.0 MHz | 537 MHz/V |
+| 1.10 V | 700.7 MHz | 346 MHz/V |
+| 1.20 V | 735.3 MHz | — |
 
 ⚠️ **The specification's 1 GHz upper limit is not reached.** Loaded, the ring tops out at
-**737 MHz with the control voltage at the 1.2 V supply rail**. The 957 MHz figure in the
+**735 MHz with the control voltage at the 1.2 V supply rail**. The 957 MHz figure in the
 proposal was measured on a bare ring driving nothing, which is not a shippable
-configuration. The achievable output band is **115–737 MHz**.
+configuration. The achievable output band is **115–735 MHz**.
 
 **Kvco varies 4.7× across the range** (349–1653 MHz/V). That is a loop-design constraint,
 not a curiosity: loop gain is proportional to Kvco, so the filter has to hold margin across
@@ -249,7 +249,7 @@ the ring, which is what prompted the matched-load arrangement.
 
 The consequence for the specification is that **the published 21–957 MHz tuning range was
 characterised on a configuration that cannot be shipped**. It has since been re-measured
-with the tap in place — see the tuning curve above — giving 115–737 MHz at the typical
+with the tap in place — see the tuning curve above — giving 115–735 MHz at the typical
 corner and a 600 MHz ceiling across PVT.
 
 ## Verification with Vyges Loom
@@ -443,7 +443,7 @@ accepting a per-part calibration, is what would recover it.
 | Parameter | Proposal | Measured | |
 | --- | --- | --- | --- |
 | Reference in | 10–50 MHz | 16–50 MHz usable | ⚠️ narrowed |
-| **Output range** | **100–800 MHz** | 115–737 MHz typical, **600 MHz ceiling over PVT** | ❌ |
+| **Output range** | **100–800 MHz** | 115–735 MHz typical, **600 MHz ceiling over PVT** | ❌ |
 | **Feedback divider N** | **4–64, register-set** | ÷2 ÷4 ÷8 ÷16; only ÷8 and ÷16 usable | ❌ |
 | **Output post-divider ÷1/2/4/8** | required | **not implemented** | ❌ |
 | Kvco | 1.0–2.1 GHz/V | 0.35–1.65 GHz/V | ⚠️ below the stated minimum at high control voltage |
@@ -485,7 +485,7 @@ For scoping pin allocation. This is the **implemented** port list.
 | Signal | Kind | Requirement |
 | --- | --- | --- |
 | `ref` | clock in | Reference, **16–50 MHz**. Needs a clean edge; a shared analog mux is acceptable electrically but any added jitter appears directly at the output multiplied by N. |
-| `vco_out` | clock out | **Up to 737 MHz.** This is the demanding one: a shared mux path will not carry it intact, so it wants a **dedicated pad with a proper output buffer**, and the board side needs a controlled-impedance route. If only a muxed pad is available, we would add an on-slot divider and characterise a lower output frequency instead. |
+| `vco_out` | clock out | **Up to 735 MHz.** This is the demanding one: a shared mux path will not carry it intact, so it wants a **dedicated pad with a proper output buffer**, and the board side needs a controlled-impedance route. If only a muxed pad is available, we would add an on-slot divider and characterise a lower output frequency instead. |
 
 **Two pads, one of them a genuine high-frequency output.** That is the block's main ask.
 
@@ -509,7 +509,7 @@ For scoping pin allocation. This is the **implemented** port list.
 | | |
 | --- | --- |
 | In | `ref`, 16–50 MHz |
-| Out | `vco_out`, up to 737 MHz typical, 600 MHz guaranteed over PVT |
+| Out | `vco_out`, up to 735 MHz typical, 600 MHz guaranteed over PVT |
 
 ## Not in this revision
 
@@ -533,7 +533,7 @@ Stated here rather than left to be discovered:
    schematic, and a model that moved 1.8× once can move again — so the block should be
    re-measured whenever the PDK pin moves, and the divider restriction to N ≥ 16 stays
    worth keeping in reserve rather than being spent now.
-2. **Decide what to do about the 1 GHz specification.** The ring reaches 737 MHz typical
+2. **Decide what to do about the 1 GHz specification.** The ring reaches 735 MHz typical
    and 600 MHz at the slow corner with the control voltage already at the rail, so this
    is not a tuning problem. The options are a shorter ring (five stages rather than seven,
    which costs phase-noise margin), a faster stage at higher current, or declaring a lower
