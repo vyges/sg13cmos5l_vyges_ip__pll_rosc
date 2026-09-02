@@ -553,24 +553,49 @@ Stated here rather than left to be discovered:
 
 ## Questions that need answers before layout
 
-1. **Is 600 MHz guaranteed acceptable, against a specification of 1 GHz?** The block's
-   largest gap, and the cheapest to resolve by conversation rather than by silicon.
-2. ✅ **Is N ≥ 16 an acceptable restriction?** Answered at the 2026-09-01 review — yes,
-   acceptable. **It is no longer needed to meet phase margin**, which N = 8 now clears at
-   49.3°, so it is held in reserve rather than spent: keeping ÷8 usable keeps the
-   reference range wider.
-3. ✅ **Should this design be re-pinned for the PDK's `rhigh` corner fix?** Done. Commit
-   `4b7d7422` is an ancestor of `dev`, and the block is pinned to `dev@ab1510c`. ⚠️ The
-   estimate made here — that the fix alone would move the worst case to 41.2° — was close
-   (measured 39.8° in isolation) but it was **not what closed the gap**; the capacitor
-   model recalibration in the same re-pin was worth more than twice as much. The decision
-   was shared with the LDO, where the same commit is worth +5.4°.
-4. **Is a 1.2 V rail distributed to the pallets?** The entire block runs from 1.2 V and
-   the slot supply is 3.3 V. If no low rail is distributed, this block needs a regulator
-   in front of it — which is a substantially different block. This is shared with the LDO
-   and is the single largest unknown for both.
-5. **Are behavioural numbers acceptable for jitter, phase noise and spur** at the
-   schematic gate, with transistor-level figures to follow at layout? See item 3.
-6. **What reference frequency will actually be supplied?** The usable range narrows to
-   16–50 MHz because only ÷8 and ÷16 are usable today; item 2 removes that constraint if
-   the answer needs it.
+⛔ **Five of the six were answered at the 2026-09-01 design review.** Kept with their
+answers rather than deleted: which questions blocked the block, and how they resolved, is
+what a reader coming to it later needs.
+
+1. ✅ **Is 600 MHz guaranteed acceptable?** — **yes, accepted**, in place of the proposal's
+   figure. ⚠️ And the question itself carried a wrong number: it asked "against a
+   specification of 1 GHz", but the proposal's own specification table says **100–800 MHz**.
+   The 1 GHz figure had propagated into the README and into the checking script, making the
+   block look worse against its own target than it was. ">16" was accepted as a
+   multiplication restriction, and being loop-filter — that is, capacitor — limited was
+   accepted as a legitimate reason.
+2. ✅ **Is N ≥ 16 an acceptable restriction?** — yes, and **no longer needed**: N = 8 now
+   clears phase margin at 49.3°, so the restriction is held in reserve rather than spent.
+   Keeping ÷8 usable keeps the reference range wider.
+3. ✅ **Should this design be re-pinned for the PDK's `rhigh` corner fix?** — done, pinned to
+   `dev@ab1510c`. ⚠️ The estimate made here (that the fix alone would reach 41.2°) was close
+   to the measured 39.8° in isolation, but it was **not what closed the gap**: the capacitor
+   model recalibration in the same re-pin was worth more than twice as much.
+4. ✅ **Is a 1.2 V rail distributed to the pallets?** — **yes.** Every slot sits beside two
+   pMOS power switches, 3.3 V and 1.2 V. This was the single largest unknown for this block
+   and it was design-breaking: without a low rail the PLL would have needed a regulator in
+   front of it, which is a substantially different block.
+5. ✅ **Are behavioural numbers acceptable for jitter, phase noise and spur?** — the
+   **numbers are acceptable; simulating them is not realistic.** ngspice has no proper PSS,
+   so the validation route is **measurement** rather than a transistor-level simulation —
+   the reviewer's scope resolves about 2 ps against our 6 ps period / 3 ps RMS figures.
+
+## What is actually open
+
+1. ⛔ **The reference range against the board oscillator.** 16–20 MHz was confirmed fine,
+   but the intended board part feeds **~100 MHz into the pad** — the clock path is pad → one
+   mux → user project, so it runs at pad speed. Either this block gains a pre-divider or the
+   reference range is confirmed wider. **There is an action on us**: send a link to a
+   suitable wide-range programmable oscillator. The board part is not chosen; a desolderable
+   fixed 10 MHz is the fallback.
+2. ⛔ **Restate the corner set in the 1.2 V domain.** The proposal's table sweeps
+   3.0/3.3/3.6 V, which is the wrong supply for a block that runs entirely from 1.2 V; the
+   suggested set is roughly 0.98 / 1.2 / 1.5 V. This applies to the top of the proposal
+   table as well as to the sweeps.
+3. **Output ceiling.** 599.5 MHz guaranteed over PVT against a specified 800 MHz remains the
+   block's headline miss, now accepted rather than resolved — see
+   `doc/datasheet/pll_rosc_tuning_pvt.svg` for where the ceiling comes from.
+
+Everything above is reproducible from this repository: `sim/run.sh` and `sim/run_pvt.sh`
+produce the results, and `python3 tools/datasheet.py --check` fails if any published figure
+has drifted from the simulation behind it.
