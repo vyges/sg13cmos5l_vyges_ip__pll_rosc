@@ -116,4 +116,11 @@ fails on the missing pair. Symlink the two sets into each other after installing
 `ihp-sg13g2`, so the bundled PDK still works — but it is the *old* two-repository pin and
 will not reproduce the numbers above.
 
+⛔ **A PDK missing `cap_cmomf` does not fail — it silently drops every capacitor.** For a
+symbol it cannot resolve, xschem writes `*  Cz -  cap_cmomf  IS MISSING !!!!` as a
+*comment*: the netlist stays syntactically valid and simulates. The IIC-OSIC-TOOLS bundled
+PDK still ships the pre-rename `cap_mfringe` and no `cap_cmomf` at all, so the loop filter
+netlists against it as a bare resistor with both capacitors gone. ⟹ Grep a fresh netlist for
+`IS MISSING` before trusting anything derived from it.
+
 Apache-2.0. See [`NOTICE`](NOTICE) for attribution.

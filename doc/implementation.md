@@ -316,6 +316,27 @@ running through the next stage's bias pin, six dummy-load taps sharing a channel
 merging `n2..n7` into one net, a mux stub landing on its neighbour's pin. Every one was
 found by netlisting and comparing, not by looking.
 
+**A second, independent pass runs over each cell's own netlist** and asks three questions
+that need no golden to compare against: are two terminals of one device on the same net, is
+any net down to a single connection, and has an xschem auto-generated name (`net1`, `net2`)
+survived into the netlist. All eight cells are clean. Two classes of single-connection net
+are deliberate and are declared rather than silenced wholesale:
+
+- `ndum2`…`ndum7` — the matched dummy inverter each ring stage carries so the tapped stage
+  is not the only loaded one. Its output going nowhere is the entire point of it.
+- `upn`, `dnn` — the `Q_N` pins of the up and dn flops. The phase detector uses only `Q`.
+
+🔑 **Run it per cell, not over the flattened top.** Slicing `.subckt` bodies out of the
+top-level netlist reaches only what the top *instantiates* — which leaves out
+`loop_filter_lownoise`, the alternative filter, and `pll_rosc` itself, whose own wiring is
+where the cells meet. Nothing in the output says a cell was skipped.
+
+⛔ **Check for dropped devices before reading any of it.** xschem records a symbol it cannot
+resolve as a *comment* (`*  Cz -  cap_cmomf  IS MISSING !!!!`) and carries on, so a netlist
+built against a PDK without `cap_cmomf` is syntactically clean and has no capacitors in it.
+The loop filter then netlists as a bare resistor, and the only visible symptom is that the
+node between `Rz` and `Cz` reads as unconnected.
+
 ### What is not yet applicable
 
 `vyges loom meas` measures a swept transfer or a coherent tone capture. The PLL has
@@ -597,6 +618,7 @@ what a reader coming to it later needs.
    ⚠️ Identifying the part does not answer the question. Whether this block takes a
    pre-divider or widens its reference range is still open, and a 160 MHz-capable source
    makes the *wider range* option testable rather than deciding it.
+
 2. ✅ **Corner set restated in the 1.2 V domain — and it moved the headline number.** The
    proposal swept 3.0/3.3/3.6 V, the wrong supply for a block that runs entirely from
    1.2 V. Worse, `tb_vco_pvt.tpl` pinned the rail at exactly 1.2 V, so **27 PVT corners
@@ -625,6 +647,7 @@ what a reader coming to it later needs.
 
    ℹ️ `doc/proposal.md` keeps its 3.0/3.3/3.6 row: it is the historical record of what was
    proposed, and what was proposed is part of why this took until now to catch.
+
 3. **Output ceiling.** 599.5 MHz guaranteed over PVT against a specified 800 MHz remains the
    block's headline miss, now accepted rather than resolved — see
    `doc/datasheet/pll_rosc_tuning_pvt.svg` for where the ceiling comes from.
