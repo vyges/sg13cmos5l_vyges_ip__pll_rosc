@@ -40,35 +40,35 @@
 <text x="18" y="180" text-anchor="middle" fill="#0f172a" transform="rotate(-90 18 180)">output frequency (MHz)</text>
 <line x1="70" y1="90.0" x2="620" y2="90.0" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="6 4"/>
 <text x="616" y="85.0" text-anchor="end" fill="#dc2626">800 MHz specified</text>
-<line x1="70" y1="222.2" x2="620" y2="222.2" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="6 4"/>
-<text x="616" y="217.2" text-anchor="end" fill="#ea580c">359 MHz guaranteed</text>
-<path d="M70.0,239.4 L180.0,199.4 L620.0,146.5" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
+<line x1="70" y1="234.5" x2="620" y2="234.5" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="616" y="229.5" text-anchor="end" fill="#ea580c">318 MHz guaranteed</text>
+<path d="M-73.0,295.8 L15.0,262.7 L378.0,163.4" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
 <path d="M70.0,234.1 L180.0,174.5 L620.0,58.9" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,241.6 L180.0,173.4 L620.0,-32.1" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,206.7 L180.0,176.7 L620.0,133.2" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M257.0,122.7 L400.0,40.7 L950.0,-75.6" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M-73.0,261.9 L15.0,226.8 L378.0,148.6" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
 <path d="M70.0,200.6 L180.0,152.4 L620.0,67.6" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,210.0 L180.0,151.4 L620.0,3.0" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,222.2 L180.0,187.0 L620.0,140.3" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M257.0,112.6 L400.0,54.8 L950.0,-32.1" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M-73.0,280.7 L15.0,244.9 L378.0,155.8" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
 <path d="M70.0,215.9 L180.0,160.1 L620.0,61.7" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,224.3 L180.0,158.2 L620.0,-18.6" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,297.2 L180.0,265.5 L620.0,222.2" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M257.0,112.1 L400.0,42.0 L950.0,-56.7" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M-73.0,324.5 L15.0,310.8 L378.0,234.5" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
 <path d="M70.0,293.7 L180.0,252.1 L620.0,146.2" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,295.3 L180.0,249.7 L620.0,63.1" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,270.6 L180.0,244.3 L620.0,210.2" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M257.0,210.2 L400.0,137.0 L950.0,22.2" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M-73.0,307.6 L15.0,286.0 L378.0,221.1" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
 <path d="M70.0,266.2 L180.0,226.9 L620.0,150.1" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,270.2 L180.0,225.4 L620.0,88.0" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,285.5 L180.0,255.5 L620.0,218.0" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M257.0,192.4 L400.0,138.5 L950.0,56.9" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M-73.0,318.6 L15.0,300.7 L378.0,229.0" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
 <path d="M70.0,281.4 L180.0,239.2 L620.0,148.6" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,283.9 L180.0,236.9 L620.0,73.9" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,273.5 L180.0,237.2 L620.0,188.8" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M257.0,199.4 L400.0,134.8 L950.0,39.1" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M-73.0,314.4 L15.0,291.9 L378.0,203.5" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
 <path d="M70.0,269.2 L180.0,218.8 L620.0,107.9" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,273.4 L180.0,217.4 L620.0,21.0" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,241.5 L180.0,213.2 L620.0,174.8" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M257.0,172.3 L400.0,94.1 L950.0,-20.7" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M-73.0,288.1 L15.0,259.5 L378.0,187.8" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
 <path d="M70.0,236.3 L180.0,192.1 L620.0,112.0" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,242.9 L180.0,190.9 L620.0,48.3" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,258.1 L180.0,225.0 L620.0,183.0" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M257.0,154.7 L400.0,98.6 L950.0,15.9" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M-73.0,303.8 L15.0,277.2 L378.0,196.3" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
 <path d="M70.0,253.1 L180.0,203.6 L620.0,109.4" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
-<path d="M70.0,258.3 L180.0,201.8 L620.0,31.6" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
+<path d="M257.0,159.7 L400.0,91.9 L950.0,-3.9" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linejoin="round"/>
 <line x1="500" y1="46" x2="524" y2="46" stroke="#dc2626" stroke-width="2"/><text x="530" y="50" fill="#334155">ff</text>
 <line x1="500" y1="62" x2="524" y2="62" stroke="#2563eb" stroke-width="2"/><text x="530" y="66" fill="#334155">ss</text>
 <line x1="500" y1="78" x2="524" y2="78" stroke="#16a34a" stroke-width="2"/><text x="530" y="82" fill="#334155">tt</text>

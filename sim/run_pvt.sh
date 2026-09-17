@@ -44,7 +44,17 @@ for corner in tt ss ff; do
    # on-slot pMOS power switch actually delivers into a varying load. The oscillator's
    # frequency depends on it directly, so it belongs in the corner set.
    for vdd in 0.98 1.20 1.50; do
-    for vc in 0.70 0.80 1.20; do
+    # ⛔ THE CONTROL VOLTAGE COMES FROM THIS RAIL, so it is swept as a FRACTION of it.
+    # Crossing a fixed 0.70/0.80/1.20 V control with the rail produced points the loop
+    # cannot reach and missed points it can: the charge pump's PMOS sources sit on the same
+    # single `vdd` net as the ring, so vctrl <= vdd always. At 0.98 V the old ceiling was
+    # read at vctrl = 1.20 V -- above its own supply, so OPTIMISTIC -- and at 1.50 V vctrl
+    # never went above 1.20 V, leaving that rail UNDERSTATED at both ends of the error.
+    # The fractions are chosen so the 1.20 V column is unchanged: 0.5833/0.6667/1.0 x 1.20
+    # is 0.70/0.80/1.20 exactly. That column is the control on this change -- if it moves,
+    # something other than the pairing moved.
+    for frac in 0.5833 0.6667 1.0000; do
+      vc=$(awk -v d="$vdd" -v f="$frac" 'BEGIN{ printf "%.2f", d*f }')
       sed -e "s|@MOS@|$mos|g" -e "s|@RES@|$res|g" -e "s|@TEMP@|$temp|g" -e "s|@VDD@|$vdd|g" \
           -e "s|@VC@|$vc|g" -e "s|@M@|$M|g" tb_vco_pvt.tpl > _v.spice
       ngspice -b _v.spice > _v.log 2>&1 || true

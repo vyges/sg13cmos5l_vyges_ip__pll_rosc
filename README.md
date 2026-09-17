@@ -27,24 +27,29 @@ every block real except the VCO, which is behavioural and matched to the measure
 | --- | --- | --- |
 | Reference in | 16–50 MHz usable | 10–50 MHz |
 | Output, typical corner | 115–735 MHz ❌ | 100–800 MHz |
-| Output, guaranteed over PVT | ceiling **359 MHz** ❌ (0.98 V rail; 600 MHz at 1.20 V, 807 MHz at 1.50 V) | 800 MHz |
+| Output, guaranteed over PVT | ceiling **318 MHz** ❌ (0.98 V rail; 600 MHz at 1.20 V, 911 MHz at 1.50 V) | 800 MHz |
 | Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) ❌ | N = 4…64 |
 | Lock time | ~4 µs ✅ | 20 µs max |
-| Phase margin, N = 16 | 48.3° ✅ (ss / 110 °C / 0.98 V / best-case sheet) | 45° min |
-| Phase margin, N = 8 | 47.2° ✅ (ff / −40 °C / 1.50 V / worst-case sheet) | 45° min |
+| Phase margin, N = 16 | **41.4°** ❌ (ss / −40 °C / 0.98 V / best-case sheet) | 45° min |
+| Phase margin, N = 8 | 48.4° ✅ (ff / −40 °C / 1.50 V / worst-case sheet) | 45° min |
 | Loop filter | Rz 80.77 kΩ, Cz 5.11 pF (63 × 63 µm) | — |
 
-⚠️ **What is not met, stated here rather than left to be found.** Two measured
-specifications fall short: the **output range** — the loaded ring tops out at 735 MHz
-typical and 600 MHz at the slow corner, with the control voltage already at the supply
-rail, so 800 MHz is a hard limit and not a margin; and the **divider range**, since only ÷8
-and ÷16 are usable against a specified 10–50 MHz reference. Six further specifications —
+⚠️ **What is not met, stated here rather than left to be found.** Three measured
+specifications fall short. The **output range** — the loaded ring tops out at 735 MHz
+typical, with the control voltage already at the supply rail, so 800 MHz is a hard limit and
+not a margin. ⛔ **And the guaranteed ceiling is a function of the RAIL, at about 1.3 GHz per
+volt**: 599.5 MHz at exactly 1.20 V, 318.3 MHz across a 0.98–1.50 V supply, 910.5 MHz at
+1.50 V. 800 MHz guaranteed would need a **1.39 V** rail, so no tolerance on a 1.2 V rail
+reaches it. The **divider range**, since only ÷8 and ÷16 are usable against a specified
+10–50 MHz reference. And **phase margin at N = 16**, which reads 41.4° against a 45° floor at
+ss/−40 °C on a 0.98 V rail — ÷8 passes at 48.4°, so restricting ÷16 at the bottom of the
+rail is available as a mitigation, at the cost of reference range. Six further specifications —
 period and RMS jitter, phase noise, reference spur, duty cycle and power — are **not
 measured**, all for the one reason given in
 [`doc/implementation.md`](doc/implementation.md). Lock detect and the output post-divider
 are **not implemented**.
 
-✅ **Phase margin at N = 8 now passes**, at 49.3° where this table read 38.4°. Nothing in
+✅ **Phase margin at N = 8 passes**, at 48.4° where this table once read 38.4°. Nothing in
 the block changed: it was re-pinned to IHP-Open-PDK `dev@ab1510c`, where base and overlay
 live in one tree. Two changes in that pin both helped — the `rhigh` corner re-alignment
 (+4.1°) and, worth more than twice as much, the MoM capacitor's rename `cap_mfringe` →

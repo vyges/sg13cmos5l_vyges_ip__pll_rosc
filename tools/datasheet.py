@@ -152,12 +152,24 @@ def pvt_kvco():
             rows[(f[0], f[1], f[2], f[3])] = float(f[4])
         elif len(f) == 4 and f[3] != "fail":
             rows[(f[0], f[1], "1.20", f[2])] = float(f[3])
+    # ⛔ FIND the two lowest control points, never NAME them. These were hardcoded to
+    # 0.70 -> 0.80 V, which silently became "the 1.20 V rail only" the moment the sweep
+    # started expressing control as a fraction of the supply: 0.70 V is not a swept point
+    # at 0.98 V or at 1.50 V. The symptom was a phase-margin table that looked like the
+    # worst corner had moved to the nominal rail, when in fact the other two rails had
+    # dropped out of the calculation entirely. The intent is the local slope at the
+    # steep, low end of whatever was swept AT THAT RAIL.
+    by_rail = {}
+    for (corner, temp, vdd, vc), hz in rows.items():
+        by_rail.setdefault((corner, temp, vdd), []).append((float(vc), hz))
     out = {}
-    for (corner, temp, vdd, vc) in list(rows):
-        if vc == "0.70" and (corner, temp, vdd, "0.80") in rows:
-            lo = rows[(corner, temp, vdd, vc)]
-            hi = rows[(corner, temp, vdd, "0.80")]
-            out[f"{corner}/{temp}C/{vdd}V"] = (hi - lo) / 0.1
+    for (corner, temp, vdd), pts in by_rail.items():
+        if len(pts) < 2:
+            continue
+        (lo_v, lo), (hi_v, hi) = sorted(pts)[:2]
+        if hi_v == lo_v:
+            continue
+        out[f"{corner}/{temp}C/{vdd}V"] = (hi - lo) / (hi_v - lo_v)
     return out
 
 

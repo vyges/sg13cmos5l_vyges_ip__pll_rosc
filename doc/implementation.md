@@ -464,14 +464,14 @@ accepting a per-part calibration, is what would recover it.
 | Parameter | Proposal | Measured | |
 | --- | --- | --- | --- |
 | Reference in | 10–50 MHz | 16–50 MHz usable | ⚠️ narrowed |
-| **Output range** | **100–800 MHz** | 115–735 MHz typical, **600 MHz ceiling over PVT** | ❌ |
+| **Output range** | **100–800 MHz** | 115–735 MHz typical; ceiling over PVT is a function of rail — **599.5 MHz at 1.20 V, 318.3 MHz at 0.98 V, 910.5 MHz at 1.50 V** | ❌ |
 | **Feedback divider N** | **4–64, register-set** | ÷2 ÷4 ÷8 ÷16; only ÷8 and ÷16 usable | ❌ |
 | **Output post-divider ÷1/2/4/8** | required | **not implemented** | ❌ |
 | Kvco | 1.0–2.1 GHz/V | 0.35–1.65 GHz/V | ⚠️ below the stated minimum at high control voltage |
 | Supply, digital | 1.08–1.32 V | 1.2 V | ✅ |
 | Supply, analog | 3.0–3.6 V | **not used** — the block is entirely 1.2 V | ℹ️ simplification, see below |
 | Lock time | 6 µs typ, 20 max | **~4 µs** | ✅ |
-| Phase margin | — | 49.3° worst, Kvco × resistor corner, N = 8 | ✅ |
+| Phase margin | — | N = 8: 48.4° worst (Kvco × resistor × rail). **N = 16: 41.4° at ss/−40 °C/0.98 V** | ⚠️ N = 8 passes, N = 16 misses 45° at the bottom of the rail |
 | Temperature | −40 to 110 °C | all 9 corners | ✅ |
 | **Period jitter** | 6 ps typ, 12 max | **not measured** | ❌ |
 | **RMS jitter** | 3 ps typ, 5 max | **not measured** | ❌ |
@@ -585,9 +585,16 @@ what a reader coming to it later needs.
    block look worse against its own target than it was. ">16" was accepted as a
    multiplication restriction, and being loop-filter — that is, capacitor — limited was
    accepted as a legitimate reason.
-2. ✅ **Is N ≥ 16 an acceptable restriction?** — yes, and **no longer needed**: N = 8 now
-   clears phase margin at 49.3°, so the restriction is held in reserve rather than spent.
-   Keeping ÷8 usable keeps the reference range wider.
+2. ✅ **Is N ≥ 16 an acceptable restriction?** — yes, and it was **no longer needed**: N = 8
+   cleared phase margin, so the restriction was held in reserve rather than spent. Keeping
+   ÷8 usable keeps the reference range wider.
+
+   ⛔ **Inverted on 2026-09-17, and worth re-reading in that light.** With the control
+   voltage swept as a fraction of the rail and all three rails in the Kvco derivation, it is
+   **÷16 that misses**, at 41.4° on a 0.98 V rail; ÷8 passes at 48.4°. The reserve the answer
+   above was holding turns out to be the mitigation for a different problem than the one it
+   was kept for.
+
 3. ✅ **Should this design be re-pinned for the PDK's `rhigh` corner fix?** — done, pinned to
    `dev@ab1510c`. ⚠️ The estimate made here (that the fix alone would reach 41.2°) was close
    to the measured 39.8° in isolation, but it was **not what closed the gap**: the capacitor
@@ -631,26 +638,73 @@ what a reader coming to it later needs.
 
    | rail | guaranteed ceiling | best corner |
    | --- | --- | --- |
-   | 0.98 V | **359.2 MHz** | 656.0 MHz |
+   | 0.98 V | **318.3 MHz** | 604.7 MHz |
    | 1.20 V | 599.5 MHz | 903.8 MHz |
-   | 1.50 V | 806.6 MHz | 1207.0 MHz |
+   | 1.50 V | 910.5 MHz | 1352.0 MHz |
 
    The published **600 MHz was the 1.20 V figure** — true only for a rail with no
-   tolerance. At the reviewer's suggested range the block guarantees **359 MHz**. ℹ️ At the
-   top of the rail it clears the 800 MHz specification, so the shortfall is a supply
-   question as much as a device one: a tighter rail buys output range directly.
+   tolerance. At the reviewer's suggested range the block guarantees **318 MHz**.
 
-   ⚠️ Phase margin also moved, and still passes: **47.2° at N = 8** (ff/−40 °C/1.50 V,
-   worst-case sheet) and **48.3° at N = 16** (ss/110 °C/0.98 V, best-case sheet). The two
-   worst corners remain *opposite* ones, now separated by supply as well — Kvco spans
-   877 to 2272 MHz/V across the extended set, a 2.6× range against 1.5× before.
+   ⛔ **Corrected 2026-09-17: the control voltage is swept as a FRACTION of the rail, and
+   both of the old numbers were wrong in opposite directions.** `Vdd` and `Vctrl` were
+   independent sources crossed fully, but the charge pump's PMOS sources sit on the same
+   single `vdd` net as the ring, so **vctrl ≤ vdd always**. The 0.98 V ceiling had been read
+   at vctrl = 1.20 V — 22 % above its own supply, an operating point the loop cannot reach —
+   and the 1.50 V rail was never probed above 1.20 V, leaving it understated. Sweeping
+   0.5833/0.6667/1.0 × vdd reproduces 0.70/0.80/1.20 V exactly at the nominal rail, and the
+   27 rows of that column came back byte-identical: the only thing that moved is the pairing.
+
+   📏 **The ceiling is ~1.3 GHz per volt of supply** (108–159 MHz per 100 mV, across all nine
+   process/temperature corners). ⟹ **800 MHz guaranteed needs a 1.39 V rail.** Even a
+   zero-tolerance 1.20 V rail guarantees 599.5 MHz, and the typical corner tops out at
+   735 MHz with vctrl at the rail — so this is not a 1.2 V part at 800 MHz, and no rail
+   tolerance makes it one. A 1.4× faster ring would still read 446 MHz at 0.98 V. **The ring
+   buys 33 %; the rail costs 47 %.**
+
+   ⛔ **Phase margin at N = 16 MISSES the 45° floor once every rail is in the calculation:
+   41.4° at ss/−40 °C/0.98 V, best-case sheet.** N = 8 passes at 48.4° (ff/−40 °C/1.50 V,
+   worst-case sheet).
+
+   🔑 **This had been hidden twice over, and the second one was self-inflicted.** Kvco was
+   derived from control points named `0.70` and `0.80` in both `tools/datasheet.py` and the
+   gate's `report.py`. Under the old pairing those were the low pair at every rail; under the
+   corrected one they exist ONLY at 1.20 V, so the other two rails dropped out of the
+   phase-margin table altogether and it reported a comfortable 54.1° — a pass computed from
+   one third of the corners, with nothing in the output to say so. Both now FIND the two
+   lowest swept points at each rail instead of naming them. ⟹ **A derivation that names its
+   inputs stops covering them silently when the sweep around it changes.**
+
+   ⚠️ **The mechanism is consistent with the corner it fails at, and is a FILTER question,
+   not a ring one.** The worst case is the lowest loop gain available — slowest process, the
+   bottom of the rail, `res_bcs`, and N = 16 dividing the gain by twice as much as N = 8. At
+   a 0.98 V rail the swept control points are 0.57/0.65 V, the bottom of the tuning curve
+   where Kvco is a few hundred MHz/V rather than the 1400–1650 MHz/V it reaches at 0.70–0.80.
+   The zero and pole were placed symmetrically about a crossover centred on the geometric
+   mean of a NARROWER Kvco spread; widen the spread and the crossover at the low end falls
+   toward the zero before its phase boost has arrived.
 
    ℹ️ `doc/proposal.md` keeps its 3.0/3.3/3.6 row: it is the historical record of what was
    proposed, and what was proposed is part of why this took until now to catch.
 
-3. **Output ceiling.** 599.5 MHz guaranteed over PVT against a specified 800 MHz remains the
-   block's headline miss, now accepted rather than resolved — see
-   `doc/datasheet/pll_rosc_tuning_pvt.svg` for where the ceiling comes from.
+3. **Output ceiling — and it is a RAIL specification, not a frequency one.** 599.5 MHz is
+   guaranteed at exactly 1.20 V, 318.3 MHz across a 0.98–1.50 V rail, against a specified
+   800 MHz. Accepted rather than resolved — see `doc/datasheet/pll_rosc_tuning_pvt.svg` for
+   where the ceiling comes from.
+
+   ⟹ **Quoting one ceiling implies a rail tolerance nobody has committed to.** At ~1.3 GHz/V
+   the band moves with the supply faster than the specification's own width, so the honest
+   form of this row is a ceiling PER RAIL. The block runs entirely from 1.2 V while the slot
+   delivers 3.3 V through an enable-gated pMOS switch, which makes "does a regulated 1.2 V
+   rail reach this block, and how well regulated" the question that decides both the ceiling
+   and, at N = 16, whether the loop holds 45°.
+
+4. ⛔ **Phase margin at N = 16 — 41.4° against a 45° floor**, at ss/−40 °C, a 0.98 V rail and
+   the best-case resistor sheet. Newly visible, not newly caused: it appears the moment the
+   control voltage is swept as a fraction of the rail AND all three rails are in the Kvco
+   derivation. Two responses are open, and the cheap one already exists — **N = 8 passes at
+   48.4°**, so restricting ÷16 at the bottom of the rail costs reference range rather than
+   silicon; the other is to re-place the filter zero and pole against the widened Kvco
+   spread, which is a loop-filter re-size and not a ring change.
 
 Everything above is reproducible from this repository: `sim/run.sh` and `sim/run_pvt.sh`
 produce the results, and `python3 tools/datasheet.py --check` fails if any published figure
