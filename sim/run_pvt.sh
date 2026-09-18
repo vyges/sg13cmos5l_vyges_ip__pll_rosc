@@ -2,7 +2,7 @@
 # PLL PVT -- part 1: measure the VCO tuning curve at each corner.
 #
 # The loop's stability follows Kvco, so the corner question for a PLL is "what does the
-# tuning curve do over PVT", not "does one bias point still work". Seven control voltages
+# tuning curve do over PVT", not "does one bias point still work". Nine control voltages
 # per corner give the band and the LOCAL slope everywhere along it -- both ends of which
 # matter, see the fraction list below.
 set -e
@@ -64,7 +64,7 @@ for corner in tt ss ff; do
     # is 0.70/0.80/1.20 exactly. That column is the control on this change -- if it moves,
     # something other than the pairing moved.
     #
-    # ⛔ SEVEN FRACTIONS, NOT THREE, AND THE REASON IS THE FLAT TOP OF THE CURVE.
+    # ⛔ NINE FRACTIONS, NOT THREE, AND THE REASON IS THE FLAT TOP OF THE CURVE.
     # Three points give two slopes per rail, and the phase-margin derivation took only the
     # LOWEST pair -- on the assumption that the worst case for loop stability is the
     # STEEPEST part of the tuning curve. It is not. A type-II loop loses margin at BOTH
@@ -72,9 +72,17 @@ for corner in tt ss ff; do
     # low Kvco lets it fall back toward the zero. The low-Kvco end is the FLAT TOP of this
     # ring's curve -- 346 MHz/V between 1.1 and 1.2 V where the bottom reads 1650 -- and it
     # is a reachable operating point, not an artifact. Resolving it needs points there, so
-    # the sweep now covers 0.5 to 1.0 x vdd in equal steps. 0.5833/0.6667/1.0 are retained
+    # the sweep now covers 0.35 to 1.0 x vdd in equal steps. 0.5833/0.6667/1.0 are retained
     # exactly so every previously published row is still a row here.
-    for frac in 0.5000 0.5833 0.6667 0.7500 0.8333 0.9167 1.0000; do
+    #
+    # ⛔ AND IT STARTS AT 0.35, NOT 0.5, BECAUSE THE ENVELOPE DOES. The loop settles where
+    # f_out = N * f_ref, so the lowest output the part can be asked for is 8 x 16 MHz =
+    # 128 MHz. On a 1.50 V rail 0.5 x vdd is 0.75 V and the ring is already past 400 MHz
+    # there -- the whole bottom half of the specified band sat below the sweep, so no phase
+    # margin was ever computed for it and the acquisition bench called those corners
+    # unreachable when it was the SWEEP that could not reach them. Points below the band
+    # simply do not oscillate and record fail, which costs nothing.
+    for frac in 0.3500 0.4167 0.5000 0.5833 0.6667 0.7500 0.8333 0.9167 1.0000; do
       vc=$(awk -v d="$vdd" -v f="$frac" 'BEGIN{ printf "%.2f", d*f }')
       echo "$corner $mos $temp $vdd $vc" >> pvt/_order
     done
