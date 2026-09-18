@@ -105,9 +105,20 @@ Rebuilding in hv devices at 3.3 V is possible but is not a port: the ring's dela
 and therefore the entire tuning curve and every loop number derived from it, is a function
 of the supply.
 
-✅ **`Icp` = 1 µA matches what the harness provides** (`ibias1u_*`). The loop was designed
-around a small charge-pump current for filter-area reasons, and that happens to line up with
-the available bias rather than requiring a new one.
+⛔ **`Icp` = 1 µA was never a measurement, and it was wrong.** This said the pump mirrors the
+harness `ibias1u_*` reference 1:1 and that the loop was therefore designed around 1 µA. The
+mirror is 1:1 in **width**; it is not 1:1 in drain-source voltage — the diode-connected
+reference sits at its own Vgs while the output devices sit near the control node, and on
+0.5 µm devices that is worth more than half the current. Swept over 27 corners
+(`sim/run_cp.sh`), the pump delivered **1.16–2.26 µA** from that reference, and it tracks rail
+and process rather than being a constant at all. Loop gain is proportional to it, so every
+phase-margin figure computed from 1 µA described a different loop.
+
+✅ **Now 250 nA (`ibias1_250n`), giving a measured 0.31–0.63 µA.** Required filter capacitance
+scales with the pump current, which makes the choice of reference an area decision: holding
+45° at the 1 µA rail costs 15,908 µm² of capacitor, against 6,980 µm² here. It also asks the
+shared bias rail for **less** current than before, which is the direction the revised harness
+bias contract pushes.
 
 ## Cell hierarchy
 
@@ -495,7 +506,11 @@ and saying so.
 
 ## Slot requirements — pins, power and clocks
 
-For scoping pin allocation. This is the **implemented** port list.
+✅ **Allocated: slot 6, two pins.** That is exactly what this block asks for — `ref` in and
+`vco_out` out — so there is no pin negotiation to have. The two pads below are the allocation,
+not a request.
+
+This is the **implemented** port list.
 
 ```text
 .subckt pll_rosc  ref porb rstb nsel0 nsel1 ibias vco_out vdd vss
@@ -515,7 +530,7 @@ For scoping pin allocation. This is the **implemented** port list.
 | Signal | From the harness |
 | --- | --- |
 | `vdd` | **1.2 V.** The whole block runs from it — no 3.3 V analog rail is needed. |
-| `ibias` | Bias current. **The loop is designed around Icp = 1 µA**, mirrored 1:1, so this is a requirement on the harness bias rather than an internal size. |
+| `ibias` | Bias current, **250 nA** — the harness `ibias1_250n` rail, not `ibias1u_*`. ⛔ The pump does **not** mirror it 1:1: measured over 27 corners it delivers **0.31–0.63 µA** from that reference, because the mirror is 1:1 in width and not in drain-source voltage. That is the current the loop filter is sized against. The reference was moved down from 1 µA because required filter capacitance scales with it — holding 45° at the 1 µA reference costs 15,908 µm² of capacitor against 6,980 µm² here — so this asks the shared rail for **less** current than the previous revision, not more. |
 | `vss` | Ground. |
 
 ### Control bits (register field, no pads)
