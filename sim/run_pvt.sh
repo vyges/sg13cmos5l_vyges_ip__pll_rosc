@@ -1,10 +1,10 @@
 #!/bin/sh
-# PLL PVT -- part 1: measure the VCO band and Kvco at each corner.
+# PLL PVT -- part 1: measure the VCO tuning curve at each corner.
 #
 # The loop's stability follows Kvco, so the corner question for a PLL is "what does the
-# tuning curve do over PVT", not "does one bias point still work". Two control voltages
-# per corner give the band and the local slope at the high-gain end, which is the corner
-# that sets the phase-margin worst case.
+# tuning curve do over PVT", not "does one bias point still work". Seven control voltages
+# per corner give the band and the LOCAL slope everywhere along it -- both ends of which
+# matter, see the fraction list below.
 set -e
 cd "$(dirname "$0")"
 # PDK location -- see sim/run.sh for why BOTH the overlay and the base are needed.
@@ -24,8 +24,18 @@ for d in ihp-sg13cmos5l "$PDK"; do
   fi
 done
 M="$PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models"
+# Points are independent runs, so they go in parallel. Serially this sweep is 189 x ~23 s,
+# an hour and a quarter, which is long enough that a design question gets ANSWERED BY
+# ARGUMENT instead of by running it -- the expensive failure mode this whole harness exists
+# to avoid. ngspice already threads within a point, so the default stays modest.
+JOBS="${PVT_JOBS:-8}"
 mkdir -p pvt
-: > pvt/vco.txt
+rm -f pvt/_pt_*
+
+# The sweep is enumerated first and executed second, so the output file is written in a
+# fixed order no matter which point finishes when. A parallel sweep that appends as results
+# arrive produces a file that diffs against itself.
+: > pvt/_order
 for corner in tt ss ff; do
   case $corner in
     tt) mos=mos_tt ;;
@@ -53,17 +63,71 @@ for corner in tt ss ff; do
     # The fractions are chosen so the 1.20 V column is unchanged: 0.5833/0.6667/1.0 x 1.20
     # is 0.70/0.80/1.20 exactly. That column is the control on this change -- if it moves,
     # something other than the pairing moved.
-    for frac in 0.5833 0.6667 1.0000; do
+    #
+    # ⛔ SEVEN FRACTIONS, NOT THREE, AND THE REASON IS THE FLAT TOP OF THE CURVE.
+    # Three points give two slopes per rail, and the phase-margin derivation took only the
+    # LOWEST pair -- on the assumption that the worst case for loop stability is the
+    # STEEPEST part of the tuning curve. It is not. A type-II loop loses margin at BOTH
+    # ends of the Kvco spread: high Kvco pushes the crossover up toward the filter pole,
+    # low Kvco lets it fall back toward the zero. The low-Kvco end is the FLAT TOP of this
+    # ring's curve -- 346 MHz/V between 1.1 and 1.2 V where the bottom reads 1650 -- and it
+    # is a reachable operating point, not an artifact. Resolving it needs points there, so
+    # the sweep now covers 0.5 to 1.0 x vdd in equal steps. 0.5833/0.6667/1.0 are retained
+    # exactly so every previously published row is still a row here.
+    for frac in 0.5000 0.5833 0.6667 0.7500 0.8333 0.9167 1.0000; do
       vc=$(awk -v d="$vdd" -v f="$frac" 'BEGIN{ printf "%.2f", d*f }')
-      sed -e "s|@MOS@|$mos|g" -e "s|@RES@|$res|g" -e "s|@TEMP@|$temp|g" -e "s|@VDD@|$vdd|g" \
-          -e "s|@VC@|$vc|g" -e "s|@M@|$M|g" tb_vco_pvt.tpl > _v.spice
-      ngspice -b _v.spice > _v.log 2>&1 || true
-      p=$(grep -oE "^per4 *= *[0-9.e+-]+" _v.log | grep -oE "[0-9.e+-]+$")
-      f=$(awk -v p="$p" 'BEGIN{ if (p+0>0) printf "%.4g", 4/p; else print "fail" }')
-      echo "$corner $temp $vdd $vc $f" >> pvt/vco.txt
+      echo "$corner $mos $temp $vdd $vc" >> pvt/_order
     done
    done
   done
 done
-rm -f _v.spice _v.log
-echo "measured $(wc -l < pvt/vco.txt) points"
+
+n=0
+while read -r corner mos temp vdd vc; do
+  tag="${corner}_${temp}_${vdd}_${vc}"
+  (
+    sed -e "s|@MOS@|$mos|g" -e "s|@RES@|$res|g" -e "s|@TEMP@|$temp|g" -e "s|@VDD@|$vdd|g" \
+        -e "s|@VC@|$vc|g" -e "s|@M@|$M|g" tb_vco_pvt.tpl > "pvt/_pt_$tag.spice"
+    ngspice -b "pvt/_pt_$tag.spice" > "pvt/_pt_$tag.log" 2>&1 || true
+    # ⛔ `|| true` IS LOAD-BEARING, and it was missing until a point failed to oscillate.
+    # grep exits 1 when it matches nothing, which is exactly what a corner that does not
+    # oscillate produces -- and under `set -e` that killed the run instead of recording
+    # "fail". Serially that would have truncated pvt/vco.txt mid-sweep and left a file that
+    # still looks like a result; here it lost two points. The awk below has always had a
+    # "fail" branch for this case and it had never once been reachable.
+    p=$(grep -oE "^per4 *= *[0-9.e+-]+" "pvt/_pt_$tag.log" | grep -oE "[0-9.e+-]+$" || true)
+    f=$(awk -v p="$p" 'BEGIN{ if (p+0>0) printf "%.4g", 4/p; else print "fail" }')
+    echo "$corner $temp $vdd $vc $f" > "pvt/_pt_$tag.txt"
+  ) &
+  n=$((n + 1))
+  if [ $((n % JOBS)) -eq 0 ]; then wait || true; fi
+done < pvt/_order
+wait || true
+
+# ⛔ A POINT THAT PRODUCED NO FILE IS NOT A POINT THAT DID NOT OSCILLATE. A run killed by
+# the OOM killer, or a subshell that died before ngspice started, leaves no file at all --
+# and a sweep that silently reports 188 of 189 points reads exactly like a sweep that
+# reported 189. Every enumerated point must come back with a line or this sweep failed.
+: > pvt/vco.txt
+missing=0
+while read -r corner mos temp vdd vc; do
+  ptf="pvt/_pt_${corner}_${temp}_${vdd}_${vc}.txt"
+  if [ -s "$ptf" ]; then
+    cat "$ptf" >> pvt/vco.txt
+  else
+    echo "MISSING $corner $temp $vdd $vc" >&2
+    missing=$((missing + 1))
+  fi
+done < pvt/_order
+want=$(wc -l < pvt/_order)
+got=$(wc -l < pvt/vco.txt)
+rm -f pvt/_pt_*
+if [ "$missing" -ne 0 ]; then
+  # ⛔ AND THE PARTIAL FILE GOES WITH IT. A vco.txt holding 187 of 189 points is not a
+  # smaller result, it is a wrong one: every consumer here reads whatever rows are present
+  # and reports a worst case over them, with nothing to say a corner was never measured.
+  rm -f pvt/vco.txt
+  echo "FAILED: $missing of $want sweep points produced no result (pvt/vco.txt removed)" >&2
+  exit 2
+fi
+echo "measured $got points (of $want enumerated, $JOBS at a time)"
