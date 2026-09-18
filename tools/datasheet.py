@@ -132,13 +132,23 @@ def vco_curve():
 
 
 def pvt_kvco():
-    """{corner/temp: Kvco} from the PVT tuning sweep.
+    """{corner/temp/rail control-span: Kvco} -- EVERY local slope the sweep resolves.
 
-    ⛔ The LOCAL slope at the high-gain end (0.70 -> 0.80 V), never the average across the
-    tuning range. Loop gain is proportional to Kvco and this ring's curve is steepest at
-    the bottom of the control range, so an average understates the worst case badly -- at
-    ff/-40C it gives about 1168 MHz/V against a local 1989, which is the difference between
-    reporting a pass and a fail. The worst case is the point of the sweep.
+    ⛔ The LOCAL slope, never the average across the tuning range. Loop gain is proportional
+    to Kvco and this ring's curve is steepest at the bottom of the control range, so an
+    average understates the worst case badly -- at ff/-40C it gives about 1168 MHz/V
+    against a local 1989, which is the difference between reporting a pass and a fail.
+
+    ⛔ AND EVERY SEGMENT, NOT THE STEEPEST ONE. This returned a single slope per corner,
+    taken at the two lowest control points, on the assumption that the worst case for
+    stability is the highest Kvco. That assumption is wrong for a type-II loop, which loses
+    phase margin at BOTH ends of the gain spread: high Kvco pushes the crossover up toward
+    the filter pole, low Kvco lets it fall back toward the zero. With this filter the
+    N = 16 window is Kvco >= ~720 MHz/V, and the low end of it is the FLAT TOP of the
+    tuning curve -- 346 MHz/V between 1.1 and 1.2 V where the bottom of the same curve
+    reads 1650. Keeping only the steep pair discarded exactly the segments that fail.
+
+    🔑 The label carries the control span, because a corner no longer names one number.
     """
     p = os.path.join(ROOT, "sim", "pvt", "vco.txt")
     if not os.path.isfile(p):
@@ -152,24 +162,22 @@ def pvt_kvco():
             rows[(f[0], f[1], f[2], f[3])] = float(f[4])
         elif len(f) == 4 and f[3] != "fail":
             rows[(f[0], f[1], "1.20", f[2])] = float(f[3])
-    # ⛔ FIND the two lowest control points, never NAME them. These were hardcoded to
-    # 0.70 -> 0.80 V, which silently became "the 1.20 V rail only" the moment the sweep
-    # started expressing control as a fraction of the supply: 0.70 V is not a swept point
-    # at 0.98 V or at 1.50 V. The symptom was a phase-margin table that looked like the
-    # worst corner had moved to the nominal rail, when in fact the other two rails had
-    # dropped out of the calculation entirely. The intent is the local slope at the
-    # steep, low end of whatever was swept AT THAT RAIL.
+    # ⛔ FIND the control points, never NAME them. These were hardcoded to 0.70 -> 0.80 V,
+    # which silently became "the 1.20 V rail only" the moment the sweep started expressing
+    # control as a fraction of the supply: 0.70 V is not a swept point at 0.98 V or at
+    # 1.50 V. The symptom was a phase-margin table that looked like the worst corner had
+    # moved to the nominal rail, when in fact the other two rails had dropped out of the
+    # calculation entirely.
     by_rail = {}
     for (corner, temp, vdd, vc), hz in rows.items():
         by_rail.setdefault((corner, temp, vdd), []).append((float(vc), hz))
     out = {}
     for (corner, temp, vdd), pts in by_rail.items():
-        if len(pts) < 2:
-            continue
-        (lo_v, lo), (hi_v, hi) = sorted(pts)[:2]
-        if hi_v == lo_v:
-            continue
-        out[f"{corner}/{temp}C/{vdd}V"] = (hi - lo) / (hi_v - lo_v)
+        pts = sorted(pts)
+        for (lo_v, lo), (hi_v, hi) in zip(pts, pts[1:]):
+            if hi_v == lo_v:
+                continue
+            out[f"{corner}/{temp}C/{vdd}V {lo_v:.2f}-{hi_v:.2f}"] = (hi - lo) / (hi_v - lo_v)
     return out
 
 
