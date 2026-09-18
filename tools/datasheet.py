@@ -20,13 +20,15 @@ Usage:
     python3 tools/datasheet.py                 # write doc/datasheet/*.md
     python3 tools/datasheet.py --check         # verify README.md figures, exit 1 on drift
 
-Inputs, all produced by sim/run.sh and sim/run_pvt.sh:
+Inputs, all produced by sim/run.sh, sim/run_pvt.sh and sim/run_cp.sh:
     sim/_report_tb_vco_sweep.spice.log   the tt tuning curve
     sim/_report_tb_pll_lock.spice.log    control voltage and phase error during lock
-    sim/pvt/vco.txt                      corner temp vctrl frequency, 27 points
+    sim/pvt/vco.txt                      corner temp rail vctrl frequency, 189 points
+    sim/pvt/cp_*.csv                     charge-pump branch currents vs vctrl, 27 corners
 """
 
 import argparse
+import glob
 import math
 import os
 import re
@@ -40,7 +42,14 @@ NAME = "pll_rosc"
 #
 # Every value here is a property of the drawn design, and each is stated with what fixes it
 # so a reader can check it against the schematic rather than trust this file.
-ICP = 1e-6          # charge-pump current: mirrored 1:1 from the harness ibias1u_* reference
+# ⛔ Icp IS NOT A CONSTANT HERE ANY MORE, AND IT NEVER SHOULD HAVE BEEN. This file used to
+# carry ICP = 1e-6, "mirrored 1:1 from the harness ibias1u_* reference". The mirror is 1:1
+# in WIDTH; it is not 1:1 in drain-source voltage, and on 0.5 um devices that is worth more
+# than half the current. Measured (sim/run_cp.sh, 27 corners) the pump delivers 1.16-2.26 uA
+# and tracks rail and process. Loop gain is proportional to it, so a phase margin computed
+# from 1 uA is the phase margin of a different loop. The value below is what the HARNESS
+# supplies into `ibias`; what the pump does with it is read from the measurement.
+IBIAS_REF = 1e-6    # the harness reference current this block asks for (ibias1u_*)
 RZ_NOM = 80.77e3    # rhigh, w = 1 um, l = 56.9 um -- measured, not sheet arithmetic
 CZ = 5.11e-12       # cap_cmomf, 63 x 63 um at 1.287 fF/um2
 CP = 0.417e-12      # cap_cmomf, 18 x 18 um at 1.287 fF/um2
@@ -150,35 +159,100 @@ def pvt_kvco():
 
     🔑 The label carries the control span, because a corner no longer names one number.
     """
-    p = os.path.join(ROOT, "sim", "pvt", "vco.txt")
-    if not os.path.isfile(p):
-        return {}
-    rows = {}
-    for line in open(p):
-        f = line.split()
-        # `corner temp vdd vc freq` since 2026-09-02; `corner temp vc freq` before the
-        # supply became a swept corner. Both are read so an older sweep still reports.
-        if len(f) == 5 and f[4] != "fail":
-            rows[(f[0], f[1], f[2], f[3])] = float(f[4])
-        elif len(f) == 4 and f[3] != "fail":
-            rows[(f[0], f[1], "1.20", f[2])] = float(f[3])
     # ⛔ FIND the control points, never NAME them. These were hardcoded to 0.70 -> 0.80 V,
     # which silently became "the 1.20 V rail only" the moment the sweep started expressing
     # control as a fraction of the supply: 0.70 V is not a swept point at 0.98 V or at
     # 1.50 V. The symptom was a phase-margin table that looked like the worst corner had
     # moved to the nominal rail, when in fact the other two rails had dropped out of the
     # calculation entirely.
-    by_rail = {}
-    for (corner, temp, vdd, vc), hz in rows.items():
-        by_rail.setdefault((corner, temp, vdd), []).append((float(vc), hz))
-    out = {}
-    for (corner, temp, vdd), pts in by_rail.items():
-        pts = sorted(pts)
+    return {lab: kv for lab, kv, _, _, _ in _segments()}
+
+
+def _segments():
+    """[(label, Kvco, Icp, f_lo, f_hi)] for every COMPLIANT control segment.
+
+    Each segment carries its own measured pump current, because Icp and Kvco are both
+    functions of the same corner and multiplying one corner's Kvco by another corner's --
+    or by a constant -- is not a corner at all.
+    """
+    sweeps = cp_sweeps()
+    out = []
+    for key, pts in sorted(_tuning_rows().items()):
+        cp = sweeps.get(key)
+        lim = cp_limit(cp) if cp else float("inf")
+        corner, temp, vdd = key
         for (lo_v, lo), (hi_v, hi) in zip(pts, pts[1:]):
-            if hi_v == lo_v:
+            if hi_v == lo_v or hi_v > lim + 1e-9:
                 continue
-            out[f"{corner}/{temp}C/{vdd}V {lo_v:.2f}-{hi_v:.2f}"] = (hi - lo) / (hi_v - lo_v)
+            icp = cp_icp(cp, (lo_v + hi_v) / 2) if cp else IBIAS_REF
+            out.append((f"{corner}/{temp}C/{vdd}V {lo_v:.2f}-{hi_v:.2f}",
+                        (hi - lo) / (hi_v - lo_v), icp, lo, hi))
     return out
+
+
+# The reference range this block is specified over. It is a loop-stability input and not
+# only a datasheet row: the loop settles where f_out = N * f_ref, so a tuning-curve segment
+# whose f_out needs a reference outside this band is not an operating point the part can be
+# commanded into. Judging phase margin there is not conservatism -- it is judging a circuit
+# that does not exist, and it costs capacitor area to satisfy.
+FREF_LO_HZ, FREF_HI_HZ = 16e6, 50e6
+
+
+def loop_points():
+    """[(label, Kvco, Icp, f_lo, N)] -- every operating point the part can be asked for."""
+    return [(lab, kv, icp, f_lo, n) for lab, kv, icp, f_lo, f_hi in _segments()
+            for n in DIVIDERS if f_hi / n >= FREF_LO_HZ and f_lo / n <= FREF_HI_HZ]
+
+
+# ------------------------------------------------------------------ the charge pump
+#
+# 🔑 THE CRITERION IS A CHOICE, SO IT IS STATED. "In compliance" is not something the
+# simulator reports; it is a threshold someone picks. This one is: the up branch still
+# delivers 90 % of its plateau current. It matters -- at 95 % the guaranteed ceiling reads
+# 260 MHz on a 1.20 V rail and at 90 % it reads 513 MHz, because the current falls off a
+# cliff over the last 150 mV. A figure published without its threshold cannot be checked.
+CP_COMPLIANCE = 0.90
+
+
+def cp_sweeps():
+    """{(corner, temp, vdd): [(vctrl, i_up, i_dn)]} from sim/run_cp.sh."""
+    out = {}
+    for p in sorted(glob.glob(os.path.join(ROOT, "sim", "pvt", "cp_*.csv"))):
+        corner, temp, vdd = os.path.basename(p)[3:-4].rsplit("_", 2)
+        pts = []
+        for line in open(p):
+            c = line.split()
+            # wrdata writes an x column per trace; the up current is column 1 and the down
+            # current column 3, and the down branch SINKS, so its sign is flipped here.
+            if len(c) >= 4:
+                pts.append((float(c[0]), float(c[1]), -float(c[3])))
+        if pts:
+            out[(corner, temp, vdd)] = pts
+    return out
+
+
+def cp_limit(pts):
+    """The highest control voltage the pump can still drive, by CP_COMPLIANCE.
+
+    ⛔ This is the top of the usable control range, and it is well below the rail: the up
+    branch's source device and switch need their Vdsat, so the current collapses to zero at
+    vctrl = vdd. Every corner here holds to about 0.85 x vdd. Tuning-curve points above it
+    are not operating points the loop can hold, and the lowest Kvco in the whole sweep --
+    292 MHz/V, the one that used to set the phase-margin worst case -- is one of them.
+    """
+    plateau = max(u for _, u, _ in pts)
+    for v, u, _ in pts:
+        if v > 0.3 and u < CP_COMPLIANCE * plateau:
+            return v
+    return pts[-1][0]
+
+
+def cp_icp(pts, vctrl):
+    """The pump current at a control voltage: the mean of the two branches, which is what
+    a PFD/charge-pump loop's small-signal gain uses. They are not equal -- the up branch
+    runs 5-10 % high over most of the range -- so naming either one alone would bias it."""
+    best = min(pts, key=lambda p: abs(p[0] - vctrl))
+    return (best[1] + best[2]) / 2
 
 
 def pvt_ceiling():
@@ -186,38 +260,86 @@ def pvt_ceiling():
 
     A tuning range measured at the typical corner is not a range the part can be sold on --
     the ceiling any unit reaches is set by the slowest corner, not the typical one.
+
+    ⛔ And the top of the control range is the pump's limit, not the rail. Reading the
+    ceiling at vctrl = vdd reports a frequency the loop cannot hold there, because the up
+    branch has no current left to hold it: 599.5 MHz against 513.1 MHz on a 1.20 V rail.
     """
-    p = os.path.join(ROOT, "sim", "pvt", "vco.txt")
-    if not os.path.isfile(p):
-        return None
+    sweeps = cp_sweeps()
     tops = {}
-    for line in open(p):
-        f = line.split()
-        if len(f) == 5 and f[4] != "fail":
-            key, freq = (f[0], f[1], f[2]), float(f[4])
-        elif len(f) == 4 and f[3] != "fail":
-            key, freq = (f[0], f[1], "1.20"), float(f[3])
-        else:
-            continue
-        tops[key] = max(tops.get(key, 0.0), freq)
+    for key, pts in _tuning_rows().items():
+        lim = cp_limit(sweeps[key]) if key in sweeps else float("inf")
+        usable = [f for v, f in pts if v <= lim + 1e-9]
+        if usable:
+            tops[key] = max(usable)
     return min(tops.values()) if tops else None
 
 
+def _tuning_rows():
+    """{(corner, temp, vdd): [(vctrl, f_out)]} -- the tuning sweep, read once."""
+    p = os.path.join(ROOT, "sim", "pvt", "vco.txt")
+    out = {}
+    if not os.path.isfile(p):
+        return out
+    for line in open(p):
+        f = line.split()
+        if len(f) == 5 and f[4] != "fail":
+            key, v, hz = (f[0], f[1], f[2]), float(f[3]), float(f[4])
+        elif len(f) == 4 and f[3] != "fail":
+            key, v, hz = (f[0], f[1], "1.20"), float(f[2]), float(f[3])
+        else:
+            continue
+        out.setdefault(key, []).append((v, hz))
+    return {k: sorted(v) for k, v in out.items()}
+
+
 def pm_over_corners():
-    """{N: (worst PM, where)} across every Kvco corner and every resistor corner."""
-    kv = pvt_kvco()
-    if not kv:
+    """{N: (worst PM, where)} over every operating point and every resistor corner.
+
+    Both gain terms come from measurement at the same corner: Kvco from the tuning sweep,
+    Icp from the charge-pump sweep. ⛔ If the pump was never swept this returns nothing
+    rather than falling back to the nominal reference current -- the fallback is how a
+    figure gets published for a loop whose gain was assumed, and it reads exactly like a
+    figure that was measured.
+    """
+    pts = loop_points()
+    if not pts or not cp_sweeps():
         return {}
     out = {}
     for n in DIVIDERS:
         worst = None
         for sheet, rz in RZ_CORNERS:
-            for corner, k in sorted(kv.items()):
-                _, pm = loop(rz, CZ, CP, ICP, k, n)
+            for label, kvco, icp, _, pn in pts:
+                if pn != n:
+                    continue
+                _, pm = loop(rz, CZ, CP, icp, kvco, n)
                 if worst is None or pm < worst[0]:
-                    worst = (pm, f"{corner} {sheet}")
-        out[n] = worst
+                    worst = (pm, f"{label} {sheet}")
+        if worst:
+            out[n] = worst
     return out
+
+
+def crossover_margin():
+    """(worst fc / (f_ref/10), where) -- the continuous-time approximation's own bound.
+
+    A type-II charge-pump loop is a sampled system, and the s-domain phase margin above is
+    only meaningful while the crossover stays well under the reference rate. The block has
+    claimed f_ref/10 since the filter was first sized; this measures it instead.
+    """
+    pts = loop_points()
+    if not pts or not cp_sweeps():
+        return None
+    worst = None
+    for sheet, rz in RZ_CORNERS:
+        for label, kvco, icp, f_lo, n in pts:
+            fc, _ = loop(rz, CZ, CP, icp, kvco, n)
+            # Where a segment only reaches into the reference band from below, the binding
+            # reference is the specified floor, not the segment's own bottom.
+            ratio = fc / (max(f_lo / n, FREF_LO_HZ) / 10.0)
+            if worst is None or ratio > worst[0]:
+                worst = (ratio, f"N={n} {sheet} {label}")
+    return worst
 
 
 # Control-voltage samples the lock bench takes, in seconds. Lock time is resolved to this
@@ -586,19 +708,24 @@ def plot_phase_margin():
     ⛔ Both divider settings are drawn because their worst corners are OPPOSITE ones: N=8
     fails toward high Kvco and high Rz, N=16 toward low. A single-N plot would suggest the
     margin moves one way with corner, and it does not.
+
+    The x axis is the loop gain Icp*Kvco/N, not Kvco: with Icp measured per corner rather
+    than assumed constant, two points at the same Kvco no longer sit at the same gain.
     """
-    kv = pvt_kvco()
-    if not kv:
+    all_pts = loop_points()
+    if not all_pts:
         return None
-    order = sorted(kv, key=lambda k: kv[k])
-    body, px, py = _axes(70, 30, 620, 330, 0, len(order) - 1, 40, 65,
-                         "Kvco corner (increasing gain →)", "phase margin (deg)",
+    body, px, py = _axes(70, 30, 620, 330, 0, max(len(all_pts) // len(DIVIDERS) - 1, 1), 25, 65,
+                         "operating point (increasing loop gain →)", "phase margin (deg)",
                          "{:.0f}", "{:.0f}")
     body += _limit_line(45.0, px, py, 70, 620, "45° specified")
     styles = {8: ("#dc2626", "N = 8"), 16: ("#2563eb", "N = 16")}
     for n in DIVIDERS:
+        mine = sorted((kvco * icp / n, kvco, icp) for lab, kvco, icp, _, pn in all_pts
+                      if pn == n)
         for sheet, rz in RZ_CORNERS:
-            pts = [(i, loop(rz, CZ, CP, ICP, kv[c], n)[1]) for i, c in enumerate(order)]
+            pts = [(i, loop(rz, CZ, CP, icp, kvco, n)[1])
+                   for i, (_, kvco, icp) in enumerate(mine)]
             body += _series(pts, px, py, styles[n][0], 1.2)
     for i, n in enumerate(DIVIDERS):
         body += (f'<line x1="{500}" y1="{46+i*16}" x2="{524}" y2="{46+i*16}" '
