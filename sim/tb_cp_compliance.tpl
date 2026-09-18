@@ -21,10 +21,10 @@
 Vdd  vdd 0 @VDD@
 Vss  vss 0 0
 Vsub sub! 0 0
-* Each instance gets its own reference: one 1 uA source feeding two diode-connected
+* Each instance gets its own reference: one source feeding two diode-connected
 * mirrors would split between them and measure half the current twice.
-Ib1 0 ib1 DC 1u
-Ib2 0 ib2 DC 1u
+Ib1 0 ib1 DC 250n
+Ib2 0 ib2 DC 250n
 Vup1 up1 0 @VDD@
 Vdn1 dn1 0 0
 Vup2 up2 0 0

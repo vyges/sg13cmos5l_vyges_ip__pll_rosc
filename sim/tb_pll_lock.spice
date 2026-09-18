@@ -28,7 +28,11 @@
 Vdd  vdd  0 1.2
 Vss  vss  0 0
 Vsub sub! 0 0
-Ibias 0 ibias DC 1u
+* ⛔ 250 nA, NOT 1 uA. The loop filter is sized against the pump current this produces,
+* and required capacitance scales with it: at the 1 uA reference the measured pump delivers
+* 1.16-2.26 uA and a filter holding 45 degrees costs 15,908 um2, against 6,980 um2 here.
+* This is the harness ibias1_250n rail rather than ibias1u_*.
+Ibias 0 ibias DC 250n
 
 Vref ref 0 PULSE(0 1.2 5n 200p 200p 3n 62.5n)
 Vpor  porb 0 PWL(0 0 20n 0 21n 1.2 1 1.2)
@@ -61,20 +65,27 @@ Xdiv vco_out rstb nsel0 nsel1 div_out vdd vss divn
 .ic v(ph)=0 v(vctrl)=0.60
 
 .control
-  * The designed loop bandwidth is ~1.2 MHz at this corner, so acquisition happens in a
-  * few microseconds; 8 us covers it without paying for 40 us of locked steady state.
-  tran 100p 8u uic
-  meas tran vc1u FIND v(vctrl) AT=1u
-  meas tran vc2u FIND v(vctrl) AT=2u
-  meas tran vc4u FIND v(vctrl) AT=4u
-  meas tran vc6u FIND v(vctrl) AT=6u
-  meas tran vc78 FIND v(vctrl) AT=7.8u
-  * locked output frequency, from the phase integrator over the last 10 us
-* AT=30u here was a leftover from an earlier 30 us target while the transient stops at
-* 8 us. ngspice reported "out of interval", left ph6u unset, and the run still exited 0 --
-* the exact shape of failure the reporting script exists to catch. The name is the spec.
-  meas tran ph6u FIND v(ph) AT=6u
-  meas tran ph78 FIND v(ph) AT=7.8u
+  * ⛔ THE WINDOW HAS TO FOLLOW THE LOOP BANDWIDTH, and this one changed. The filter was
+  * re-sized against a MEASURED charge-pump current (it is a quarter of what it was, off
+  * the harness 250 nA reference), which puts the crossover near 0.9 MHz here against the
+  * ~1.9 MHz it actually had. Acquisition scales with 1/fc, so an 8 us window that used to
+  * contain a 4 us lock would now end before the loop settles -- and every sample in it
+  * would still return a number. 24 us covers it with room to see the settled value.
+  tran 100p 24u uic
+  meas tran vc2u  FIND v(vctrl) AT=2u
+  meas tran vc4u  FIND v(vctrl) AT=4u
+  meas tran vc8u  FIND v(vctrl) AT=8u
+  meas tran vc12u FIND v(vctrl) AT=12u
+  meas tran vc16u FIND v(vctrl) AT=16u
+  meas tran vc20u FIND v(vctrl) AT=20u
+  meas tran vc235 FIND v(vctrl) AT=23.5u
+  * locked output frequency, from the phase integrator
+* AT=30u here was once a leftover from an earlier 30 us target while the transient stopped
+* at 8 us. ngspice reported "out of interval", left the sample unset, and the run still
+* exited 0 -- the exact shape of failure the reporting script exists to catch. The name is
+* the spec, so both of these sit inside the window above.
+  meas tran ph20u FIND v(ph) AT=20u
+  meas tran ph235 FIND v(ph) AT=23.5u
   wrdata /work/sim/lock.csv v(vctrl)
 .endc
 .end

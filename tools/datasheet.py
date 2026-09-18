@@ -49,10 +49,15 @@ NAME = "pll_rosc"
 # and tracks rail and process. Loop gain is proportional to it, so a phase margin computed
 # from 1 uA is the phase margin of a different loop. The value below is what the HARNESS
 # supplies into `ibias`; what the pump does with it is read from the measurement.
-IBIAS_REF = 1e-6    # the harness reference current this block asks for (ibias1u_*)
-RZ_NOM = 80.77e3    # rhigh, w = 1 um, l = 56.9 um -- measured, not sheet arithmetic
-CZ = 5.11e-12       # cap_cmomf, 63 x 63 um at 1.287 fF/um2
-CP = 0.417e-12      # cap_cmomf, 18 x 18 um at 1.287 fF/um2
+# 🔑 250 nA, NOT 1 uA, AND THE FILTER IS THE REASON. Required loop-filter capacitance
+# scales with the pump current, so the reference this block asks the harness for is an AREA
+# decision as much as a bias one: from the 1 uA rail the measured pump delivers 1.16-2.26 uA
+# and a filter holding 45 degrees costs 15,908 um2; from the 250 nA rail the filter below
+# costs 6,980 um2 and holds 53.9. It also asks the shared rail for less rather than more.
+IBIAS_REF = 250e-9  # the harness reference current this block asks for (ibias1_250n)
+RZ_NOM = 125.09e3   # rhigh, w = 1 um, l = 88 um -- measured, not sheet arithmetic
+CZ = 8.654e-12      # cap_cmomf, 82 x 82 um at 1.287 fF/um2
+CP = 0.3295e-12     # cap_cmomf, 16 x 16 um at 1.287 fF/um2
 RSH_TYP = 1360.0    # rhigh typical sheet, ohm/sq -- the sheet RZ_NOM was drawn against
 
 # Rz corners are MEASURED on the PDK at each rhigh corner, never derived from sheet x
@@ -70,7 +75,12 @@ RSH_TYP = 1360.0    # rhigh typical sheet, ohm/sq -- the sheet RZ_NOM was drawn 
 # it pushes crossover up faster than it lowers the zero, so a WORST-CASE sheet LOSES margin.
 # That is the opposite direction to the same resistor in the LDO's nulling role, where it
 # fails at both extremes for different reasons. Neither is guessable, so all three are swept.
-RZ_CORNERS = [("res_bcs", 66.16e3), ("res_typ", 80.77e3), ("res_wcs", 96.64e3)]
+# Re-measured at l = 88 um when the filter was re-sized. ✅ The corner RATIOS came back
+# unchanged -- 0.8188/1.1971 against 0.8189/1.1967 at l = 56.9 um -- which is the evidence
+# that the width correction above is a function of WIDTH and not of length, and that a
+# length change may be scaled. It was measured rather than assumed because this file says
+# to measure it, and the same run reproduced all three of the old values to within 0.07 %.
+RZ_CORNERS = [("res_bcs", 102.42e3), ("res_typ", 125.09e3), ("res_wcs", 149.75e3)]
 
 # The divider settings the control bus can select. N is a loop parameter, not merely a
 # frequency setting -- crossover goes as Icp*Kvco/N, so a programmable divider drags the
@@ -255,6 +265,52 @@ def cp_icp(pts, vctrl):
     return (best[1] + best[2]) / 2
 
 
+def lock_points(n=16, fref=FREF_LO_HZ):
+    """Per-corner operating point for the acquisition bench: (corner, temp, vdd, f0, kvco, vc0).
+
+    🔑 WHY THIS IS DERIVED AND NOT WRITTEN DOWN. The acquisition bench models the ring
+    behaviourally, and its F0/KVCO/VC0 describe the ring AT ONE CORNER -- they were taken
+    from the tt curve around 0.70 V and then used to report a single lock time for the
+    block. That was tolerable while lock read 4 us against a 20 us limit. It is not
+    tolerable now: sizing the loop to respect its own f_ref/10 bound cost most of that
+    margin, so the corner spread in lock time is the question rather than a detail.
+
+    The target is the SLOWEST operating point the part can be asked for -- N * f_ref at the
+    bottom of the reference range -- because acquisition scales with the loop gain there.
+    A corner that cannot reach it inside the charge pump's compliance is reported as such
+    rather than silently dropped.
+    """
+    target = n * fref
+    sweeps = cp_sweeps()
+    out = []
+    for key, pts in sorted(_tuning_rows().items()):
+        cp = sweeps.get(key)
+        lim = cp_limit(cp) if cp else float("inf")
+        usable = [(v, f) for v, f in pts if v <= lim + 1e-9]
+        # ⛔ "NOT IN THE SWEEP" AND "NOT IN THE CIRCUIT" ARE DIFFERENT ANSWERS, and calling
+        # both unreachable hides one of them. The control sweep starts at 0.5 x vdd, so on a
+        # 1.50 V rail its lowest point is 0.75 V and the band below that is simply not
+        # characterised -- the ring runs there (5.6 MHz at 0.40 V on the tt curve), the
+        # sweep just never asked. Above the compliance limit is the opposite: the pump
+        # cannot hold the loop there at all, whatever the ring does.
+        if len(usable) < 2:
+            out.append((key, "no-compliant-points", None, None))
+            continue
+        if target < usable[0][1]:
+            out.append((key, "below-sweep", None, None))
+            continue
+        if target > usable[-1][1]:
+            out.append((key, "above-compliance", None, None))
+            continue
+        for (v0, f0), (v1, f1) in zip(usable, usable[1:]):
+            if f0 <= target <= f1:
+                kvco = (f1 - f0) / (v1 - v0)
+                vc0 = v0 + (target - f0) / kvco
+                out.append((key, target, kvco, vc0))
+                break
+    return out
+
+
 def pvt_ceiling():
     """The highest output frequency GUARANTEED across PVT: the slowest corner's top.
 
@@ -345,7 +401,8 @@ def crossover_margin():
 # Control-voltage samples the lock bench takes, in seconds. Lock time is resolved to this
 # grid and no finer -- reporting "3.7 us" from samples at 2 and 4 us would be inventing
 # precision the measurement does not have.
-LOCK_SAMPLES = [(1e-6, "vc1u"), (2e-6, "vc2u"), (4e-6, "vc4u"), (6e-6, "vc6u"), (7.8e-6, "vc78")]
+LOCK_SAMPLES = [(2e-6, "vc2u"), (4e-6, "vc4u"), (8e-6, "vc8u"), (12e-6, "vc12u"),
+                (16e-6, "vc16u"), (20e-6, "vc20u"), (23.5e-6, "vc235")]
 LOCK_TOL = 0.01     # "locked" = control voltage within 1 % of its final value
 
 
@@ -411,6 +468,13 @@ def rows():
     for n in DIVIDERS:
         if n in pm:
             out.append((f"Phase margin, N = {n}", "deg", 45.0, None, one(pm[n][0])))
+    # Published because the block has always CLAIMED it -- "the crossover stays below
+    # f_ref/10 everywhere" was written when the filter was first sized and was never
+    # measured. It is the bound that makes the s-domain phase margin above mean anything
+    # for a sampled loop, so a margin quoted without it is quoted without its precondition.
+    xo = crossover_margin()
+    if xo:
+        out.append(("Crossover, worst / (f_ref/10)", "", None, 1.0, one(xo[0])))
     return out
 
 
@@ -484,6 +548,7 @@ PUBLISHED_AS = {
     "Output ceiling over PVT": ("Output, guaranteed over PVT", 0),
     "Phase margin, N = 16": ("Phase margin, N = 16", 0),
     "Phase margin, N = 8": ("Phase margin, N = 8", 0),
+    "Crossover, worst / (f_ref/10)": ("Crossover vs f_ref/10", 0),
 }
 
 NUM = re.compile(r"[-+]?\d+\.?\d*")
@@ -560,9 +625,27 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--check", action="store_true",
                     help="verify README figures against the simulations; exit 1 on drift")
+    ap.add_argument("--lock-points", action="store_true",
+                    help="per-corner operating point for sim/run_lock.sh, one line each")
     a = ap.parse_args()
     if a.check:
         return check()
+    if a.lock_points:
+        pts = lock_points()
+        if not pts:
+            print("no tuning sweep on disk -- run sim/run_pvt.sh and sim/run_cp.sh",
+                  file=sys.stderr)
+            return 2
+        for (corner, temp, vdd), f0, kvco, vc0 in pts:
+            if isinstance(f0, str):
+                # Printed, not dropped. A corner that cannot reach the slowest selectable
+                # output inside the pump's compliance is a result about the block, and a
+                # runner that simply saw fewer lines would report a clean sweep of a
+                # smaller set without saying so.
+                print(f"{corner} {temp} {vdd} {f0}")
+            else:
+                print(f"{corner} {temp} {vdd} {f0:.6g} {kvco:.6g} {vc0:.4f}")
+        return 0
     d = os.path.join(ROOT, "doc", "datasheet")
     os.makedirs(d, exist_ok=True)
     written = []
