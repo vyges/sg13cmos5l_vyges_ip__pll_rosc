@@ -62,17 +62,61 @@ mismatch in the schematic. **Two are known to be unconfirmed and are marked.**
 | Passives | `rhigh` 1360 Ω/sq, `rppd` 260, `rsil` 7; `cap_cmomf` at 0.372 + (mmax−mmin)×0.305 fF/µm², so **1.287 fF/µm²** on an M1–M4 stack — measured from the model, not read off its header |
 | No MiM capacitor | correct for this process — the CMOS5L overlay deliberately omits `capacitors_mod.lib` |
 
-### Slot supply — the one to check first
+### Supply rails — 1.2 V and 3.3 V, and which is which
 
-> "Each pallet has an identical footprint. **It gets its 3.3V power supply from a pMOS power
-> switch**, and is given pins to connect to the digital interface of the harness (control and
-> status lines), regulated voltage bias signals, and regulated current bias signals."
->
-> — `sg13cmos5l_ocd_openframe/README`, the openframe harness this block targets
+⛔ **These two have been conflated more than once, so they are written out here and every
+other statement in this document defers to this section.**
 
-So the slot has **one supply, 3.3 V**. ⚠️ **A 1.2 V rail is assumed available and this is
-NOT confirmed.** The harness's own digital controller is built from 1.2 V standard cells, so
-the rail exists on the die; whether it is distributed to the pallets is the open question.
+| Rail | What it is | Devices | Does this block use it? |
+| --- | --- | --- | --- |
+| **3.3 V** | The **pallet supply**. The only supply the openframe harness README documents for a slot: *"It gets its 3.3V power supply from a pMOS power switch."* It is the I/O-class rail. | `hv`, max Vds **3.3 V** | **No.** No 3.3 V analog rail is required. The capless LDO in the same programme runs from it; this block does not. |
+| **1.2 V** | The **core / digital rail**. The ring, PFD, charge pump and divider are all `lv` devices and 1.2 V standard cells, so the entire block runs from it. Confirmed distributed to the pallets at the 2026-09-01 design review — two pMOS power switches per slot, 3.3 V and 1.2 V. | `lv`, max Vds **1.5 V** | **Yes — entirely.** |
+
+⚠️ **Three traps that have actually caught us, each stated so it cannot recur.**
+
+1. **The harness bandgap is ~1.2 V and is a REFERENCE, not a supply.** It is the only "1.2 V"
+   string in the harness repository, and it lives in the bias generator. Finding it there is
+   not evidence that a 1.2 V *rail* reaches a pallet; that came from the review answer.
+2. **`openframe_project_wrapper` labels its ports "Core 5.0V supply" / "Core 3.3V supply".**
+   Those comments are stale Caravel/sky130 text carried into the SG13CMOS5L port. The
+   harness's own digital is built from `sg13cmos5l_*` standard cells, which do not run at
+   3.3 V, so `vccd` is a **core** rail in the 1.2/1.5 V families — not 3.3 V. Read the cell
+   library, not the port comment.
+3. **A series pMOS power switch can only DROP its input.** A 1.2 V rail therefore cannot
+   arrive at a pallet at 1.5 V, which is what finally exposed the corner set below.
+
+### Supply corner set — 1.08 / 1.20 / 1.32 V, and why the old one was wrong
+
+**1.2 V is a hard input requirement for this block; the design is built to it and the
+results are whatever they are.** The corner set follows from the PDK rather than from a
+sketch:
+
+| Liberty | `nom_voltage` |
+| --- | --- |
+| `sg13cmos5l_stdcell_slow_1p08V_125C` | 1.08 |
+| `sg13cmos5l_stdcell_typ_1p20V_25C` | 1.20 |
+| `sg13cmos5l_stdcell_fast_1p32V_m40C` | 1.32 |
+| `sg13cmos5l_stdcell_slow_1p35V_125C` | 1.35 |
+| `sg13cmos5l_stdcell_typ_1p50V_25C` | 1.50 |
+| `sg13cmos5l_stdcell_fast_1p65V_m40C` | 1.65 |
+
+The process ships **two** core-rail families — 1.2 V ±10 % and 1.5 V ±10 %. So for a 1.2 V
+rail the corners are **1.08 / 1.20 / 1.32 V**, full stop.
+
+⛔ **The previous corner set was 0.98 / 1.20 / 1.50 V and neither outer point was a corner
+of a 1.2 V rail.** Its only written provenance was a comment in `sim/run_pvt.sh` citing a
+verbal sketch — "what an on-slot pMOS power switch delivers into a varying load".
+
+- **0.98 V is below the library's slowest characterised point.** The PFD and divider are
+  standard cells; at 0.98 V they are outside characterisation altogether, so it is not a
+  pessimistic corner, it is an undefined one. ⚠️ It also mattered: **every acquisition-time
+  failure measured on this block was at 0.98 V** — 21, 21 and 24 µs against a 20 µs limit,
+  where the 1.20 V corner locks in 15 µs.
+- **1.50 V is the OTHER family's nominal**, not a 1.2 V excursion. Selecting it is choosing a
+  different rail, and it drove most of the crossover-bound violations.
+
+ℹ️ Both are still swept, alongside 1.08 and 1.32, so the two answers can be compared rather
+than one asserted — but the specification is the ±10 % set.
 
 ### Harness resources assumed
 
@@ -89,17 +133,24 @@ the rail exists on the die; whether it is distributed to the pallets is the open
 | --- | --- |
 | Corners | `cornerMOShv/lv.lib` (tt, ss, ff) **crossed with** `cornerRES.lib` (`res_typ`, `res_bcs`, `res_wcs`) — swept **independently**, not paired. `Rz` is an `rhigh`, and holding it at nominal is exactly what made the phase-margin figure wrong for several revisions |
 | Temperature | −40, 27, 110 °C |
-| Supply | 3.0, 3.3, 3.6 V |
+| Supply | **1.08 / 1.20 / 1.32 V** — the 1.2 V ±10 % core rail this block runs from, matching the PDK's own `1p08`/`1p20`/`1p32` standard-cell families. ⛔ It read "3.0, 3.3, 3.6 V" until 2026-09-18, which is the *pallet* rail and not a supply this block has; before that it was pinned at exactly 1.2 V, and in between it was swept 0.98/1.20/1.50 V, which is neither family. 0.98 and 1.50 V are still swept for comparison, but they are not corners of a 1.2 V rail |
 | Tools | xschem 3.4.8RC, ngspice-46, in an IIC-OSIC-TOOLS-derived container |
 | Not covered | Monte-Carlo mismatch, and post-layout parasitics — both after layout |
 
 ### Block-specific
 
-⚠️ **The entire block runs from 1.2 V, and the slot supply is 3.3 V.** The ring oscillator,
-phase detector, charge pump and divider are all lv devices and 1.2 V standard cells. This is
-the single largest open assumption in the design: if no 1.2 V rail reaches the pallet, the
-block has no supply. The proposal's specification table listed "Supply (digital)
-1.08–1.32 V" as a given, and that is the assumption in question.
+✅ **The entire block runs from 1.2 V, and that is a hard input requirement rather than an
+assumption.** The ring oscillator, phase detector, charge pump and divider are all lv devices
+and 1.2 V standard cells. This was once the single largest open question here — if no 1.2 V
+rail reached the pallet the block would have had no supply — and it was answered at the
+2026-09-01 review: two pMOS power switches per slot, 3.3 V and 1.2 V. See the rail section
+above, which this note defers to.
+
+🔑 **And the proposal already specified the right bracket.** Its specification table listed
+**"Supply (digital) 1.08–1.32 V"** — the ±10 % rail, from the start. The 0.98 / 1.20 / 1.50 V
+sweep that produced the phase-margin and acquisition worst cases therefore contradicted this
+block's own proposal, not merely the PDK's characterisation. The design is built to 1.2 V and
+reports whatever follows from it; the rail is not a parameter to be widened to suit a result.
 
 Rebuilding in hv devices at 3.3 V is possible but is not a port: the ring's delay per stage,
 and therefore the entire tuning curve and every loop number derived from it, is a function
