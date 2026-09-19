@@ -19,7 +19,7 @@ Measured on the schematic hierarchy, on the 1.2 V core rail this block is specif
 
 | Parameter | Measured | Goal |
 | --- | --- | --- |
-| Supply | **1.08 / 1.20 / 1.32 V** — the 1.2 V ±10 % core rail, a hard input | 1.08–1.32 V |
+| Digital supply (`vccd`) input | **1.08 / 1.20 / 1.32 V** — the 1.2 V ±10 % core rail, a hard input. Arrives on the block's `vdd` port. **Not** the 3.3 V pallet supply, which this block does not use | 1.08–1.32 V |
 | Reference in | 16–50 MHz usable | 10–50 MHz |
 | Output, typical corner | 115.4–735.3 MHz | 100–800 MHz |
 | Output, guaranteed over PVT | **352.6 MHz** ceiling, within charge-pump compliance | 800 MHz |

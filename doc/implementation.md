@@ -69,8 +69,8 @@ other statement in this document defers to this section.**
 
 | Rail | What it is | Devices | Does this block use it? |
 | --- | --- | --- | --- |
-| **3.3 V** | The **pallet supply**. The only supply the openframe harness README documents for a slot: *"It gets its 3.3V power supply from a pMOS power switch."* It is the I/O-class rail. | `hv`, max Vds **3.3 V** | **No.** No 3.3 V analog rail is required. The capless LDO in the same programme runs from it; this block does not. |
-| **1.2 V** | The **core / digital rail**. The ring, PFD, charge pump and divider are all `lv` devices and 1.2 V standard cells, so the entire block runs from it. Confirmed distributed to the pallets at the 2026-09-01 design review — two pMOS power switches per slot, 3.3 V and 1.2 V. | `lv`, max Vds **1.5 V** | **Yes — entirely.** |
+| **3.3 V** (the pallet switch output) | The **pallet supply**. The only supply the openframe harness README documents for a slot: *"It gets its 3.3V power supply from a pMOS power switch."* It is the I/O-class rail. | `hv`, max Vds **3.3 V** | **No.** No 3.3 V analog rail is required. The capless LDO in the same programme runs from it; this block does not. |
+| **1.2 V** (`vccd` at the harness, `vdd` at this block) | The **core / digital rail**. The ring, PFD, charge pump and divider are all `lv` devices and 1.2 V standard cells, so the entire block runs from it. Confirmed distributed to the pallets at the 2026-09-01 design review — two pMOS power switches per slot, 3.3 V and 1.2 V. | `lv`, max Vds **1.5 V** | **Yes — entirely.** |
 
 ⚠️ **Three traps that have actually caught us, each stated so it cannot recur.**
 
@@ -580,7 +580,7 @@ This is the **implemented** port list.
 
 | Signal | From the harness |
 | --- | --- |
-| `vdd` | **1.2 V.** The whole block runs from it — no 3.3 V analog rail is needed. |
+| `vdd` | **1.2 V**, the harness core/digital rail (`vccd`), 1.08–1.32 V over tolerance. The whole block runs from it — **no 3.3 V analog rail is needed**, and the 3.3 V pallet supply is not connected. |
 | `ibias` | Bias current, **250 nA** — the harness `ibias1_250n` rail, not `ibias1u_*`. ⛔ The pump does **not** mirror it 1:1: measured over 27 corners it delivers **0.31–0.63 µA** from that reference, because the mirror is 1:1 in width and not in drain-source voltage. That is the current the loop filter is sized against. The reference was moved down from 1 µA because required filter capacitance scales with it — holding 45° at the 1 µA reference costs 15,908 µm² of capacitor against 6,980 µm² here — so this asks the shared rail for **less** current than the previous revision, not more. |
 | `vss` | Ground. |
 
