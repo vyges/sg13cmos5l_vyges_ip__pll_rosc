@@ -15,59 +15,85 @@ analog-slot IP.
 
 ## What it is
 
-A foundational on-chip clock multiplier. Designed to drop into
-one openframe pallet slot: 3.3 V from the slot power switch, bias from the
-harness V/I references, and `enable` / ÷N-select / `lock` over the digital
-control-status bus.
+A foundational on-chip clock multiplier. Designed to drop into one openframe pallet slot —
+**allocated slot 6, two pins**, which is exactly what it asks for: `ref` in and `vco_out` out.
+It runs entirely from the **1.2 V core rail**, takes its bias from the harness 250 nA current
+reference, and receives ÷N-select and its two resets as a register field on the digital
+control-status bus. It needs **no 3.3 V analog rail**, and it reports no status: lock detect
+is not implemented.
 
 Measured on the schematic hierarchy; the loop figures come from a closed-loop run with
 every block real except the VCO, which is behavioural and matched to the measured curve.
 
-| Parameter | Measured | Specification |
+| Parameter | Measured | Goal |
 | --- | --- | --- |
+| Supply | **1.08 / 1.20 / 1.32 V** — the 1.2 V ±10 % core rail, a hard input | 1.08–1.32 V |
 | Reference in | 16–50 MHz usable | 10–50 MHz |
-| Output, typical corner | 115–735 MHz ❌ | 100–800 MHz |
-| Output, guaranteed over PVT | ceiling **318 MHz** ❌ (0.98 V rail; 600 MHz at 1.20 V, 911 MHz at 1.50 V) | 800 MHz |
-| Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) ❌ | N = 4…64 |
-| Lock time | ~4 µs ✅ | 20 µs max |
-| Phase margin, N = 16 | **41.4°** ❌ (ss / −40 °C / 0.98 V / best-case sheet) | 45° min |
-| Phase margin, N = 8 | 48.4° ✅ (ff / −40 °C / 1.50 V / worst-case sheet) | 45° min |
-| Loop filter | Rz 80.77 kΩ, Cz 5.11 pF (63 × 63 µm) | — |
+| Output, typical corner | 115.4–735.3 MHz | 100–800 MHz |
+| Output, guaranteed over PVT | **352.6 MHz** ceiling, within charge-pump compliance | 800 MHz |
+| Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) | N = 4…64 |
+| Lock time | **16.0 µs** (tt / 27 °C / 1.20 V) | 20 µs max |
+| Phase margin, N = 8 | **51.3°** ✅ (ff / 27 °C / 1.32 V / worst-case sheet) | 45° min |
+| Phase margin, N = 16 | **51.2°** ✅ (ss / 27 °C / 1.08 V / best-case sheet) | 45° min |
+| Crossover vs f_ref/10 | **1.20×** — exceeds the guideline | ≤ 1.0 |
+| Charge-pump current | **0.31–0.63 µA** measured, from the harness 250 nA reference | — |
+| Loop filter | Rz 125.09 kΩ, Cz 8.65 pF (82 × 82 µm), Cp 0.33 pF (16 × 16 µm) | — |
 
-⚠️ **What is not met, stated here rather than left to be found.** Three measured
-specifications fall short. The **output range** — the loaded ring tops out at 735 MHz
-typical, with the control voltage already at the supply rail, so 800 MHz is a hard limit and
-not a margin. ⛔ **And the guaranteed ceiling is a function of the RAIL, at about 1.3 GHz per
-volt**: 599.5 MHz at exactly 1.20 V, 318.3 MHz across a 0.98–1.50 V supply, 910.5 MHz at
-1.50 V. 800 MHz guaranteed would need a **1.39 V** rail, so no tolerance on a 1.2 V rail
-reaches it. The **divider range**, since only ÷8 and ÷16 are usable against a specified
-10–50 MHz reference. And **phase margin at N = 16**, which reads 41.4° against a 45° floor at
-ss/−40 °C on a 0.98 V rail — ÷8 passes at 48.4°, so restricting ÷16 at the bottom of the
-rail is available as a mitigation, at the cost of reference range. Six further specifications —
-period and RMS jitter, phase noise, reference spur, duty cycle and power — are **not
-measured**, all for the one reason given in
-[`doc/implementation.md`](doc/implementation.md). Lock detect and the output post-divider
-are **not implemented**.
+🔑 **The goals column is a goal, not a contract.** It was written before the PDK, the charge
+pump's real output current and the supply's own tolerance could be modelled. They can be now,
+and the measured column is what this design does on a 1.2 V rail. The output ceiling is the
+clearest case: the ring reaches 735 MHz at the typical corner with the control voltage at the
+top of the pump's compliance range, so 800 MHz guaranteed is not a margin that can be tuned
+back — it is a property of a seven-stage ring on this process at this supply.
 
-✅ **Phase margin at N = 8 passes**, at 48.4° where this table once read 38.4°. Nothing in
-the block changed: it was re-pinned to IHP-Open-PDK `dev@ab1510c`, where base and overlay
-live in one tree. Two changes in that pin both helped — the `rhigh` corner re-alignment
-(+4.1°) and, worth more than twice as much, the MoM capacitor's rename `cap_mfringe` →
-`cap_cmomf` with its density recalibrated 2.32 → 1.287 fF/µm² (+9.4°), which drops `Cz` to
-5.11 pF at the same drawn size and raises the loop zero. ⚠️ **Read that second one as a
-warning too**: a device model moved a specification by 9.4° under a finished schematic.
+✅ **Phase margin passes at both divider settings**, 51.3° and 51.2° against a 45° floor,
+over every operating point the part can be commanded into. Getting there needed two things
+that had never been measured rather than any change to the oscillator:
+
+- **The charge-pump current.** It was carried as 1 µA because the pump mirrors the harness
+  bias 1:1. The mirror is 1:1 in *width*, not in drain-source voltage — measured over 27
+  corners it delivered **1.16–2.26 µA**, so the loop ran at roughly twice the gain its filter
+  was designed for. The block now takes the harness **250 nA** reference instead, measuring
+  0.31–0.63 µA; required filter capacitance scales with it, so this also made the fix cheap
+  (6,980 µm² of capacitor against 15,908 µm² at the 1 µA rail).
+- **The top of the control range is not an operating point.** The pump's up branch runs out
+  of compliance at about 0.85–0.91 × vdd and collapses to zero at the rail, so tuning-curve
+  points above that cannot hold lock. The lowest Kvco in the whole sweep lives there, and it
+  had been setting the phase-margin worst case.
+
+⚠️ **What is not met, stated here rather than left to be found.** The **output ceiling**,
+above. The **divider range**, since only ÷8 and ÷16 are usable against a 16–50 MHz reference.
+And the **crossover bound**: the loop's crossover reaches 1.20 × f_ref/10 at worst case
+(N = 8, worst-case sheet, ff/27 °C/1.32 V), against the classical ≤ f_ref/10 guideline — 11 of
+456 corner/point combinations exceed it, all at N = 8 and worst-case sheet resistance, by at
+most 20 %. It is published as measured rather than bought back, because the only lever that
+lowers it is a faster loop, and acquisition time is the tighter constraint. Six further
+specifications — period and RMS jitter, phase noise, reference spur, duty cycle and power —
+are **not measured**, for the one reason given in
+[`doc/implementation.md`](doc/implementation.md). Lock detect and the output post-divider are
+**not implemented**.
+
+⛔ **Supply rails, because these have been conflated more than once.** **1.2 V is the core
+rail and this block runs entirely from it** — ring, PFD, charge pump and divider are all lv
+devices and 1.2 V standard cells. **3.3 V is the pallet supply** from the harness pMOS power
+switch, and this block does not use it at all. The corner set is **1.08 / 1.20 / 1.32 V**,
+which is what the PDK characterises (`sg13cmos5l_stdcell_*_1p08/1p20/1p32`); an earlier sweep
+of 0.98 / 1.20 / 1.50 V was neither — 0.98 V is *below* the slowest characterised standard
+cell, and 1.50 V is the other rail family's nominal. Detail and the traps that caused it:
+[`doc/implementation.md`](doc/implementation.md).
 
 ## For the integrator
 
 [`doc/implementation.md`](doc/implementation.md) carries two sections written for scoping
 this block into a slot:
 
-- **Assumptions** — the process, slot supply and harness resources the design rests on. One is load-bearing and unconfirmed: the block runs from 1.2 V and the slot supply is 3.3 V.
+- **Supply rails** — which rail is which, why the corner set is 1.08/1.20/1.32 V, and the three ways 1.2 V and 3.3 V have been conflated here before.
+- **Assumptions** — the process and harness resources the design rests on, each with what it is based on.
 - **Slot requirements** — pads, harness resources, control bits and clocks. Two pads, one
   of them an up-to-735 MHz output that needs a dedicated path; the block runs entirely
   from 1.2 V, with **no 3.3 V analog rail required**.
-- **Against the proposal** — every specification line with what the schematic measures,
-  including the output range and divider range that fall short.
+- **Against the proposal** — every goal line with what the schematic measures, including the
+  output range and divider range that fall short of it.
 
 ## Layout
 

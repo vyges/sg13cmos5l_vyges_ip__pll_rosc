@@ -40,7 +40,18 @@ for corner in tt ss ff; do
     ff) mos=mos_ff ;;
   esac
   for temp in -40 27 110; do
-    for vdd in 0.98 1.20 1.50; do
+    # ⛔ FIVE RAILS, AND THE OUTER TWO ARE NOT A SPECIFICATION. 0.98 / 1.20 / 1.50 came from
+    # a sketch at the 2026-09-01 review, recorded only in this comment: "what an on-slot pMOS
+    # power switch delivers into a varying load". That cannot be right for this block. The
+    # harness README gives a pallet ONE supply, 3.3 V through a pMOS switch; the 1.2 V the
+    # whole block runs from is the CORE/DIGITAL rail, confirmed distributed at the same
+    # review. A series pMOS switch can only DROP its input, so a 1.2 V rail cannot arrive at
+    # 1.50 V, and +/-25 % is not a digital rail tolerance -- +/-10 % is 1.08-1.32 V.
+    # ⟹ 1.08 and 1.32 are swept alongside the original three rather than replacing them, so
+    # the two answers can be compared instead of one being asserted. It matters: 0.98 V is
+    # the sole cause of the acquisition-time failure and 1.50 V drives most of the crossover
+    # violations, and neither is inside a +/-10 % digital rail.
+    for vdd in 0.98 1.08 1.20 1.32 1.50; do
       echo "$corner $mos $temp $vdd" >> pvt/_cporder
     done
   done

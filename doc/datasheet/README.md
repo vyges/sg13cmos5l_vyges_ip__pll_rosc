@@ -50,7 +50,7 @@ Three, and each is drawn because a table cannot show what it shows:
 - **`pll_rosc_tuning.svg`** — the typical tuning curve against the 800 MHz line it misses.
   The headline shortfall is a distance on this plot rather than a claim in a row.
 - **`pll_rosc_tuning_pvt.svg`** — all nine corner curves. The typical curve is not what the
-  part guarantees; drawing the spread shows where the 600 MHz ceiling comes from.
+  part guarantees; drawing the spread shows where the guaranteed ceiling comes from.
 - **`pll_rosc_phase_margin.svg`** — margin at every Kvco and resistor corner, for BOTH
   divider settings, because their worst corners are opposite ones. A single-N plot would
   suggest margin moves one way with corner, and it does not.

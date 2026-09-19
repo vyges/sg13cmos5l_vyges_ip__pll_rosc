@@ -82,6 +82,20 @@ RSH_TYP = 1360.0    # rhigh typical sheet, ohm/sq -- the sheet RZ_NOM was drawn 
 # to measure it, and the same run reproduced all three of the old values to within 0.07 %.
 RZ_CORNERS = [("res_bcs", 102.42e3), ("res_typ", 125.09e3), ("res_wcs", 149.75e3)]
 
+# ⛔ THE SPECIFIED SUPPLY RAIL, AND IT IS A SPECIFICATION AND NOT A SWEEP RANGE.
+# This block runs entirely from the 1.2 V core rail, which is a hard input requirement. The
+# PDK ships two core-rail families -- 1p08/1p20/1p32 and 1p35/1p50/1p65 -- so a 1.2 V rail
+# has exactly these corners.
+#
+# The sweep previously ran 0.98 / 1.20 / 1.50 V on the strength of a verbal sketch recorded
+# only in a code comment, and NEITHER outer point is a corner of a 1.2 V rail: 0.98 V is
+# BELOW the slowest characterised standard cell, which makes it undefined rather than
+# pessimistic (the PFD and divider are standard cells), and 1.50 V is the other family's
+# nominal, i.e. a different rail choice. The block's own proposal had said 1.08-1.32 V all
+# along. Both are still swept and are reported separately for comparison; they are not
+# corners, so they are not judged.
+RAILS_SPEC = ("1.08", "1.20", "1.32")
+
 # The divider settings the control bus can select. N is a loop parameter, not merely a
 # frequency setting -- crossover goes as Icp*Kvco/N, so a programmable divider drags the
 # crossover across the filter's fixed zero/pole pair. The design target is the WORST N.
@@ -178,7 +192,7 @@ def pvt_kvco():
     return {lab: kv for lab, kv, _, _, _ in _segments()}
 
 
-def _segments():
+def _segments(rails=RAILS_SPEC):
     """[(label, Kvco, Icp, f_lo, f_hi)] for every COMPLIANT control segment.
 
     Each segment carries its own measured pump current, because Icp and Kvco are both
@@ -188,6 +202,8 @@ def _segments():
     sweeps = cp_sweeps()
     out = []
     for key, pts in sorted(_tuning_rows().items()):
+        if rails is not None and key[2] not in rails:
+            continue
         cp = sweeps.get(key)
         lim = cp_limit(cp) if cp else float("inf")
         corner, temp, vdd = key
@@ -208,9 +224,9 @@ def _segments():
 FREF_LO_HZ, FREF_HI_HZ = 16e6, 50e6
 
 
-def loop_points():
+def loop_points(rails=RAILS_SPEC):
     """[(label, Kvco, Icp, f_lo, N)] -- every operating point the part can be asked for."""
-    return [(lab, kv, icp, f_lo, n) for lab, kv, icp, f_lo, f_hi in _segments()
+    return [(lab, kv, icp, f_lo, n) for lab, kv, icp, f_lo, f_hi in _segments(rails)
             for n in DIVIDERS if f_hi / n >= FREF_LO_HZ and f_lo / n <= FREF_HI_HZ]
 
 
@@ -284,6 +300,8 @@ def lock_points(n=16, fref=FREF_LO_HZ):
     sweeps = cp_sweeps()
     out = []
     for key, pts in sorted(_tuning_rows().items()):
+        if key[2] not in RAILS_SPEC:
+            continue
         cp = sweeps.get(key)
         lim = cp_limit(cp) if cp else float("inf")
         usable = [(v, f) for v, f in pts if v <= lim + 1e-9]
@@ -324,6 +342,8 @@ def pvt_ceiling():
     sweeps = cp_sweeps()
     tops = {}
     for key, pts in _tuning_rows().items():
+        if key[2] not in RAILS_SPEC:
+            continue
         lim = cp_limit(sweeps[key]) if key in sweeps else float("inf")
         usable = [f for v, f in pts if v <= lim + 1e-9]
         if usable:
@@ -349,7 +369,7 @@ def _tuning_rows():
     return {k: sorted(v) for k, v in out.items()}
 
 
-def pm_over_corners():
+def pm_over_corners(rails=RAILS_SPEC):
     """{N: (worst PM, where)} over every operating point and every resistor corner.
 
     Both gain terms come from measurement at the same corner: Kvco from the tuning sweep,
@@ -358,7 +378,7 @@ def pm_over_corners():
     figure gets published for a loop whose gain was assumed, and it reads exactly like a
     figure that was measured.
     """
-    pts = loop_points()
+    pts = loop_points(rails)
     if not pts or not cp_sweeps():
         return {}
     out = {}
@@ -376,14 +396,14 @@ def pm_over_corners():
     return out
 
 
-def crossover_margin():
+def crossover_margin(rails=RAILS_SPEC):
     """(worst fc / (f_ref/10), where) -- the continuous-time approximation's own bound.
 
     A type-II charge-pump loop is a sampled system, and the s-domain phase margin above is
     only meaningful while the crossover stays well under the reference rate. The block has
     claimed f_ref/10 since the filter was first sized; this measures it instead.
     """
-    pts = loop_points()
+    pts = loop_points(rails)
     if not pts or not cp_sweeps():
         return None
     worst = None

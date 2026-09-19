@@ -35,7 +35,12 @@ python3 ../tools/datasheet.py --lock-points > pvt/_lkpoints || {
 # same answer on a corner whose answer is already known before it is used anywhere else.
 # LOCK_CORNERS restricts the run to named corners -- acquisition tracks Icp*Kvco/N at the
 # lock point, so the slowest corners bound the result and the rest are inference from them.
-TSTEP="${LOCK_TSTEP:-250p}"
+# ⛔ 100 ps, AND 250 ps WAS TRIED AND REJECTED ON EVIDENCE. 250 ps is 2.5x cheaper and it
+# does not converge: the PFD up flop fails at 3.6 us with "Timestep too small ... trouble
+# with node xpfd.xup.net2", aborting the transient while still answering the first .meas.
+# It was checked against the corner whose answer was already known, which is the only
+# reason that showed up as a failure rather than as a plausible number.
+TSTEP="${LOCK_TSTEP:-100p}"
 WANT="${LOCK_CORNERS:-}"
 
 n=0
@@ -91,13 +96,28 @@ while read -r corner temp vdd f0 kvco vc0; do
   key="${corner}_${temp}_${vdd}"
   if [ -n "$WANT" ]; then case " $WANT " in *" $key "*) ;; *) continue ;; esac; fi
   f="pvt/_lk_lock_${key}.txt"
-  if [ -s "$f" ]; then cat "$f" >> pvt/lock.txt; else
-    echo "MISSING lock $corner $temp $vdd" >&2; missing=$((missing + 1)); fi
+  if [ ! -s "$f" ]; then
+    echo "MISSING lock $corner $temp $vdd" >&2; missing=$((missing + 1)); continue
+  fi
+  # ⛔ A LINE OF "fail" IS NOT A RESULT, AND IT WAS PASSING THIS CHECK. The completeness
+  # test asked only whether the per-corner file existed, so a transient that aborted after
+  # the first sample wrote seven `fail` fields and read as a measured corner. A sample that
+  # did not resolve means the window did not contain the run, which is the one thing this
+  # bench exists to find out.
+  if grep -q "fail" "$f"; then
+    echo "INCOMPLETE lock $corner $temp $vdd -- the transient did not reach every sample" >&2
+    missing=$((missing + 1)); continue
+  fi
+  cat "$f" >> pvt/lock.txt
 done < pvt/_lkpoints
-rm -f pvt/_lk_*
 if [ "$missing" -ne 0 ]; then
+  # ⛔ AND THE LOGS STAY. Deleting them on success keeps the tree clean; deleting them on
+  # FAILURE deletes the only evidence of why, which is how a failed validation run left
+  # nothing behind to diagnose. Kept whenever anything went wrong.
   rm -f pvt/lock.txt
-  echo "FAILED: $missing acquisition runs produced no result (pvt/lock.txt removed)" >&2
+  echo "FAILED: $missing acquisition run(s) incomplete -- pvt/lock.txt removed," >&2
+  echo "        pvt/_lk_*.log KEPT for diagnosis" >&2
   exit 2
 fi
+rm -f pvt/_lk_*
 echo "measured $(wc -l < pvt/lock.txt) acquisition corners, $unreach unreachable ($JOBS at a time)"
