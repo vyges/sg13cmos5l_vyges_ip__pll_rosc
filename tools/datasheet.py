@@ -329,6 +329,46 @@ def lock_points(n=16, fref=FREF_LO_HZ):
     return out
 
 
+def lock_over_corners():
+    """(worst lock time, where, corners measured) from sim/run_lock.sh.
+
+    ⛔ THE HEADLINE LOCK TIME IS ONE CORNER, AND IT IS NOT THE WORST ONE. The acquisition
+    bench models the ring behaviourally at a single process/temperature/rail, which was
+    defensible while lock read 4 us against a 20 us limit -- no corner spread closes a 5x
+    gap. Sizing the loop to respect its own f_ref/10 bound spent most of that margin, so
+    the spread is now the result rather than a detail.
+
+    ⚠️ The count is returned and published with the figure. This is a worst case over the
+    corners that were MEASURED, not over the corner set: each one is a transistor-level
+    transient that takes hours, so they are chosen by loop gain at the lock point and the
+    rest are inference. A worst case quoted without how many corners produced it invites
+    exactly the reading it does not support.
+    """
+    p = os.path.join(ROOT, "sim", "pvt", "lock.txt")
+    if not os.path.isfile(p):
+        return None
+    worst = None
+    n = 0
+    for line in open(p):
+        f = line.split()
+        if len(f) < 5 or "fail" in f:
+            continue
+        corner, temp, vdd, tstop = f[0], f[1], f[2], f[3]
+        vals = [float(x) for x in f[4:]]
+        n += 1
+        total = float(tstop.rstrip("u")) * 1e-6
+        step = total / len(vals)
+        final = vals[-1]
+        t_lock = total
+        for i, v in enumerate(vals):
+            if abs(v - final) <= LOCK_TOL * abs(final):
+                t_lock = step * (i + 1)
+                break
+        if worst is None or t_lock > worst[0]:
+            worst = (t_lock, f"{corner}/{temp}C/{vdd}V")
+    return (worst[0], worst[1], n) if worst else None
+
+
 def pvt_ceiling():
     """The highest output frequency GUARANTEED across PVT: the slowest corner's top.
 
@@ -495,6 +535,11 @@ def rows():
     xo = crossover_margin()
     if xo:
         out.append(("Crossover, worst / (f_ref/10)", "", None, 1.0, one(xo[0])))
+    lk = lock_over_corners()
+    if lk:
+        # Stable row name: the corner COUNT belongs in the prose, not in the key a checker
+        # matches on, or adding a corner silently breaks the check it should have tightened.
+        out.append(("Lock time, worst corner", "us", None, 20e-6, one(lk[0])))
     return out
 
 
@@ -564,11 +609,12 @@ def plots_section(written):
 PUBLISHED_AS = {
     "VCO tuning range, low": ("Output, typical corner", 0),
     "VCO tuning range, high": ("Output, typical corner", 1),
-    "Lock time": ("Lock time", 0),
+    "Lock time": ("Lock time, typical", 0),
     "Output ceiling over PVT": ("Output, guaranteed over PVT", 0),
     "Phase margin, N = 16": ("Phase margin, N = 16", 0),
     "Phase margin, N = 8": ("Phase margin, N = 8", 0),
     "Crossover, worst / (f_ref/10)": ("Crossover vs f_ref/10", 0),
+    "Lock time, worst corner": ("Lock time, worst measured corner", 0),
 }
 
 NUM = re.compile(r"[-+]?\d+\.?\d*")

@@ -11,6 +11,7 @@
 | Phase margin, N = 8 | deg | 45.000 deg | 51.308 deg | 51.308 deg | any | 51.308 deg | Pass ✅ |
 | Phase margin, N = 16 | deg | 45.000 deg | 51.192 deg | 51.192 deg | any | 51.192 deg | Pass ✅ |
 | Crossover, worst / (f_ref/10) | - | any | 1.202 | 1.202 | 1.000 | 1.202 | Fail ❌ |
+| Lock time, worst corner | us | any | 24.000 us | 24.000 us | 20.000 us | 24.000 us | Fail ❌ |
 | Area | um2 | any | ​ | ​ | 164300.000 um2 | ​ | Skip 🟧 |
 | Magic DRC | - | any | ​ | ​ | 0.000 | ​ | Skip 🟧 |
 | Netgen LVS | - | any | ​ | ​ | 0.000 | ​ | Skip 🟧 |

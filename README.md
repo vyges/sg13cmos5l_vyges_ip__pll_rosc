@@ -13,6 +13,29 @@ analog-slot IP.
 
 ![Block diagram](doc/schematics/pll_rosc_block.svg)
 
+## Summary
+
+Measured on the schematic hierarchy, on the 1.2 V core rail this block is specified for.
+
+| Parameter | Measured | Goal |
+| --- | --- | --- |
+| Supply | **1.08 / 1.20 / 1.32 V** — the 1.2 V ±10 % core rail, a hard input | 1.08–1.32 V |
+| Reference in | 16–50 MHz usable | 10–50 MHz |
+| Output, typical corner | 115.4–735.3 MHz | 100–800 MHz |
+| Output, guaranteed over PVT | **352.6 MHz** ceiling, within charge-pump compliance | 800 MHz |
+| Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) | N = 4…64 |
+| Lock time, typical | **16.0 µs** (tt / 27 °C / 1.20 V) | 20 µs max |
+| Lock time, worst measured corner | **24.0 µs** ❌ (ss / −40 °C / 1.08 V) | 20 µs max |
+| Phase margin, N = 8 | **51.3°** ✅ (ff / 27 °C / 1.32 V / worst-case sheet) | 45° min |
+| Phase margin, N = 16 | **51.2°** ✅ (ss / 27 °C / 1.08 V / best-case sheet) | 45° min |
+| Crossover vs f_ref/10 | **1.20×** — exceeds the guideline | ≤ 1.0 |
+| Charge-pump current | **0.31–0.63 µA** measured, from the harness 250 nA reference | — |
+| Loop filter | Rz 125.09 kΩ, Cz 8.65 pF (82 × 82 µm), Cp 0.33 pF (16 × 16 µm) | — |
+
+Every figure in this table is derived by `tools/datasheet.py`, which **exits non-zero if any
+published number has drifted from the simulation behind it** — so the table cannot quietly go
+stale. Detail, and what each miss costs, below.
+
 ## What it is
 
 A foundational on-chip clock multiplier. Designed to drop into one openframe pallet slot —
@@ -22,22 +45,8 @@ reference, and receives ÷N-select and its two resets as a register field on the
 control-status bus. It needs **no 3.3 V analog rail**, and it reports no status: lock detect
 is not implemented.
 
-Measured on the schematic hierarchy; the loop figures come from a closed-loop run with
-every block real except the VCO, which is behavioural and matched to the measured curve.
-
-| Parameter | Measured | Goal |
-| --- | --- | --- |
-| Supply | **1.08 / 1.20 / 1.32 V** — the 1.2 V ±10 % core rail, a hard input | 1.08–1.32 V |
-| Reference in | 16–50 MHz usable | 10–50 MHz |
-| Output, typical corner | 115.4–735.3 MHz | 100–800 MHz |
-| Output, guaranteed over PVT | **352.6 MHz** ceiling, within charge-pump compliance | 800 MHz |
-| Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) | N = 4…64 |
-| Lock time | **16.0 µs** (tt / 27 °C / 1.20 V) | 20 µs max |
-| Phase margin, N = 8 | **51.3°** ✅ (ff / 27 °C / 1.32 V / worst-case sheet) | 45° min |
-| Phase margin, N = 16 | **51.2°** ✅ (ss / 27 °C / 1.08 V / best-case sheet) | 45° min |
-| Crossover vs f_ref/10 | **1.20×** — exceeds the guideline | ≤ 1.0 |
-| Charge-pump current | **0.31–0.63 µA** measured, from the harness 250 nA reference | — |
-| Loop filter | Rz 125.09 kΩ, Cz 8.65 pF (82 × 82 µm), Cp 0.33 pF (16 × 16 µm) | — |
+The loop figures come from a closed-loop run with every block real except the VCO, which is
+behavioural and matched to the measured tuning curve of the real ring.
 
 🔑 **The goals column is a goal, not a contract.** It was written before the PDK, the charge
 pump's real output current and the supply's own tolerance could be modelled. They can be now,
@@ -60,6 +69,25 @@ that had never been measured rather than any change to the oscillator:
   of compliance at about 0.85–0.91 × vdd and collapses to zero at the rail, so tuning-curve
   points above that cannot hold lock. The lowest Kvco in the whole sweep lives there, and it
   had been setting the phase-margin worst case.
+
+📏 **Acquisition, per corner.** The bench models the ring behaviourally at one corner, so the
+spread is measured explicitly rather than inferred — transistor-level, 100 ps over a 32 µs
+window, at the corners with the lowest loop gain at the lock point:
+
+| Corner | Lock time | |
+| --- | --- | --- |
+| tt / 27 °C / 1.20 V | 16 µs | ✅ |
+| ss / 110 °C / 1.08 V | 16 µs | ✅ |
+| ss / 27 °C / 1.08 V | 20 µs | ✅ at the limit |
+| tt / −40 °C / 1.08 V | 20 µs | ✅ at the limit |
+| **ss / −40 °C / 1.08 V** | **24 µs** | ❌ |
+
+⛔ **One corner of the specified set misses the 20 µs goal** — cold, slow process, bottom of
+the rail. At 20 µs it is still 3 % from its lock point, so this is a real miss and not a
+sampling artifact. It is a direct consequence of bringing the loop inside its own bandwidth
+bound: the previous 4 µs was fast *because* the crossover sat at twice the f_ref/10 it
+claimed. Four corners were measured, not twenty-seven — each is a multi-hour transient, so
+they were chosen by loop gain at the lock point and the rest are inference from them.
 
 ⚠️ **What is not met, stated here rather than left to be found.** The **output ceiling**,
 above. The **divider range**, since only ÷8 and ÷16 are usable against a 16–50 MHz reference.
