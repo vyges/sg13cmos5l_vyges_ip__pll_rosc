@@ -173,16 +173,29 @@ bias contract pushes.
 
 ## Cell hierarchy
 
-| Cell | What it does | Schematic |
-| --- | --- | --- |
-| `cs_inv` | One current-starved inverter stage | [SVG](schematics/cs_inv.svg) |
-| `rosc_vco` | 7-stage ring with bias mirror, matched loading, buffered tap | [SVG](schematics/rosc_vco.svg) |
-| `pfd` | Tri-state phase-frequency detector, two flops with a POR-gated reset | [SVG](schematics/pfd.svg) |
-| `charge_pump` | Current-steering pump, mirrored from the harness bias line | [SVG](schematics/charge_pump.svg) |
-| `loop_filter` | Type-II RC filter — the baseline | [SVG](schematics/loop_filter.svg) |
-| `loop_filter_lownoise` | Dual-path small-capacitor alternative | [SVG](schematics/loop_filter_lownoise.svg) |
-| `divn` | Programmable feedback divider, ÷2 ÷4 ÷8 ÷16 (only ÷8 and ÷16 usable — see below) | [SVG](schematics/divn.svg) |
-| `pll_rosc` | Top level | [SVG](schematics/pll_rosc.svg) |
+| Cell | What it does | Schematic | Wired |
+| --- | --- | --- | --- |
+| `cs_inv` | One current-starved inverter stage | [SVG](schematics/cs_inv.svg) | [SVG](schematics/cs_inv_wired.svg) |
+| `rosc_vco` | 7-stage ring with bias mirror, matched loading, buffered tap | [SVG](schematics/rosc_vco.svg) | [SVG](schematics/rosc_vco_wired.svg) |
+| `pfd` | Tri-state phase-frequency detector, two flops with a POR-gated reset | [SVG](schematics/pfd.svg) | [SVG](schematics/pfd_wired.svg) |
+| `charge_pump` | Current-steering pump, mirrored from the harness bias line | [SVG](schematics/charge_pump.svg) | [SVG](schematics/charge_pump_wired.svg) |
+| `loop_filter` | Type-II RC filter — the baseline | [SVG](schematics/loop_filter.svg) | [SVG](schematics/loop_filter_wired.svg) |
+| `loop_filter_lownoise` | Dual-path small-capacitor alternative | [SVG](schematics/loop_filter_lownoise.svg) | [SVG](schematics/loop_filter_lownoise_wired.svg) |
+| `divn` | Programmable feedback divider, ÷2 ÷4 ÷8 ÷16 (only ÷8 and ÷16 usable — see below) | [SVG](schematics/divn.svg) | [SVG](schematics/divn_wired.svg) |
+| `pll_rosc` | Top level | [SVG](schematics/pll_rosc.svg) | [SVG](schematics/pll_rosc_wired.svg) |
+
+**Wired views.** The generated cells connect most terminals by `lab_pin` name, which netlists
+correctly but reads as a parts table. Each `xschem/<cell>_wired.sch` is the same circuit, with
+same-name connections drawn as wires. It is produced by `tools/sch_bridge.py`, which works on the
+netgraph and moves no device. A net keeps one label only where no wired port names it, and a
+side-column port stays a port. The ring's stage overlap is placement, which that pass does not
+change.
+
+⛔ **Equivalence is xschem's, not the script's.** `tools/sch_equiv.sh --selftest <a> <b> ...`
+netlists both files, sorts the device lines and diffs them. `--selftest` first injects a short
+and requires the diff to fire. All eight pairs are identical (2026-10-04). The simulated cells
+remain the unwired files. Regenerate with
+`tools/sch_bridge.py xschem/{cs_inv,rosc_vco,pfd,charge_pump,loop_filter,loop_filter_lownoise,divn,pll_rosc}.sch`.
 
 ## VCO tuning curve — measured on the loaded ring
 

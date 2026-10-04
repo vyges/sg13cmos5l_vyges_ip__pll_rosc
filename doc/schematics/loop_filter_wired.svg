@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="750" height="515" viewBox="-440 -445 750 515">
+<rect x="-440.0" y="-445.0" width="750.0" height="515.0" fill="#ffffff"/>
+<line x1="0.0" y1="-220.0" x2="0.0" y2="-155.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="0.0" y1="-155.0" x2="0.0" y2="-150.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="0.0" y1="-150.0" x2="0.0" y2="-110.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="0.0" y1="-280.0" x2="0.0" y2="-340.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="0.0" y1="-340.0" x2="260.0" y2="-340.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="260.0" y1="-340.0" x2="260.0" y2="-150.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="260.0" y1="-150.0" x2="260.0" y2="-110.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="0.0" y1="-50.0" x2="0.0" y2="15.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="0.0" y1="15.0" x2="0.0" y2="30.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="0.0" y1="30.0" x2="260.0" y2="30.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="260.0" y1="30.0" x2="260.0" y2="15.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="260.0" y1="15.0" x2="260.0" y2="-50.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="0.0" y1="-280.0" x2="0.0" y2="-320.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<circle cx="0.0" cy="-220.0" r="2.6" fill="#c05621"/>
+<text x="7.0" y="-215.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">nz</text>
+<circle cx="0.0" cy="-50.0" r="2.6" fill="#c05621"/>
+<text x="7.0" y="-45.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vss</text>
+<line x1="0.0" y1="-230.0" x2="0.0" y2="-220.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="0.0" y1="-230.0" x2="7.5" y2="-232.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-7.5" y1="-237.5" x2="7.5" y2="-232.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-7.5" y1="-237.5" x2="7.5" y2="-242.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-7.5" y1="-247.5" x2="7.5" y2="-242.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-7.5" y1="-247.5" x2="7.5" y2="-252.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-7.5" y1="-257.5" x2="7.5" y2="-252.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-7.5" y1="-257.5" x2="7.5" y2="-262.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-7.5" y1="-267.5" x2="7.5" y2="-262.5" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-7.5" y1="-267.5" x2="0.0" y2="-270.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="0.0" y1="-280.0" x2="0.0" y2="-270.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<text x="-30.0" y="-288.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Rz</text>
+<text x="-30.0" y="-275.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="9.5" fill="#4a5568">W=1u L=88u</text>
+<line x1="0.0" y1="-75.0" x2="0.0" y2="-50.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="0.0" y1="-110.0" x2="0.0" y2="-85.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-10.0" y1="-85.0" x2="10.0" y2="-85.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-10.0" y1="-75.0" x2="10.0" y2="-75.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<text x="-30.0" y="-118.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Cz</text>
+<text x="-30.0" y="-105.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="9.5" fill="#4a5568">W=82u L=82u</text>
+<line x1="260.0" y1="-75.0" x2="260.0" y2="-50.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="260.0" y1="-110.0" x2="260.0" y2="-85.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="250.0" y1="-85.0" x2="270.0" y2="-85.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="250.0" y1="-75.0" x2="270.0" y2="-75.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<text x="230.0" y="-118.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Cp</text>
+<text x="230.0" y="-105.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="9.5" fill="#4a5568">W=16u L=16u</text>
+<circle cx="0.0" cy="-320.0" r="2.6" fill="#c05621"/>
+<text x="7.0" y="-315.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vctrl</text>
+<circle cx="-400.0" cy="-200.0" r="2.6" fill="#c05621"/>
+<text x="-393.0" y="-195.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vss</text>
+<text x="-400.0" y="-405.0" font-family="Helvetica,Arial,sans-serif" font-size="17.0" font-weight="bold" fill="#1a202c">loop_filter -- type-II RC loop filter (Rz 125.1k, Cz 8.65p, Cp 0.33p)</text>
+</svg>
