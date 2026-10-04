@@ -7,9 +7,12 @@ SG13CMOS5L provides); the loop-filter cap is MOM/poly within the 5-metal stack.
 Built for the **Chipalooza Challenge #2 (IHP SG13CMOS5L)** as an openframe
 analog-slot IP.
 
-> Status: **schematic**. The full cell hierarchy is captured in xschem, netlists, and
-> simulates. See [`doc/implementation.md`](doc/implementation.md) for what is built and
-> measured, and [`doc/proposal.md`](doc/proposal.md) for the original design intent.
+> Status: **schematic complete; placed and routed, layout not yet committed.** The full cell
+> hierarchy is captured in xschem, netlists, and simulates. A routed slot layout is DRC- and
+> LVS-clean on the PDK decks and is held back until the items under
+> [Physical design](#physical-design) close. See [`doc/implementation.md`](doc/implementation.md)
+> for what is built and measured, and [`doc/proposal.md`](doc/proposal.md) for the original
+> design intent.
 
 ![Block diagram](doc/schematics/pll_rosc_block.svg)
 
@@ -123,13 +126,45 @@ this block into a slot:
 - **Against the proposal** — every goal line with what the schematic measures, including the
   output range and divider range that fall short of it.
 
+## Physical design
+
+Every device of the netlist is placed in the slot-6 floorplan
+([`doc/implementation.md`](doc/implementation.md#floorplan--the-slot-6-placement-as-checked-data))
+and the block is routed to the 537.15 × 273 µm slot outline, on the harness's own pins. On the
+PDK decks:
+
+| Check | Result |
+| --- | --- |
+| DRC (KLayout, main rules) | **0 violations** |
+| LVS (KLayout, strict top-level ports) | **match** |
+| Antenna | 6 markers, all at one PFD gate on `ref`, about 200 µm from the pad. Expected to clear in chip context, where the pad's ESD diode joins on the wrapper-pin layer; unconfirmed |
+| Density | fails at block level, as expected — chip-level fill is a harness step |
+
+`Rz` is drawn **straight** (1.40 × 89.22 µm). Folding it with the PDK's `rhigh` serpentine would
+change what LVS extracts (per-segment `l`, bends, leg spacing) and the resistance itself.
+
+What holds the layout back from `gds/slot_6.gds`:
+
+- ⚠️ `porb`, `rstb`, `nsel0` and `nsel1` wait on their harness bit assignment; until then they
+  are unconnected inputs in the layout.
+- ⚠️ `vco_out` leaves on an analog pad unless the harness can give it an output pad; the
+  alternative is an on-slot divider, which changes the output path.
+- ⚠️ **Post-layout simulation is not run.** Parasitic extraction works, but it does not yet
+  recognise the PDK's MOM capacitor as a device and extracts `Cz`'s combs at about twice the
+  model (16.6 pF against 8.65 pF). The loop's phase margin depends on exactly that value.
+- ℹ️ The rails are routed as ordinary nets; a proper power grid comes with the final layout.
+
+**What routing needed that the PDK cells do not provide:** a gate contact on every MOSFET, a well
+tap on every pMOS, a substrate tie beside every nMOS (LU.b), and Metal4 terminal stubs on the
+MOM capacitors, whose own pins are below Metal4's minimum width.
+
 ## Layout
 
 | Dir | Contents |
 | --- | --- |
 | `xschem/` | schematics — `cs_inv`, `rosc_vco`, `pfd`, `charge_pump`, `loop_filter`, `divn`, `pll_rosc` |
 | `doc/schematics/` | rendered SVGs of every cell, readable without opening xschem |
-| `magic/` | analog layout |
+| `magic/` | analog layout — empty until the routed layout is committed (see Physical design) |
 | `netlist/` | extracted / simulation netlists |
 | `sim/` | testbenches — **`sim/ringvco_feasibility.spice`** + `run_tuning_sweep.sh` |
 | `verilog/` | digital control/status wrapper (LibreLane) |
