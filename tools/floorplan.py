@@ -228,7 +228,10 @@ PLACE = [
 ]
 # Every analog region keeps its guard ring free; Rz folds at the height used above.
 PACK = {r[0]: dict(inset=GUARD) for r in BLOCKS if r[5] != "route"}
-PACK["loop filter (Cz Cp Rz)"]["fold"] = RZ_H
+# Rz is placed STRAIGHT (1.40 x 89.22 um fits the 94 um inner height). Folding it with the
+# PDK's serpentine changes what LVS extracts -- per-segment l plus bends -- so a folded Rz
+# would need b and a per-segment l in the schematic, and a re-simulation for the bend
+# resistance. Found by LVS on the first routed slot GDS (2026-10-04).
 PACK["VCO ring + output buffer"]["order"] = "netlist"   # stages X1..X7 in sequence, not by size
 
 COLOUR = {"lf": "#2a9d8f", "cp": "#e76f51", "pfd": "#adb5bd", "div": "#ced4da",
