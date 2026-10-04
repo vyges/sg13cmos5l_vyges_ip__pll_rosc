@@ -641,7 +641,7 @@ rules, each with its reason:
 
 A channel is reserved along the left edge, y 70–100, for the routes coming in there:
 `ibias0` and the four controls (`porb`, `rstb`, `nsel0`, `nsel1`) all arrive in that band.
-Power arrives on metal5 and can run over every region, except that `Cz` fills M1–M4, which is
+Power arrives on TopMetal1 and can run over every region, except that `Cz` fills M1–M4, which is
 why nothing routes through the filter.
 
 ⚠️ **What it is not.** A first-cut placement: one guard ring per analog region, no routing,

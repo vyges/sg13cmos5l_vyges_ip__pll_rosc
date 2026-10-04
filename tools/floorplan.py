@@ -27,8 +27,8 @@ PIN GEOMETRY (slot6_wrapper.mag, harness @ 1906830; y from the slot bottom):
 
   right / pad edge   ref      s6_an[0]  y  77.2-101.9
                      vco_out  s6_an[1]  y 187.2-211.9
-  left / core edge   vdd_1v2  metal5    y   1.5-56.8
-                     vss_1v2  metal5    y  66.4-96.4
+  left / core edge   vdd_1v2  TopMetal1 y   1.5-56.8   (magic calls it metal5)
+                     vss_1v2  TopMetal1 y  66.4-96.4
                      ibias0   metal3    y  97.2-99.2
                      dig_in   metal3    y  72.2-90.0   (porb, rstb, nsel0, nsel1; bits not
                                                          yet assigned by the harness owner)
@@ -36,7 +36,7 @@ PIN GEOMETRY (slot6_wrapper.mag, harness @ 1906830; y from the slot bottom):
 ⚠️ WHAT THIS IS NOT. A first-cut placement, not a routed floorplan. It reserves one guard
 ring per analog region and one channel; it does not route, and region shapes are rectangles.
 The packing checks are floors: a row of devices fitting a region's width does not prove the
-local routing does. Power is on metal5 (both rails arrive on metal5) and can run over every
+local routing does. Power is on TopMetal1 (both rails arrive on it) and can run over every
 region, so no power channel is reserved -- except that Cz occupies M1-M4 over its whole area,
 which is why nothing is routed through the filter region.
 """
@@ -216,6 +216,20 @@ def report():
     print("\nevery region is inside the slot, none overlap, each holds its devices, every rule holds")
     return 0
 
+
+# Which region each netlist instance is placed in, for chipalooza's placement-only slot GDS
+# (tools/slot_gds.py there). Instance-path regex, first match wins; every device must match.
+PLACE = [
+    (r"/Xlf/",  "loop filter (Cz Cp Rz)"),
+    (r"/Xcp/",  "charge pump"),
+    (r"/Xpfd/", "PFD"),
+    (r"/Xdiv/", "divider /N"),
+    (r"/Xvco/", "VCO ring + output buffer"),
+]
+# Every analog region keeps its guard ring free; Rz folds at the height used above.
+PACK = {r[0]: dict(inset=GUARD) for r in BLOCKS if r[5] != "route"}
+PACK["loop filter (Cz Cp Rz)"]["fold"] = RZ_H
+PACK["VCO ring + output buffer"]["order"] = "netlist"   # stages X1..X7 in sequence, not by size
 
 COLOUR = {"lf": "#2a9d8f", "cp": "#e76f51", "pfd": "#adb5bd", "div": "#ced4da",
           "vco": "#219ebc", "route": "#ffffff"}
