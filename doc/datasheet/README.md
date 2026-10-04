@@ -54,6 +54,9 @@ Three, and each is drawn because a table cannot show what it shows:
 - **`pll_rosc_phase_margin.svg`** — margin at every Kvco and resistor corner, for BOTH
   divider settings, because their worst corners are opposite ones. A single-N plot would
   suggest margin moves one way with corner, and it does not.
+- **`pll_rosc_floorplan.svg`** — region placement in the 537.15 × 273 µm slot with the wrapper
+  pins marked, drawn by `tools/floorplan.py` from the same checked data (measured footprints,
+  routing rules). Not a layout.
 
 They are emitted as hand-written SVG rather than through matplotlib: the block's tooling is
 stdlib-only, an SVG diffs and reviews like the rest of the repository, and no plotting

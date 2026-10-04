@@ -230,7 +230,7 @@ the crossover in log frequency, centred on the geometric-mean loop gain.
 | --- | --- | --- |
 | Icp | 1 µA | mirrored 1:1 from the harness bias |
 | Rz | 80.77 kΩ | `rhigh`, w = 1 µm, l = 56.9 µm — **measured**, not sheet arithmetic |
-| Cz | 5.11 pF | `cap_cmomf`, 63 × 63 µm — **2.4 % of the slot** |
+| Cz | 5.11 pF | `cap_cmomf`, 63 × 63 µm — **2.7 % of the slot** |
 | Cp | 0.417 pF | `cap_cmomf`, 18 × 18 µm |
 
 ⚠️ **`Cz` and `Cp` fell by 45 % at the same drawn size**, because the re-pin renamed
@@ -283,8 +283,11 @@ so the choice can be made on measurements rather than on argument:
 
 **`loop_filter` (in use).** The type-II RC designed above. Sizing it from the measured
 tuning curve rather than from a round number brought the zero capacitor to 63 × 63 µm,
-about **2.4 % of a 530 × 310 µm slot** — 5.11 pF under this pin's capacitor model, 9.21 pF
-under the previous one at the same drawn size. The area problem the proposal anticipated is
+about **2.7 % of the 537.15 × 273 µm slot** — 5.11 pF under this pin's capacitor model, 9.21 pF
+under the previous one at the same drawn size. ⚠️ Since re-sized against the **measured** pump
+current (2026-09-18): `Cz` is now 82 × 82.5 µm, **4.6 % of the slot**, and the whole filter is
+7,154 µm², 4.9 %, as measured by `tools/area_budget.py`. (The slot share was quoted against a
+verbal 530 × 310 µm until 2026-10-04; the drawn harness wrapper is 537.15 × 273.) The area problem the proposal anticipated is
 largely answered by designing the loop properly; it does not need an exotic filter.
 
 **`loop_filter_lownoise` (candidate).** A dual-path filter: the series resistor is
@@ -295,7 +298,7 @@ whole filter then scales down, provided the charge-pump current scales with it. 
 integrating capacitor is a MOS capacitor held in inversion, which is far denser than
 MOM, at 5× the minimum thick-oxide channel length.
 
-With the RC filter now at 3.1 % of the slot, the low-noise variant is no longer needed for
+With the RC filter at 4.9 % of the slot even after the re-size, the low-noise variant is no longer needed for
 area — its remaining argument is control-node noise, which has not been measured. **The
 swap is not free, and this is the part to carry forward:** a MOS capacitor only has
 its capacitance while the channel is formed, so `vctrl` must stay above the thick-oxide
@@ -608,6 +611,43 @@ This is the **implemented** port list.
 | --- | --- |
 | In | `ref`, 16–50 MHz |
 | Out | `vco_out`, up to 735 MHz typical, 600 MHz guaranteed over PVT |
+
+## Floorplan — the slot-6 placement, as checked data
+
+`tools/floorplan.py` places the block in the real slot — **537.15 × 273 µm**, read from the
+harness's `slot6_wrapper` layout — and fails if any region leaves the slot, overlaps another,
+cannot hold its devices, or breaks one of the routing rules below.
+`doc/datasheet/pll_rosc_floorplan.svg` is drawn from the same data, with the wrapper pins
+marked.
+
+![Floorplan](datasheet/pll_rosc_floorplan.svg)
+
+**Every footprint is measured.** `tools/area_budget.py` instantiates all 59 devices with the
+PDK's own PyCells and sizes the standard cells from the PDK LEF: **7,678 µm², 5.2 % of the
+slot**, of which the loop filter is 93 %. The whole seven-stage ring is 116 µm².
+
+⟹ **Area is not this block's constraint; routing is.** So the floorplan's checks are routing
+rules, each with its reason:
+
+| Rule | Limit | Placed | Why |
+| --- | --- | --- | --- |
+| `vctrl`: filter → pump | ≤ 8 µm | 6.0 | highest-impedance node; sets frequency directly |
+| `vctrl`: filter → ring bias | ≤ 40 µm | 30.0 | same net, other end |
+| `up`/`dn`: PFD → pump | ≤ 8 µm | 6.0 | mismatch is static phase offset and reference spur |
+| `div_out`: divider → PFD | ≤ 10 µm | 8.0 | |
+| PFD / divider off the filter | ≥ 40 µm | 52.0 | standard cells switch at up to the VCO rate; the pump sits between |
+| ring off the filter | ≥ 25 µm | 30.0 | room for both guard rings and a shield |
+| ring output end → `vco_out` pad | ≤ 100 µm | 97.1 | `Xbuf` (`inv_4`) drives the line and the pad |
+
+A channel is reserved along the left edge, y 70–100, for the routes coming in there:
+`ibias0` and the four controls (`porb`, `rstb`, `nsel0`, `nsel1`) all arrive in that band.
+Power arrives on metal5 and can run over every region, except that `Cz` fills M1–M4, which is
+why nothing routes through the filter.
+
+⚠️ **What it is not.** A first-cut placement: one guard ring per analog region, no routing,
+rectangular regions. Regions reserve 15.4 % of the slot. Two inputs are still open with the
+harness owner and do not move this placement: the `ibias0` source range, and whether
+`vco_out` gets an output pad (if not, an on-slot divider would join the ring region).
 
 ## Not in this revision
 
