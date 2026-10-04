@@ -185,17 +185,15 @@ bias contract pushes.
 | `pll_rosc` | Top level | [SVG](schematics/pll_rosc.svg) | [SVG](schematics/pll_rosc_wired.svg) |
 
 **Wired views.** The generated cells connect most terminals by `lab_pin` name, which netlists
-correctly but reads as a parts table. Each `xschem/<cell>_wired.sch` is the same circuit, with
-same-name connections drawn as wires. It is produced by `tools/sch_bridge.py`, which works on the
-netgraph and moves no device. A net keeps one label only where no wired port names it, and a
-side-column port stays a port. The ring's stage overlap is placement, which that pass does not
-change.
+correctly but reads as a parts table. Each `xschem/<cell>_wired.sch` is the same circuit with
+same-name connections drawn as wires. It was produced from the netgraph without moving any
+device. A net keeps one label only where no wired port names it, and a side-column port stays a
+port. The ring's stage overlap is placement, which that pass does not change.
 
-⛔ **Equivalence is xschem's, not the script's.** `tools/sch_equiv.sh --selftest <a> <b> ...`
-netlists both files, sorts the device lines and diffs them. `--selftest` first injects a short
-and requires the diff to fire. All eight pairs are identical (2026-10-04). The simulated cells
-remain the unwired files. Regenerate with
-`tools/sch_bridge.py xschem/{cs_inv,rosc_vco,pfd,charge_pump,loop_filter,loop_filter_lownoise,divn,pll_rosc}.sch`.
+⛔ **Equivalence is xschem's.** Each pair is netlisted by xschem, and the sorted device lines
+are diffed. That check was first shown to fire on an injected short. All eight pairs are
+identical (2026-10-04). The simulated cells remain the unwired files, so if a cell changes,
+its wired view is stale until it is regenerated.
 
 ## VCO tuning curve — measured on the loaded ring
 
