@@ -155,17 +155,25 @@ an even 3.2–5.8 fF.
 | | Schematic | First layout | Folded ring |
 | --- | --- | --- | --- |
 | Ring frequency, tt / 27 °C / 1.20 V, vctrl 0.80 V | 421.4 MHz | 296.0 MHz (−30 %) | 319.7 MHz (−24 %) |
-| Worst phase margin, N = 16 (floor 45°) | 51.2° | ⛔ 44.4° | re-running |
-| Lock at ss / −40 °C / 1.08 V | 21.0 µs | ⛔ unreachable (control voltage above the pump's compliance) | re-running |
+| Worst phase margin, N = 16 (floor 45°) | 51.2° | ⛔ 44.4° | ✅ 46.0° |
+| Lock at ss / −40 °C / 1.08 V (goal 20 µs) | 21.0 µs | ⛔ unreachable (control voltage above the pump's compliance) | ⛔ 21–24 µs |
 
 The loop filter extracts within 1 % of the model, so the filter is not the cause. The rest of the
 slowdown is the minimum wiring each ring node needs (about 4 fF against about 15 fF of device
-load). If the re-run still fails, the fix is in the ring's design: fewer stages, or stronger
-ones sized for that wiring.
+load). The folded ring gets back enough of it to pass the phase-margin floor, with 1° to spare.
+
+**Lock with the folded ring.** In a 48 µs run, the control voltage reaches its lock point
+(0.891 V) at 24 µs and stays within 0.13 % of it to the end. In a 24 µs run sampled every 3 µs,
+it is still 9 % short at 21 µs. So lock lands between 21 and 24 µs, and it misses the 20 µs goal
+at this corner. The schematic misses too: 21.0 µs on the same 3 µs grid, and 24 µs in its own
+32 µs run (see Acquisition, per corner). The miss comes from the loop sizing; the layout makes it
+slightly worse. Closing it means faster loop dynamics, which costs phase margin, and post-layout
+margin is now 46.0° against a 45° floor. So it is a spec decision, not a layout fix: either relax
+lock time at cold, slow process, low rail, or retune the loop and re-check phase margin.
 
 What holds the layout back from `gds/slot_6.gds`:
 
-- ⛔ **The post-layout check** above, then the same check with wire resistance extracted.
+- ⛔ **The post-layout check** above: phase margin passes; lock at ss / −40 °C / 1.08 V misses 20 µs (a spec decision). Then the same check with wire resistance extracted.
 - ⚠️ `porb`, `rstb`, `nsel0` and `nsel1` have no slot pins yet. Every harness control bit
   reaches every slot, so the bits are ours to choose; until then they are unconnected inputs
   in the layout.
