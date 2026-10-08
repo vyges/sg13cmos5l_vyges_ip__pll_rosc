@@ -7,11 +7,12 @@ SG13CMOS5L provides); the loop-filter cap is MOM/poly within the 5-metal stack.
 Built for the **Chipalooza Challenge #2 (IHP SG13CMOS5L)** as an openframe
 analog-slot IP.
 
-> Status: **schematic complete; placed and routed, layout not yet committed.** The full cell
-> hierarchy is captured in xschem, netlists, and simulates. A routed slot layout is DRC- and
-> LVS-clean on the PDK decks. ⛔ Its first post-layout check **failed**, and the re-laid ring is
-> being re-checked; the layout is held back until the items under
-> [Physical design](#physical-design) close. See [`doc/implementation.md`](doc/implementation.md)
+> Status: **schematic complete; placed, routed and checked post-layout; layout not yet committed.**
+> The routed slot layout is DRC- and LVS-clean on the PDK decks, with all control bits pinned.
+> Post-layout (extracted C, no wire R yet), phase margin passes (46.0° against 45°) and lock at
+> the typical corner is 18 µs. The ring runs about 24 % slower than in the schematic, and lock at
+> ss / −40 °C / 1.08 V is 24 µs against a 20 µs goal. The layout is held back until the items under
+> [Physical design](#physical-design) close (antenna diodes, wire resistance). See [`doc/implementation.md`](doc/implementation.md)
 > for what is built and measured, and [`doc/proposal.md`](doc/proposal.md) for the original
 > design intent.
 
@@ -19,26 +20,30 @@ analog-slot IP.
 
 ## Summary
 
-Measured on the schematic hierarchy, on the 1.2 V core rail this block is specified for.
+Measured on the schematic hierarchy and, post-layout, on the routed slot-6 layout with extracted
+capacitance (no wire resistance yet), on the 1.2 V core rail this block is specified for.
 
-| Parameter | Measured | Goal |
-| --- | --- | --- |
-| Digital supply (`vccd`) input | **1.08 / 1.20 / 1.32 V** — the 1.2 V ±10 % core rail, a hard input. Arrives on the block's `vdd` port. **Not** the 3.3 V pallet supply, which this block does not use | 1.08–1.32 V |
-| Reference in | 16–50 MHz usable | 10–50 MHz |
-| Output, typical corner | 115.4–735.3 MHz | 100–800 MHz |
-| Output, guaranteed over PVT | **352.6 MHz** ceiling, within charge-pump compliance | 800 MHz |
-| Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) | N = 4…64 |
-| Lock time, typical | **16.0 µs** (tt / 27 °C / 1.20 V) | 20 µs max |
-| Lock time, worst measured corner | **24.0 µs** ❌ (ss / −40 °C / 1.08 V) | 20 µs max |
-| Phase margin, N = 8 | **51.3°** ✅ (ff / 27 °C / 1.32 V / worst-case sheet) | 45° min |
-| Phase margin, N = 16 | **51.2°** ✅ (ss / 27 °C / 1.08 V / best-case sheet) | 45° min |
-| Crossover vs f_ref/10 | **1.20×** — exceeds the guideline | ≤ 1.0 |
-| Charge-pump current | **0.31–0.63 µA** measured, from the harness 250 nA reference | — |
-| Loop filter | Rz 125.09 kΩ, Cz 8.65 pF (82 × 82 µm), Cp 0.33 pF (16 × 16 µm) | — |
+| Parameter | Schematic | Post-layout | Goal |
+| --- | --- | --- | --- |
+| Digital supply (`vccd`) input | **1.08 / 1.20 / 1.32 V** — the 1.2 V ±10 % core rail, a hard input. Arrives on the block's `vdd` port. **Not** the 3.3 V pallet supply, which this block does not use | same | 1.08–1.32 V |
+| Reference in | 16–50 MHz usable | 16–33 MHz at ÷8 guaranteed over PVT (ceiling ÷ 8) | 10–50 MHz |
+| Output, typical corner | 115.4–735.3 MHz | 194.6–559.7 MHz | 100–800 MHz |
+| Output, guaranteed over PVT | **352.6 MHz** ceiling, within charge-pump compliance | **263.9 MHz** | 800 MHz |
+| Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) | same | N = 4…64 |
+| Lock time, typical | **16.0 µs** (tt / 27 °C / 1.20 V) | **18 µs** ✅ | 20 µs max |
+| Lock time, worst measured corner | **24.0 µs** ❌ (ss / −40 °C / 1.08 V) | **24 µs** ❌ | 20 µs max |
+| Phase margin, N = 8 | **51.3°** ✅ (ff / 27 °C / 1.32 V / worst-case sheet) | **56.1°** ✅ | 45° min |
+| Phase margin, N = 16 | **51.2°** ✅ (ss / 27 °C / 1.08 V / best-case sheet) | **46.0°** ✅ | 45° min |
+| Crossover vs f_ref/10 | **1.20×** — exceeds the guideline | **1.02×** | ≤ 1.0 |
+| Charge-pump current | **0.31–0.63 µA** measured, from the harness 250 nA reference | — | — |
+| Loop filter | Rz 125.09 kΩ, Cz 8.65 pF (82 × 82 µm), Cp 0.33 pF (16 × 16 µm) | Cz 8.57 pF, Cp 0.33 pF extracted (−1 %) | — |
 
 Every figure in this table is derived by `tools/datasheet.py`, which **exits non-zero if any
 published number has drifted from the simulation behind it** — so the table cannot quietly go
-stale. Detail, and what each miss costs, below.
+stale. The post-layout column is checked against `doc/datasheet/pll_rosc_pex.md`, which the
+same tool writes from the post-layout run (`--source pex --tree <run> --pexjson <pex_cells.json>`).
+Post-layout lock time is sampled every 6 µs (48 µs window): typical lock lands between 12 and
+18 µs, and the worst corner between 21 and 24 µs (a 24 µs run with 3 µs samples was still 9 % short at 21 µs). Detail, and what each miss costs, below.
 
 ## What it is
 

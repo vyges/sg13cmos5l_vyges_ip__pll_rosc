@@ -36,6 +36,10 @@ import sys
 from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Where the simulation RESULTS are read from. The repo itself for the schematic sheet;
+# --tree points it at a post-layout run (the extracted cells swapped into a copy of this repo).
+SIM = ROOT
+SOURCE = "schematic"
 NAME = "pll_rosc"
 
 # ------------------------------------------------------------------ loop parameters
@@ -138,7 +142,7 @@ def loop(rz, cz, cp, icp, kvco_hz_per_v, n):
 # ------------------------------------------------------------------ reading results
 
 def _log(name):
-    p = os.path.join(ROOT, "sim", f"_report_{name}.log")
+    p = os.path.join(SIM, "sim", f"_report_{name}.log")
     if not os.path.isfile(p):
         raise SystemExit(f"no such bench log: {p}\nrun sim/run.sh first")
     return open(p).read()
@@ -243,7 +247,7 @@ CP_COMPLIANCE = 0.90
 def cp_sweeps():
     """{(corner, temp, vdd): [(vctrl, i_up, i_dn)]} from sim/run_cp.sh."""
     out = {}
-    for p in sorted(glob.glob(os.path.join(ROOT, "sim", "pvt", "cp_*.csv"))):
+    for p in sorted(glob.glob(os.path.join(SIM, "sim", "pvt", "cp_*.csv"))):
         corner, temp, vdd = os.path.basename(p)[3:-4].rsplit("_", 2)
         pts = []
         for line in open(p):
@@ -366,7 +370,7 @@ def lock_over_corners():
     rest are inference. A worst case quoted without how many corners produced it invites
     exactly the reading it does not support.
     """
-    p = os.path.join(ROOT, "sim", "pvt", "lock.txt")
+    p = os.path.join(SIM, "sim", "pvt", "lock.txt")
     if not os.path.isfile(p):
         return None
     worst = None
@@ -413,7 +417,7 @@ def pvt_ceiling():
 
 def _tuning_rows():
     """{(corner, temp, vdd): [(vctrl, f_out)]} -- the tuning sweep, read once."""
-    p = os.path.join(ROOT, "sim", "pvt", "vco.txt")
+    p = os.path.join(SIM, "sim", "pvt", "vco.txt")
     out = {}
     if not os.path.isfile(p):
         return out
@@ -505,6 +509,24 @@ def lock_time():
     return math.inf if t is None else t
 
 
+def lock_time_tt():
+    """Typical lock time for a post-layout sheet, from the per-corner bench at tt/27/1.20.
+
+    ⛔ NOT tb_pll_lock.spice: that bench's VCO is behavioural with F0/KVCO/VC0 typed in from
+    the SCHEMATIC tuning sweep, so on an extracted tree it would re-measure the schematic
+    loop. sim/run_lock.sh takes its operating point from the tree's own sweep.
+    """
+    p = os.path.join(SIM, "sim", "pvt", "lock.txt")
+    for line in open(p) if os.path.isfile(p) else ():
+        f = line.split()
+        if f[:3] == ["tt", "27", "1.20"] and "fail" not in f:
+            vals = [float(x) for x in f[4:]]
+            step = float(f[3].rstrip("u")) * 1e-6 / len(vals)
+            t = settle_time([(step * (i + 1), v) for i, v in enumerate(vals)])
+            return math.inf if t is None else t
+    raise SystemExit(f"no tt/27/1.20 row in {p}: run sim/run_lock.sh with LOCK_CORNERS=tt_27_1.20")
+
+
 def band():
     """(low, high) of the output band: the frequencies over the control range where the VCO
     meets its specified floor.
@@ -524,7 +546,7 @@ def band():
 def rows():
     lo_f, hi_f = band()
     pm = pm_over_corners()
-    lock = lock_time()
+    lock = lock_time() if SOURCE == "schematic" else lock_time_tt()
 
     def one(v):
         return (v, v, v)
@@ -652,14 +674,32 @@ def _tolerance(literal):
     return 0.5 * 10 ** (-len(frac))
 
 
-def _readme_figures():
+def _readme_figures(col=1):
     out = {}
     for line in open(os.path.join(ROOT, "README.md"), encoding="utf-8"):
         if not line.startswith("|"):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) >= 2:
-            out[cells[0]] = NUM.findall(cells[1])
+        if len(cells) > col:
+            out[cells[0]] = NUM.findall(cells[col])
+    return out
+
+
+def _sheet_typ(source):
+    """{row name: Typ value as printed} from a generated sheet, or None if it is absent.
+
+    The post-layout results live on the build box, not in this repository, so --check cannot
+    re-derive them. It checks the README's post-layout column against the sheet those results
+    produced, so the column cannot drift from the sheet, and the sheet says where it came from.
+    """
+    p = os.path.join(ROOT, "doc", "datasheet", f"{NAME}_{source}.md")
+    if not os.path.isfile(p):
+        return None
+    out = {}
+    for line in open(p, encoding="utf-8"):
+        c = [x.strip() for x in line.strip().strip("|").split("|")]
+        if len(c) == 8 and c[0] not in ("Parameter",) and not c[0].startswith(":"):
+            out[c[0]] = c[4]
     return out
 
 
@@ -692,6 +732,24 @@ def check():
         for n in bad:
             print(f"  {n}")
         return 1
+    pex = _sheet_typ("pex")
+    if pex is not None:
+        post = _readme_figures(col=2)
+        for name, (label, idx) in PUBLISHED_AS.items():
+            if name not in pex or pex[name] == "not settled":
+                continue
+            if label not in post or len(post[label]) <= idx:
+                raise SystemExit(f"README.md row {label!r} has no post-layout figure {idx}")
+            literal, sheet = post[label][idx], float(NUM.findall(pex[name])[0])
+            ok = abs(sheet - float(literal)) <= _tolerance(literal)
+            if not ok:
+                bad.append(name + " (post-layout)")
+            print(f"{name + ' (pex)':<28} {literal:>10} {sheet:>10.6g}   {'ok' if ok else 'DRIFTED'}")
+        if bad:
+            print(f"\n{len(bad)} post-layout figure(s) no longer match {NAME}_pex.md:")
+            for n in bad:
+                print(f"  {n}")
+            return 1
     print("\nevery figure README.md publishes still matches the simulation behind it")
     return 0
 
@@ -713,7 +771,21 @@ def main():
                     help="verify README figures against the simulations; exit 1 on drift")
     ap.add_argument("--lock-points", action="store_true",
                     help="per-corner operating point for sim/run_lock.sh, one line each")
+    ap.add_argument("--source", default="schematic",
+                    help="netlist source the sheet is named for (schematic, pex, ...)")
+    ap.add_argument("--tree", help="read results from this copy of the repo instead of this one")
+    ap.add_argument("--pexjson", help="pex_cells.json: Cz, Cp as EXTRACTED (total C on nz, vctrl)")
     a = ap.parse_args()
+    global SIM, SOURCE, CZ, CP
+    SOURCE = a.source
+    if a.tree:
+        SIM = os.path.abspath(a.tree)
+    if a.pexjson:
+        import json
+        net = json.load(open(a.pexjson))["net_C_F"]
+        CZ, CP = net["pll_rosc/Xlf/nz"], net["vctrl"]
+    if SOURCE != "schematic" and SIM == ROOT:
+        ap.error("a non-schematic sheet needs --tree: this repo holds schematic results")
     if a.check:
         return check()
     if a.lock_points:
@@ -735,7 +807,7 @@ def main():
     d = os.path.join(ROOT, "doc", "datasheet")
     os.makedirs(d, exist_ok=True)
     written = []
-    for slug, fn, caption in PLOTS:
+    for slug, fn, caption in PLOTS if SOURCE == "schematic" else ():
         svg = fn()
         if svg is None:
             print(f"skipped plot {slug}: its inputs are absent")
@@ -744,7 +816,7 @@ def main():
         open(q, "w").write(svg)
         written.append((slug, caption))
         print(f"wrote {os.path.relpath(q, ROOT)}")
-    for source in ("schematic",):
+    for source in (SOURCE,):
         p = os.path.join(d, f"{NAME}_{source}.md")
         open(p, "w").write(table(source) + plots_section(written) + footer())
         print(f"wrote {os.path.relpath(p, ROOT)}")
@@ -845,7 +917,7 @@ def plot_tuning_pvt():
     visible and shows where the guaranteed ceiling comes from -- the slowest corner's top,
     not the typical one's.
     """
-    p = os.path.join(ROOT, "sim", "pvt", "vco.txt")
+    p = os.path.join(SIM, "sim", "pvt", "vco.txt")
     if not os.path.isfile(p):
         return None
     rows = {}

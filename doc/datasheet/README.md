@@ -1,6 +1,6 @@
 # Datasheet
 
-`pll_rosc_schematic.md` is generated. Do not edit it.
+`pll_rosc_schematic.md` and `pll_rosc_pex.md` are generated. Do not edit them.
 
 ```bash
 sh sim/run.sh && sh sim/run_pvt.sh     # produce the results
@@ -11,9 +11,13 @@ python3 tools/datasheet.py --check     # verify README.md against them; exit 1 o
 ## The format
 
 One table per netlist source, the same rows in every one, rows that cannot run against a
-given source marked **Skip** rather than dropped. Only `schematic` exists today: there is no
-layout, so `layout`, `pex` and `rcx`, and with them every physical row, have nothing to run
-against. They are still listed, because a missing row reads as an oversight while a Skipped
+given source marked **Skip** rather than dropped. `schematic` is written from this repository's
+results. `pex` is written from the post-layout run on the build box, where the routed slot's
+extracted cells are swapped into a copy of this repository:
+`python3 tools/datasheet.py --source pex --tree <run>/pex --pexjson <run>/pex/sim/pex/pex_cells.json`.
+That run uses Cz and Cp as extracted, and takes typical lock from the per-corner bench at
+tt / 27 °C / 1.20 V, because `tb_pll_lock.spice` carries the schematic's VCO model. `rcx`
+(wire resistance) does not exist yet. The physical rows stay Skip until a checker reads them. They are still listed, because a missing row reads as an oversight while a Skipped
 row states that the check exists and says what it will be judged against. The format is
 CACE's; the tool is not a dependency (it cannot consume `.spice` testbenches at all).
 
