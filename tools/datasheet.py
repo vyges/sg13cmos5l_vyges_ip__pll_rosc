@@ -329,6 +329,28 @@ def lock_points(n=16, fref=FREF_LO_HZ):
     return out
 
 
+def settle_time(samples, tol=None):
+    """Earliest sample time from which the control voltage STAYS within tol of its final
+    value, or None when the run did not settle inside its window.
+
+    ⛔ "Final" is the last sample, so the last sample always agrees with itself. The old rule
+    -- first sample within tol of the last -- therefore reported a loop still slewing at the
+    window's end as locked AT the window's end: the post-layout ss/-40/1.08 run read
+    "24.0 us" from a 24 us window while vctrl was still climbing 0.73 -> 0.81 -> 0.89 V.
+    Settling needs a witness: at least one EARLIER sample already within tol, and every sample
+    after the lock time staying there (a loop swinging through its lock point does not count).
+    """
+    tol = LOCK_TOL if tol is None else tol
+    pts = sorted(samples)
+    final = pts[-1][1]
+    t_lock = None
+    for t, v in reversed(pts):
+        if abs(v - final) > tol * abs(final):
+            break
+        t_lock = t
+    return t_lock if t_lock is not None and t_lock < pts[-1][0] else None
+
+
 def lock_over_corners():
     """(worst lock time, where, corners measured) from sim/run_lock.sh.
 
@@ -358,14 +380,12 @@ def lock_over_corners():
         n += 1
         total = float(tstop.rstrip("u")) * 1e-6
         step = total / len(vals)
-        final = vals[-1]
-        t_lock = total
-        for i, v in enumerate(vals):
-            if abs(v - final) <= LOCK_TOL * abs(final):
-                t_lock = step * (i + 1)
-                break
+        t_lock = settle_time([(step * (i + 1), v) for i, v in enumerate(vals)])
+        where = f"{corner}/{temp}C/{vdd}V"
+        if t_lock is None:                  # not settled by the window end: worse than any figure
+            t_lock, where = math.inf, f"{where}, not settled by {tstop}s"
         if worst is None or t_lock > worst[0]:
-            worst = (t_lock, f"{corner}/{temp}C/{vdd}V")
+            worst = (t_lock, where)
     return (worst[0], worst[1], n) if worst else None
 
 
@@ -481,11 +501,8 @@ def lock_time():
             vals[t] = float(m.group(1))
     if not vals:
         raise SystemExit("the lock bench measured no control voltage")
-    final = vals[max(vals)]
-    for t in sorted(vals):
-        if abs(vals[t] - final) <= LOCK_TOL * abs(final):
-            return t
-    return None
+    t = settle_time(vals.items())
+    return math.inf if t is None else t
 
 
 def band():
@@ -562,6 +579,8 @@ SCALE = {"MHz": 1e-6, "us": 1e6, "deg": 1, "um2": 1e12, "MHz/V": 1e-6, "": 1}
 # ------------------------------------------------------------------ rendering
 
 def _fmt(v, unit):
+    if v == math.inf:
+        return "not settled"
     return f"{v * SCALE[unit]:.3f} {unit}".strip()
 
 
