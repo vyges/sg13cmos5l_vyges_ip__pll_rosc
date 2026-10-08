@@ -644,10 +644,16 @@ A channel is reserved along the left edge, y 70–100, for the routes coming in 
 Power arrives on TopMetal1 and can run over every region, except that `Cz` fills M1–M4, which is
 why nothing routes through the filter.
 
+🔁 **The ring region is FOLDED (2026-10-08).** The placer laid the seven stages in one row and
+wrapped it inside X6, so `n7` ran about 110 µm back to X7 and the extracted ring was 30 % slow.
+`PACK[...]["groups"]` in `tools/floorplan.py` now anchors each stage as a column (nMOS below,
+pMOS and its load inverter above): X1–X4 left to right, X5–X7 back above them. Same region,
+same rules. The extracted ring is 319.7 MHz against 421.4 in schematic; see the README.
+
 ⚠️ **What it is not.** A first-cut placement: one guard ring per analog region, no routing,
 rectangular regions. Regions reserve 15.4 % of the slot. Two inputs are still open with the
 harness owner and do not move this placement: the `ibias0` source range, and whether
-`vco_out` gets an output pad (if not, an on-slot divider would join the ring region).
+`vco_out` keeps its analog pad and an on-slot divider joins the ring region (decided 2026-10-05).
 
 ## Not in this revision
 

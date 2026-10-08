@@ -9,7 +9,8 @@ analog-slot IP.
 
 > Status: **schematic complete; placed and routed, layout not yet committed.** The full cell
 > hierarchy is captured in xschem, netlists, and simulates. A routed slot layout is DRC- and
-> LVS-clean on the PDK decks and is held back until the items under
+> LVS-clean on the PDK decks. ⛔ Its first post-layout check **failed**, and the re-laid ring is
+> being re-checked; the layout is held back until the items under
 > [Physical design](#physical-design) close. See [`doc/implementation.md`](doc/implementation.md)
 > for what is built and measured, and [`doc/proposal.md`](doc/proposal.md) for the original
 > design intent.
@@ -143,20 +144,40 @@ PDK decks:
 `Rz` is drawn **straight** (1.40 × 89.22 µm). Folding it with the PDK's `rhigh` serpentine would
 change what LVS extracts (per-segment `l`, bends, leg spacing) and the resistance itself.
 
+**The ring is folded.** The first layout placed the seven stages in one row and wrapped it
+partway through one stage, so one ring wire ran about 110 µm back across the block. The ring
+now runs in two lanes, one column per stage, with each stage's load inverter in its own column,
+so no ring wire spans more than about one column. Ring-node capacitance went from 2.1–12.3 fF to
+an even 3.2–5.8 fF.
+
+**Post-layout (capacitance only; wire resistance is not yet extracted):**
+
+| | Schematic | First layout | Folded ring |
+| --- | --- | --- | --- |
+| Ring frequency, tt / 27 °C / 1.20 V, vctrl 0.80 V | 421.4 MHz | 296.0 MHz (−30 %) | 319.7 MHz (−24 %) |
+| Worst phase margin, N = 16 (floor 45°) | 51.2° | ⛔ 44.4° | re-running |
+| Lock at ss / −40 °C / 1.08 V | 21.0 µs | ⛔ unreachable (control voltage above the pump's compliance) | re-running |
+
+The loop filter extracts within 1 % of the model, so the filter is not the cause. The rest of the
+slowdown is the minimum wiring each ring node needs (about 4 fF against about 15 fF of device
+load). If the re-run still fails, the fix is in the ring's design: fewer stages, or stronger
+ones sized for that wiring.
+
 What holds the layout back from `gds/slot_6.gds`:
 
-- ⚠️ `porb`, `rstb`, `nsel0` and `nsel1` wait on their harness bit assignment; until then they
-  are unconnected inputs in the layout.
-- ⚠️ `vco_out` leaves on an analog pad unless the harness can give it an output pad; the
-  alternative is an on-slot divider, which changes the output path.
-- ⚠️ **Post-layout simulation is not run.** Parasitic extraction works, but it does not yet
-  recognise the PDK's MOM capacitor as a device and extracts `Cz`'s combs at about twice the
-  model (16.6 pF against 8.65 pF). The loop's phase margin depends on exactly that value.
+- ⛔ **The post-layout check** above, then the same check with wire resistance extracted.
+- ⚠️ `porb`, `rstb`, `nsel0` and `nsel1` have no slot pins yet. Every harness control bit
+  reaches every slot, so the bits are ours to choose; until then they are unconnected inputs
+  in the layout.
+- ⚠️ `vco_out` keeps its analog pad, and an on-slot output divider is added (decided
+  2026-10-05). The divider is not drawn yet.
 - ℹ️ The rails are routed as ordinary nets; a proper power grid comes with the final layout.
 
 **What routing needed that the PDK cells do not provide:** a gate contact on every MOSFET, a well
-tap on every pMOS, a substrate tie beside every nMOS (LU.b), and Metal4 terminal stubs on the
-MOM capacitors, whose own pins are below Metal4's minimum width.
+tap on every pMOS, a substrate tie beside every nMOS (LU.b), and short Metal4 stubs to bring
+each MOM capacitor's minimum-width terminal pins out of a cell that fills Metal1–Metal4.
+Reported upstream as [IHP-Open-PDK#1267](https://github.com/IHP-GmbH/IHP-Open-PDK/issues/1267);
+newer PDK versions add a guard-ring option that covers the taps and ties.
 
 ## Layout
 
