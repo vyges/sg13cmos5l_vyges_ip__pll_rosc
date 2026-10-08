@@ -605,6 +605,13 @@ This is the **implemented** port list.
 | 4 | control | `nsel[1:0]` divider select (2), `porb` phase-detector power-on reset (1), `rstb` divider reset (1) |
 | 0 | status | none — **lock detect is not implemented**, so there is nothing to report yet |
 
+Slot 6 pins, from the slot's own `dig_in[23:0]` bus (`user_dig_in[5*24 +: 24]` in the harness):
+`nsel0` → `dig_in[0]`, `nsel1` → `dig_in[2]`, `rstb` → `dig_in[4]`, `porb` → `dig_in[6]`. The
+wrapper's `dig_in` pins are Metal3, 0.22 µm tall at a 0.44 µm pitch, so using every other bit
+leaves the router a gap to each one. The pins we don't use are blockages for the router, and
+`slot_keepout_check.py` fails the run if routed metal comes within spacing of them. The
+assignment lives in chipalooza `tools/slot_fit.py`.
+
 ### Clocks
 
 | | |

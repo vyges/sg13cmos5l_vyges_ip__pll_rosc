@@ -174,9 +174,12 @@ lock time at cold, slow process, low rail, or retune the loop and re-check phase
 What holds the layout back from `gds/slot_6.gds`:
 
 - ⛔ **The post-layout check** above: phase margin passes; lock at ss / −40 °C / 1.08 V misses 20 µs (a spec decision). Then the same check with wire resistance extracted.
-- ⚠️ `porb`, `rstb`, `nsel0` and `nsel1` have no slot pins yet. Every harness control bit
-  reaches every slot, so the bits are ours to choose; until then they are unconnected inputs
-  in the layout.
+- ✅ **Control bits pinned (2026-10-08):** `nsel0` → `dig_in[0]`, `nsel1` → `dig_in[2]`,
+  `rstb` → `dig_in[4]`, `porb` → `dig_in[6]` of slot 6's own 24-bit `dig_in` bus. Every other
+  bit is used, so the router has a gap to reach each 0.22 µm pin. The wrapper's unused pins go to
+  the router as blockages and are checked after routing. Routed DRC 0, LVS match. If the bits
+  power up at 0, `porb` and `rstb` hold the phase detector and divider in reset until software
+  releases them.
 - ⚠️ `vco_out` keeps its analog pad, and an on-slot output divider is added (decided
   2026-10-05). The divider is not drawn yet.
 - ℹ️ The rails are routed as ordinary nets; a proper power grid comes with the final layout.

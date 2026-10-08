@@ -30,8 +30,8 @@ PIN GEOMETRY (slot6_wrapper.mag, harness @ 1906830; y from the slot bottom):
   left / core edge   vdd_1v2  TopMetal1 y   1.5-56.8   (magic calls it metal5)
                      vss_1v2  TopMetal1 y  66.4-96.4
                      ibias0   metal3    y  97.2-99.2
-                     dig_in   metal3    y  72.2-90.0   (porb, rstb, nsel0, nsel1; bits not
-                                                         yet assigned by the harness owner)
+                     dig_in   metal3    y  72.2-90.0   (nsel0 [0], nsel1 [2], rstb [4], porb [6];
+                                                         ours to choose, chipalooza slot_fit.py)
 
 ⚠️ WHAT THIS IS NOT. A first-cut placement, not a routed floorplan. It reserves one guard
 ring per analog region and one channel; it does not route, and region shapes are rectangles.
