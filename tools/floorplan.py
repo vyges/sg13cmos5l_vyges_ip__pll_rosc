@@ -232,7 +232,34 @@ PACK = {r[0]: dict(inset=GUARD) for r in BLOCKS if r[5] != "route"}
 # PDK's serpentine changes what LVS extracts -- per-segment l plus bends -- so a folded Rz
 # would need b and a per-segment l in the schematic, and a re-simulation for the bend
 # resistance. Found by LVS on the first routed slot GDS (2026-10-04).
-PACK["VCO ring + output buffer"]["order"] = "netlist"   # stages X1..X7 in sequence, not by size
+# The ring is FOLDED, one column per stage: X1-X4 run left to right in the lower lane, X5-X7
+# come back right to left in the upper lane, so X4 sits under X5 and X7 beside X1 and no ring
+# wire is longer than about one column plus the lane gap. Each column is the stage's nMOS
+# (lower sub-row) and pMOS (upper), plus the one inverter that loads ITS output -- Xdum<i+1>
+# for stage i, Xtap for X7 -- so every stage drives the same load at the same distance.
+# ⛔ Why: the shelf packer laid the stages in one row and wrapped it inside X6; n7 ran 110 um
+# back to X7, ring-node C rose from 2.1 fF (n1) to 12.3 fF (n7), and the extracted ring was
+# 30 % slow (296 vs 421 MHz at tt/27 C/1.20 V, vctrl 0.80) -- the post-layout gate's failure.
+RING_PITCH = 14.5           # stage column: Mps + Mpu + its load inverter, plus the 2 um gap
+RING_BIAS_W = 6.0           # the Mpr/Mnr bias column at the lane's left end
+RING_SUBROWS = (0.0, 5.0, 12.0, 19.0)   # lower n, lower p, upper p, upper n (um, from inset)
+
+
+def _ring_groups():
+    v = "/Xvco/"
+    col = lambda k: RING_BIAS_W + (k - 1) * RING_PITCH       # stage column k = 1..4
+    g = [(0.0, RING_SUBROWS[0], [v + "XMnr$"]), (0.0, RING_SUBROWS[1], [v + "XMpr$"])]
+    for i in range(1, 8):
+        k, (yn, yp) = (i, RING_SUBROWS[:2]) if i <= 4 else (9 - i, RING_SUBROWS[:1:-1])
+        load = v + ("Xtap$" if i == 7 else f"Xdum{i + 1}$")
+        g += [(col(k), yn, [f"{v}X{i}/XMnd$", f"{v}X{i}/XMns$"]),
+              (col(k), yp, [f"{v}X{i}/XMps$", f"{v}X{i}/XMpu$", load])]
+    # the output buffer beside Xtap, in the upper lane over X1
+    g.append((col(1), RING_SUBROWS[2], [v + "Xbuf$"]))
+    return g
+
+
+PACK["VCO ring + output buffer"]["groups"] = _ring_groups()
 
 COLOUR = {"lf": "#2a9d8f", "cp": "#e76f51", "pfd": "#adb5bd", "div": "#ced4da",
           "vco": "#219ebc", "route": "#ffffff"}
