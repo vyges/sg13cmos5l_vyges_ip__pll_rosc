@@ -68,7 +68,7 @@ DEVICES = {
              ("Mpsrc", 1.80, 4.62), ("Mnsnk", 1.18, 2.36), ("Mpi", 1.43, 2.62),
              ("Mni", 0.81, 1.36), ("Mswup", 1.43, 4.62), ("Mswdn", 0.81, 2.36)],
     "pfd":  [("Xup", 13.92, 3.78), ("Xdn", 13.92, 3.78), ("Xnand", 1.92, 3.78),
-             ("Xand", 2.40, 3.78)],
+             ("Xand", 2.40, 3.78), ("Xantref", 1.44, 3.78), ("Xantporb", 1.44, 3.78)],
     "div":  [("Xd1", 13.92, 3.78), ("Xd2", 13.92, 3.78), ("Xd3", 13.92, 3.78),
              ("Xd4", 13.92, 3.78), ("Xmux", 10.08, 3.78)],
     "vco":  [("Mpr", 1.43, 1.62), ("Mnr", 0.81, 1.36)]
@@ -78,7 +78,7 @@ DEVICES = {
             + [(f"Xdum{i}", 1.44, 3.78) for i in range(2, 8)]
             + [("Xtap", 1.44, 3.78), ("Xbuf", 2.88, 3.78)],
 }
-MEASURED_TOTAL = 7678.3     # area_budget.py's own total; the table above must reproduce it
+MEASURED_TOTAL = 7689.2     # area_budget.py's own total (+2 antennanp, D3, 2026-10-18); the table above must reproduce it
 
 # name, x, y, w, h, group(key into DEVICES, or "route")
 BLOCKS = [

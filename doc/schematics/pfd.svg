@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="745" viewBox="-560 -385 1160 745">
-<rect x="-560.0" y="-385.0" width="1160.0" height="745.0" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="960" viewBox="-560 -510 1160 960">
+<rect x="-560.0" y="-510.0" width="1160.0" height="960.0" fill="#ffffff"/>
 <line x1="90.0" y1="-240.0" x2="205.0" y2="-240.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
 <line x1="205.0" y1="-240.0" x2="280.0" y2="-240.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
 <line x1="280.0" y1="-240.0" x2="280.0" y2="-100.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
@@ -33,6 +33,8 @@
 <line x1="-90.0" y1="40.0" x2="-90.0" y2="0.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
 <line x1="-90.0" y1="60.0" x2="-140.0" y2="60.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
 <line x1="360.0" y1="200.0" x2="360.0" y2="240.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="-250.0" y1="-360.0" x2="-300.0" y2="-360.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
+<line x1="210.0" y1="400.0" x2="160.0" y2="400.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
 <line x1="-90.0" y1="-240.0" x2="-90.0" y2="-280.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
 <line x1="-90.0" y1="40.0" x2="-90.0" y2="0.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
 <line x1="360.0" y1="200.0" x2="360.0" y2="240.0" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round"/>
@@ -97,6 +99,36 @@
 <text x="390.0" y="142.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Xand</text>
 <circle cx="360.0" cy="240.0" r="2.6" fill="#c05621"/>
 <text x="367.0" y="244.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">porb</text>
+<line x1="-230.0" y1="-370.0" x2="-90.0" y2="-370.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-230.0" y1="-350.0" x2="-90.0" y2="-350.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-230.0" y1="-370.0" x2="-230.0" y2="-350.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-90.0" y1="-370.0" x2="-90.0" y2="-350.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-250.0" y1="-360.0" x2="-230.0" y2="-360.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-230.0" y1="-360.0" x2="-220.0" y2="-360.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-220.0" y1="-365.0" x2="-220.0" y2="-360.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-220.0" y1="-365.0" x2="-210.0" y2="-360.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-220.0" y1="-360.0" x2="-220.0" y2="-355.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-220.0" y1="-355.0" x2="-210.0" y2="-360.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-210.0" y1="-365.0" x2="-210.0" y2="-355.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="-210.0" y1="-360.0" x2="-205.0" y2="-360.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<text x="-190.0" y="-398.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Xantref</text>
+<circle cx="-300.0" cy="-360.0" r="2.6" fill="#c05621"/>
+<text x="-307.0" y="-355.5" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">ref</text>
+<line x1="230.0" y1="390.0" x2="370.0" y2="390.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="230.0" y1="410.0" x2="370.0" y2="410.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="230.0" y1="390.0" x2="230.0" y2="410.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="370.0" y1="390.0" x2="370.0" y2="410.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="210.0" y1="400.0" x2="230.0" y2="400.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="230.0" y1="400.0" x2="240.0" y2="400.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="240.0" y1="395.0" x2="240.0" y2="400.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="240.0" y1="395.0" x2="250.0" y2="400.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="240.0" y1="400.0" x2="240.0" y2="405.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="240.0" y1="405.0" x2="250.0" y2="400.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="250.0" y1="395.0" x2="250.0" y2="405.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<line x1="250.0" y1="400.0" x2="255.0" y2="400.0" stroke="#1a202c" stroke-width="2" stroke-linecap="round"/>
+<text x="270.0" y="362.0" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="bold" fill="#1a202c">Xantporb</text>
+<circle cx="160.0" cy="400.0" r="2.6" fill="#c05621"/>
+<text x="153.0" y="404.5" text-anchor="end" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">porb</text>
 <circle cx="-90.0" cy="-280.0" r="2.6" fill="#c05621"/>
 <text x="-83.0" y="-275.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">ref</text>
 <circle cx="-90.0" cy="0.0" r="2.6" fill="#c05621"/>
@@ -111,5 +143,5 @@
 <text x="-513.0" y="-195.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vdd</text>
 <circle cx="-520.0" cy="-140.0" r="2.6" fill="#c05621"/>
 <text x="-513.0" y="-135.5" text-anchor="start" font-family="Helvetica,Arial,sans-serif" font-size="11" fill="#7b341e">vss</text>
-<text x="-520.0" y="-345.0" font-family="Helvetica,Arial,sans-serif" font-size="17.0" font-weight="bold" fill="#1a202c">pfd -- tri-state phase-frequency detector</text>
+<text x="-520.0" y="-470.0" font-family="Helvetica,Arial,sans-serif" font-size="17.0" font-weight="bold" fill="#1a202c">pfd -- tri-state phase-frequency detector</text>
 </svg>

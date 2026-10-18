@@ -53,6 +53,12 @@ C {sg13cmos5l_stdcells/sg13cmos5l_nand2_1.sym} 420 -80 0 0 {name=Xnand VDD=vdd V
 C {sg13cmos5l_stdcells/sg13cmos5l_and2_1.sym} 420 180 0 0 {name=Xand VDD=vdd VSS=vss prefix=sg13cmos5l_}
 N 360 200 360 240 {lab=porb}
 C {devices/lab_pin.sym} 360 240 0 0 {name=l_Xand_B sig_type=std_logic lab=porb}
+C {sg13cmos5l_stdcells/sg13cmos5l_antennanp.sym} -160 -360 0 0 {name=Xantref VDD=vdd VSS=vss prefix=sg13cmos5l_}
+N -250 -360 -300 -360 {lab=ref}
+C {devices/lab_pin.sym} -300 -360 0 1 {name=l_Xantref_A sig_type=std_logic lab=ref}
+C {sg13cmos5l_stdcells/sg13cmos5l_antennanp.sym} 300 400 0 0 {name=Xantporb VDD=vdd VSS=vss prefix=sg13cmos5l_}
+N 210 400 160 400 {lab=porb}
+C {devices/lab_pin.sym} 160 400 0 1 {name=l_Xantporb_A sig_type=std_logic lab=porb}
 N -90 -240 -90 -280 {lab=ref}
 C {devices/ipin.sym} -90 -280 0 0 {name=p_ref lab=ref}
 N -90 40 -90 0 {lab=div}
