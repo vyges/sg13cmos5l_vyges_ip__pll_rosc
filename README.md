@@ -7,16 +7,30 @@ SG13CMOS5L provides); the loop-filter cap is MOM/poly within the 5-metal stack.
 Built for the **Chipalooza Challenge #2 (IHP SG13CMOS5L)** as an openframe
 analog-slot IP.
 
-> Status: **schematic complete; placed, routed and checked post-layout; layout not yet committed.**
-> The routed slot layout is DRC- and LVS-clean on the PDK decks, with all control bits pinned.
+> Status: **laid out and handed off to the harness (`gds/`); post-layout re-check running.**
+> The block is its own layout cell, instanced once in `gds/slot_6.gds`; both are DRC-, antenna- and
+> LVS-clean on the PDK decks, with all control bits pinned, and the harness test build places it.
 > Post-layout (extracted C, no wire R yet), phase margin passes (46.0° against 45°) and lock at
 > the typical corner is 18 µs. The ring runs about 24 % slower than in the schematic, and lock at
-> ss / −40 °C / 1.08 V is 24 µs against a 20 µs goal. The layout is held back until the items under
-> [Physical design](#physical-design) close (antenna diodes, wire resistance). See [`doc/implementation.md`](doc/implementation.md)
+> ss / −40 °C / 1.08 V is 24 µs against a 20 µs goal. Those numbers are from the previous route; the
+> handed-off block was re-routed, and the post-layout check is re-running on it (open items under
+> [Physical design](#physical-design)). See [`doc/implementation.md`](doc/implementation.md)
 > for what is built and measured, and [`doc/proposal.md`](doc/proposal.md) for the original
 > design intent.
 
-![Block diagram](doc/schematics/pll_rosc_block.svg)
+![PLL top level](doc/figures/pll_top.svg)
+
+The loop: a tri-state PFD (`Xup`/`Xdn`, reset through `Xnand`/`Xand`, held by `porb`) steers the
+charge pump's switches `Mswup`/`Mswdn` between the current source `Mpsrc` and sink `Mnsnk`; the
+pump drives `vctrl` into `Cp` and the `Rz`–`Cz` zero; `vctrl` sets the current-starved ring
+`Xvco`, whose output returns through the ÷N divider `Xdiv`. The figures in
+[`doc/figures/`](doc/figures/) are drawn from the xschem schematics and checked against them pin
+by pin (the check tables are in that directory's README); the schematics in `xschem/` remain the
+source of truth.
+
+| PFD | Charge pump | Ring VCO: one stage, and the folded seven-stage ring |
+| --- | --- | --- |
+| ![PFD](doc/figures/pll_pfd.svg) | ![Charge pump](doc/figures/pll_cp.svg) | ![Ring VCO](doc/figures/pll_vco.svg) |
 
 ## Summary
 
@@ -134,17 +148,28 @@ this block into a slot:
 
 ## Physical design
 
-Every device of the netlist is placed in the slot-6 floorplan
-([`doc/implementation.md`](doc/implementation.md#floorplan--the-slot-6-placement-as-checked-data))
-and the block is routed to the 537.15 × 273 µm slot outline, on the harness's own pins. On the
-PDK decks:
+✅ **The layout is in [`gds/`](gds/).** Every device of the netlist is placed in the slot-6
+floorplan ([`doc/implementation.md`](doc/implementation.md#floorplan--the-slot-6-placement-as-checked-data)).
+The block is its own cell, `sg13cmos5l_vyges_ip__pll_rosc` (529.05 × 269 µm, pins named by its
+ports), routed inside its own outline; `gds/slot_6.gds` instances it once in the harness slot,
+with a straight stub from each wrapper pin it uses to the block pin facing it. On the PDK decks:
 
-| Check | Result |
-| --- | --- |
-| DRC (KLayout, main rules) | **0 violations** |
-| LVS (KLayout, strict top-level ports) | **match** |
-| Antenna | 6 markers, all at one PFD gate on `ref`, about 200 µm from the pad. Expected to clear in chip context, where the pad's ESD diode joins on the wrapper-pin layer; unconfirmed |
-| Density | fails at block level, as expected — chip-level fill is a harness step |
+| Check | Block alone | In `slot_6` |
+| --- | --- | --- |
+| DRC (KLayout, main rules) | **0** | **0** |
+| Antenna | **0** | **0** |
+| LVS (KLayout, strict top-level ports) | **match** | **match** |
+| Unused wrapper pins clear of our metal | — | **0 violations, 45 pins** |
+| Density | fails at block level, as expected — chip-level fill is a harness step | |
+
+In the harness's own test build, the slot is found and placed, its outline and every pin land on
+the wrapper's (contract check PASS), and the slot as assembled into the chip is identical to
+`gds/slot_6.gds` (XOR clean, 36 layers).
+
+**Antenna diodes** (2026-10-18): `ref` and `porb` arrive from wrapper pins hundreds of µm away and
+climb to TopMetal1, so the PFD gates they drive failed the antenna rule on Metal3, Metal4 and
+TopMetal1 (12 markers). One `sg13cmos5l_antennanp` beside each gate, in the schematic and the PFD
+region, clears all 12; the pad's ESD diode could not, because it joins only on Metal3.
 
 `Rz` is drawn **straight** (1.40 × 89.22 µm). Folding it with the PDK's `rhigh` serpentine would
 change what LVS extracts (per-segment `l`, bends, leg spacing) and the resistance itself.
@@ -176,9 +201,13 @@ slightly worse. Closing it means faster loop dynamics, which costs phase margin,
 margin is now 46.0° against a 45° floor. So it is a spec decision, not a layout fix: either relax
 lock time at cold, slow process, low rail, or retune the loop and re-check phase margin.
 
-What holds the layout back from `gds/slot_6.gds`:
+Open items:
 
-- ⛔ **The post-layout check** above: phase margin passes; lock at ss / −40 °C / 1.08 V misses 20 µs (a spec decision). Then the same check with wire resistance extracted.
+- ⏳ **The post-layout check is re-running** on the handed-off block. Giving the block its own
+  outline moved the routing grid, so every net was re-routed (same placement, wire length 5585
+  against 5575 µm); the ring at tt / 27 °C / 1.20 V, vctrl 0.80 V, comes out at 323.7 MHz against
+  319.7 MHz before. The table above is the previous route's until the run finishes.
+- ⛔ Lock at ss / −40 °C / 1.08 V misses 20 µs (a spec decision). Then the same check with wire resistance extracted.
 - ✅ **Control bits pinned (2026-10-08):** `nsel0` → `dig_in[0]`, `nsel1` → `dig_in[2]`,
   `rstb` → `dig_in[4]`, `porb` → `dig_in[6]` of slot 6's own 24-bit `dig_in` bus. Every other
   bit is used, so the router has a gap to reach each 0.22 µm pin. The wrapper's unused pins go to
@@ -201,7 +230,8 @@ newer PDK versions add a guard-ring option that covers the taps and ties.
 | --- | --- |
 | `xschem/` | schematics — `cs_inv`, `rosc_vco`, `pfd`, `charge_pump`, `loop_filter`, `divn`, `pll_rosc` |
 | `doc/schematics/` | rendered SVGs of every cell, readable without opening xschem |
-| `magic/` | analog layout — empty until the routed layout is committed (see Physical design) |
+| `gds/` | the layout: block cell `sg13cmos5l_vyges_ip__pll_rosc` and the harness hand-off `slot_6.gds` |
+| `doc/figures/` | presentation circuit figures (cirfig_gen), each checked pin by pin against the schematic |
 | `netlist/` | extracted / simulation netlists |
 | `sim/` | testbenches — **`sim/ringvco_feasibility.spice`** + `run_tuning_sweep.sh` |
 | `verilog/` | digital control/status wrapper (LibreLane) |
