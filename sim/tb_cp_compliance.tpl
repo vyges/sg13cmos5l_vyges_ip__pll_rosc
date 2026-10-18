@@ -14,6 +14,8 @@
 .lib @M@/cornerMOSlv.lib @MOS@
 .lib @M@/cornerRES.lib @RES@
 .include @M@/cap_cmomf.lib
+* the PFD's antenna diodes (sg13cmos5l_antennanp) are dpantenna, defined here
+.include @M@/diodes.lib
 .include $PDK_ROOT/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/spice/sg13cmos5l_stdcell.spice
 .global sub!
 .include pll_cells.spice
