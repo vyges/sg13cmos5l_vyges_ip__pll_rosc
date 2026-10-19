@@ -27,7 +27,7 @@
 # rs takes away the amplifier and the internal node rather than the step itself.
 # The maintainer's breakdown fix (bv=10.37 ibv=1.433E-007 nbv=25, tt and rs kept) completes
 # tb_pll_lock.spice. Its v(vctrl) agrees with this copy to 0.5 mV there, and on both post-layout
-# lock corners. This copy stays because it also completes decks the breakdown fix alone does not.
+# lock corners. This copy stays: it is the one checked against a bench with no antenna diodes.
 #
 # Exactly two lines must change, or this exits 2: a PDK update that renames the models or
 # the value would otherwise leave the benches including an unmodified copy.
