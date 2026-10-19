@@ -21,6 +21,13 @@
 # drop across rs (about 0.36 Mohm on this device) is nanovolts. The PDK header itself says the model "is
 # designed for reverse direction". Junction capacitance, leakage and breakdown are untouched.
 # Reported upstream: https://github.com/IHP-GmbH/IHP-Open-PDK/issues/1288
+# 🔑 ROOT CAUSE, per the maintainer's reply there: the soft-breakdown fit, not tt. darea's
+# nbv = 48.9 makes the reverse current jump about 160x at 3*n*kT/q (78 mV at 27 C, 61 mV at -40 C;
+# no DC solution at all at 110 C), and tt's diffusion charge amplifies the jump. Removing tt and
+# rs takes away the amplifier and the internal node rather than the step itself.
+# The maintainer's breakdown fix (bv=10.37 ibv=1.433E-007 nbv=25, tt and rs kept) completes
+# tb_pll_lock.spice. Its v(vctrl) agrees with this copy to 0.5 mV there, and on both post-layout
+# lock corners. This copy stays because it also completes decks the breakdown fix alone does not.
 #
 # Exactly two lines must change, or this exits 2: a PDK update that renames the models or
 # the value would otherwise leave the benches including an unmodified copy.

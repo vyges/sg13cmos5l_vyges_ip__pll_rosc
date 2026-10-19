@@ -207,12 +207,17 @@ Open items:
   against 5575 µm). The table above is that block's: phase margin 55.8° (÷8) and 46.2° (÷16),
   tuning 197.5–565.4 MHz typical, lock 18 µs typical and 24 µs at ss / −40 °C / 1.08 V.
 - ⚠️ **The PFD's antenna diodes needed a simulation workaround.** The PDK's `dantenna` model
-  aborts a transient under a clock edge (700 ns transit time behind 0.36 MΩ;
-  [IHP-Open-PDK#1288](https://github.com/IHP-GmbH/IHP-Open-PDK/issues/1288)). The PFD benches
-  include a copy of the PDK's `diodes.lib` with that transit time and the 0.36 MΩ series
-  resistance removed (`sim/diodes_rev.sh`). The diodes stay reverse-biased, where neither does
-  anything: the lock bench agrees with the same bench run without the diodes to 0.8 mV of
-  `vctrl` at every sample.
+  aborts a transient under a clock edge
+  ([IHP-Open-PDK#1288](https://github.com/IHP-GmbH/IHP-Open-PDK/issues/1288)). The cause, per the
+  maintainer, is the soft-breakdown fit: `nbv` ≈ 49 makes the reverse current jump about 160× at
+  3·n·kT/q (78 mV at 27 °C), and the model's 700 ns transit time amplifies the jump.
+  - **Workaround:** the PFD benches include a copy of the PDK's `diodes.lib` with the transit time
+    and the 0.36 MΩ series resistance removed (`sim/diodes_rev.sh`).
+  - **Why it is safe:** the diodes stay reverse-biased, where neither parameter does anything. The
+    lock bench agrees with the same bench run without the diodes to 0.8 mV of `vctrl` at every
+    sample.
+  - **Upstream's fix agrees:** the maintainer's breakdown fix gives the same result as this
+    workaround, within 0.5 mV, wherever both run.
 - ⛔ Lock at ss / −40 °C / 1.08 V misses 20 µs (a spec decision). Then the same check with wire resistance extracted.
 - ✅ **Control bits pinned (2026-10-08):** `nsel0` → `dig_in[0]`, `nsel1` → `dig_in[2]`,
   `rstb` → `dig_in[4]`, `porb` → `dig_in[6]` of slot 6's own 24-bit `dig_in` bus. Every other
