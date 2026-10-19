@@ -15,7 +15,7 @@
 .lib @M@/cornerRES.lib @RES@
 .include @M@/cap_cmomf.lib
 * the PFD's antenna diodes (sg13cmos5l_antennanp): the PDK's diodes.lib with the n-diode's
-* transit time zeroed, written by sim/diodes_rev.sh -- see there for why
+* transit time and series resistance removed, written by sim/diodes_rev.sh -- see there for why
 .include diodes_rev.lib
 .include $PDK_ROOT/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/spice/sg13cmos5l_stdcell.spice
 .global sub!

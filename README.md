@@ -7,14 +7,13 @@ SG13CMOS5L provides); the loop-filter cap is MOM/poly within the 5-metal stack.
 Built for the **Chipalooza Challenge #2 (IHP SG13CMOS5L)** as an openframe
 analog-slot IP.
 
-> Status: **laid out and handed off to the harness (`gds/`); post-layout re-check running.**
+> Status: **laid out and handed off to the harness (`gds/`); post-layout check done on the handed-off block.**
 > The block is its own layout cell, instanced once in `gds/slot_6.gds`; both are DRC-, antenna- and
 > LVS-clean on the PDK decks, with all control bits pinned, and the harness test build places it.
-> Post-layout (extracted C, no wire R yet), phase margin passes (46.0° against 45°) and lock at
-> the typical corner is 18 µs. The ring runs about 24 % slower than in the schematic, and lock at
-> ss / −40 °C / 1.08 V is 24 µs against a 20 µs goal. Those numbers are from the previous route; the
-> handed-off block was re-routed, and the post-layout check is re-running on it (open items under
-> [Physical design](#physical-design)). See [`doc/implementation.md`](doc/implementation.md)
+> Post-layout (extracted C, no wire R yet), phase margin passes (46.2° against 45°) and lock at
+> the typical corner is 18 µs. The ring runs about 23 % slower than in the schematic, and lock at
+> ss / −40 °C / 1.08 V is 24 µs against a 20 µs goal. Measured on the handed-off block itself
+> (2026-10-19). See [`doc/implementation.md`](doc/implementation.md)
 > for what is built and measured, and [`doc/proposal.md`](doc/proposal.md) for the original
 > design intent.
 
@@ -41,14 +40,14 @@ capacitance (no wire resistance yet), on the 1.2 V core rail this block is speci
 | --- | --- | --- | --- |
 | Digital supply (`vccd`) input | **1.08 / 1.20 / 1.32 V** — the 1.2 V ±10 % core rail, a hard input. Arrives on the block's `vdd` port. **Not** the 3.3 V pallet supply, which this block does not use | same | 1.08–1.32 V |
 | Reference in | 16–50 MHz usable | 16–33 MHz at ÷8 guaranteed over PVT (ceiling ÷ 8) | 10–50 MHz |
-| Output, typical corner | 115.4–735.3 MHz | 194.6–559.7 MHz | 100–800 MHz |
-| Output, guaranteed over PVT | **352.6 MHz** ceiling, within charge-pump compliance | **263.9 MHz** | 800 MHz |
+| Output, typical corner | 115.4–735.3 MHz | 197.5–565.4 MHz | 100–800 MHz |
+| Output, guaranteed over PVT | **352.6 MHz** ceiling, within charge-pump compliance | **267.1 MHz** | 800 MHz |
 | Divider | ÷8 and ÷16 usable (÷2, ÷4 need a reference above 50 MHz) | same | N = 4…64 |
 | Lock time, typical | **16.0 µs** (tt / 27 °C / 1.20 V) | **18 µs** ✅ | 20 µs max |
 | Lock time, worst measured corner | **24.0 µs** ❌ (ss / −40 °C / 1.08 V) | **24 µs** ❌ | 20 µs max |
-| Phase margin, N = 8 | **51.3°** ✅ (ff / 27 °C / 1.32 V / worst-case sheet) | **56.1°** ✅ | 45° min |
-| Phase margin, N = 16 | **51.2°** ✅ (ss / 27 °C / 1.08 V / best-case sheet) | **46.0°** ✅ | 45° min |
-| Crossover vs f_ref/10 | **1.20×** — exceeds the guideline | **1.02×** | ≤ 1.0 |
+| Phase margin, N = 8 | **51.3°** ✅ (ff / 27 °C / 1.32 V / worst-case sheet) | **55.8°** ✅ | 45° min |
+| Phase margin, N = 16 | **51.2°** ✅ (ss / 27 °C / 1.08 V / best-case sheet) | **46.2°** ✅ | 45° min |
+| Crossover vs f_ref/10 | **1.20×** — exceeds the guideline | **1.01×** | ≤ 1.0 |
 | Charge-pump current | **0.31–0.63 µA** measured, from the harness 250 nA reference | — | — |
 | Loop filter | Rz 125.09 kΩ, Cz 8.65 pF (82 × 82 µm), Cp 0.33 pF (16 × 16 µm) | Cz 8.57 pF, Cp 0.33 pF extracted (−1 %) | — |
 
@@ -203,10 +202,17 @@ lock time at cold, slow process, low rail, or retune the loop and re-check phase
 
 Open items:
 
-- ⏳ **The post-layout check is re-running** on the handed-off block. Giving the block its own
+- ✅ **Post-layout check re-run on the handed-off block (2026-10-19).** Giving the block its own
   outline moved the routing grid, so every net was re-routed (same placement, wire length 5585
-  against 5575 µm); the ring at tt / 27 °C / 1.20 V, vctrl 0.80 V, comes out at 323.7 MHz against
-  319.7 MHz before. The table above is the previous route's until the run finishes.
+  against 5575 µm). The table above is that block's: phase margin 55.8° (÷8) and 46.2° (÷16),
+  tuning 197.5–565.4 MHz typical, lock 18 µs typical and 24 µs at ss / −40 °C / 1.08 V.
+- ⚠️ **The PFD's antenna diodes needed a simulation workaround.** The PDK's `dantenna` model
+  aborts a transient under a clock edge (700 ns transit time behind 0.36 MΩ;
+  [IHP-Open-PDK#1288](https://github.com/IHP-GmbH/IHP-Open-PDK/issues/1288)). The PFD benches
+  include a copy of the PDK's `diodes.lib` with that transit time and the 0.36 MΩ series
+  resistance removed (`sim/diodes_rev.sh`). The diodes stay reverse-biased, where neither does
+  anything: the lock bench agrees with the same bench run without the diodes to 0.8 mV of
+  `vctrl` at every sample.
 - ⛔ Lock at ss / −40 °C / 1.08 V misses 20 µs (a spec decision). Then the same check with wire resistance extracted.
 - ✅ **Control bits pinned (2026-10-08):** `nsel0` → `dig_in[0]`, `nsel1` → `dig_in[2]`,
   `rstb` → `dig_in[4]`, `porb` → `dig_in[6]` of slot 6's own 24-bit `dig_in` bus. Every other
