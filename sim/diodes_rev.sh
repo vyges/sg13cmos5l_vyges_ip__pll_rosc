@@ -13,6 +13,7 @@
 # diodes sit reverse-biased between vss and the 1.2 V rail for the whole run, where the
 # diffusion charge is tt times a femtoamp leakage. The PDK header itself says the model "is
 # designed for reverse direction". Junction capacitance, leakage and breakdown are untouched.
+# Reported upstream: https://github.com/IHP-GmbH/IHP-Open-PDK/issues/1288
 #
 # Exactly two lines must change, or this exits 2: a PDK update that renames the models or
 # the value would otherwise leave the benches including an unmodified copy.
