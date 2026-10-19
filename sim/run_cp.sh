@@ -25,6 +25,7 @@ for d in ihp-sg13cmos5l "$PDK"; do
 done
 [ -s pll_cells.spice ] || { echo "FAILED: no pll_cells.spice -- run sim/run.sh first" >&2; exit 2; }
 M="$PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models"
+sh ./diodes_rev.sh || exit 2
 JOBS="${PVT_JOBS:-8}"
 mkdir -p pvt
 rm -f pvt/cp_*.csv pvt/_cp_*

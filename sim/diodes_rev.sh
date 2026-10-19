@@ -1,0 +1,28 @@
+#!/bin/sh
+# diodes_rev.sh -- write sim/diodes_rev.lib: the PDK's diodes.lib with the transit time of the
+# n-side antenna diode (darea, dperim) set to 0. Every bench that holds the PFD includes it.
+#
+# Why: the PFD's antenna diodes (sg13cmos5l_antennanp on ref and porb) put the PDK dantenna on
+# a pin driven by a clock edge. Its darea model carries tt = 700 ns behind rs = 219 kohm (per
+# um2, on a 0.6 um2 device), and ngspice cannot integrate that internal node: the transient
+# aborts with "Timestep too small ... trouble with node d...xd1.d1#internal" at 8.8 ns. It
+# reproduces with a pulse source and the diode alone, so it is the model, not the PLL. Setting
+# tt = 0 (or dropping rs) is enough; Gear integration, gmin, rshunt and reltol are not.
+#
+# Why that is not a change of circuit: tt is the diffusion charge of FORWARD conduction. These
+# diodes sit reverse-biased between vss and the 1.2 V rail for the whole run, where the
+# diffusion charge is tt times a femtoamp leakage. The PDK header itself says the model "is
+# designed for reverse direction". Junction capacitance, leakage and breakdown are untouched.
+#
+# Exactly two lines must change, or this exits 2: a PDK update that renames the models or
+# the value would otherwise leave the benches including an unmodified copy.
+set -u
+cd "$(dirname "$0")" || exit 2
+SRC="$PDK_ROOT/ihp-sg13cmos5l/libs.tech/ngspice/models/diodes.lib"
+[ -s "$SRC" ] || { echo "FAILED: no $SRC" >&2; exit 2; }
+sed -E '/^\.MODEL (darea|dperim) D/s/tt=7\.009E-007/tt=0/' "$SRC" > diodes_rev.lib
+n=$(diff "$SRC" diodes_rev.lib | grep -c '^>')
+if [ "$n" -ne 2 ]; then
+  echo "FAILED: diodes_rev.lib changed $n lines of $SRC, expected 2 (darea, dperim tt)" >&2
+  rm -f diodes_rev.lib; exit 2
+fi

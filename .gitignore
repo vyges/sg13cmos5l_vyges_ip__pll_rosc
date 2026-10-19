@@ -5,3 +5,4 @@ __pycache__/
 sim/pvt/
 sim/_report_*.log
 sim/*.csv
+sim/diodes_rev.lib

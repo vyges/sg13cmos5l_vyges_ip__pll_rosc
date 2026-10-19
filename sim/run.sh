@@ -49,6 +49,7 @@ for d in ihp-sg13cmos5l "$PDK"; do
   fi
 done
 mkdir -p sim/netlist
+sh sim/diodes_rev.sh || exit 2   # the antenna-diode model copy the PFD benches include
 
 # ⚠️ No `set -e` around the netlist step: xschem returns non-zero on a perfectly clean
 # netlist, so aborting on its status skips everything after it and the benches then read

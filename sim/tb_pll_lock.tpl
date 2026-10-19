@@ -25,8 +25,9 @@
 .lib @M@/cornerMOSlv.lib @MOS@
 .lib @M@/cornerRES.lib @RES@
 .include @M@/cap_cmomf.lib
-* the PFD's antenna diodes (sg13cmos5l_antennanp) are dpantenna, defined here
-.include @M@/diodes.lib
+* the PFD's antenna diodes (sg13cmos5l_antennanp): the PDK's diodes.lib with the n-diode's
+* transit time zeroed, written by sim/diodes_rev.sh -- see there for why
+.include diodes_rev.lib
 .include $PDK_ROOT/ihp-sg13cmos5l/libs.ref/sg13cmos5l_stdcell/spice/sg13cmos5l_stdcell.spice
 .global sub!
 * pll_cells.spice holds the real .subckt definitions, extracted from the top-level
