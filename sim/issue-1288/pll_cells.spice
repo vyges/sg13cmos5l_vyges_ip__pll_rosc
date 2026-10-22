@@ -1,0 +1,115 @@
+.subckt pfd ref div porb up dn vdd vss
+*.ipin ref
+*.ipin div
+*.ipin porb
+*.opin up
+*.opin dn
+*.iopin vdd
+*.iopin vss
+Xup up upn ref vdd rstb vdd vss sg13cmos5l_dfrbp_1
+Xdn dn dnn div vdd rstb vdd vss sg13cmos5l_dfrbp_1
+Xnand nout up dn vdd vss sg13cmos5l_nand2_1
+Xand rstb nout porb vdd vss sg13cmos5l_and2_1
+Xantref ref vdd vss sg13cmos5l_antennanp
+Xantporb porb vdd vss sg13cmos5l_antennanp
+.ends
+
+
+* expanding   symbol:  charge_pump.sym # of pins=6
+** sym_path: /work/sch/xschem/charge_pump.sym
+** sch_path: /work/sch/xschem/charge_pump.sch
+.subckt charge_pump up dn ibias vctrl vdd vss
+*.ipin up
+*.ipin dn
+*.ipin ibias
+*.iopin vctrl
+*.iopin vdd
+*.iopin vss
+XMn0 ibias ibias vss vss sg13_lv_nmos w=2u l=0.5u ng=1 m=1 mm_ok=1
+XMn1 vbp ibias vss vss sg13_lv_nmos w=2u l=0.5u ng=1 m=1 mm_ok=1
+XMp0 vbp vbp vdd vdd sg13_lv_pmos w=4u l=0.5u ng=1 m=1 mm_ok=1
+XMpsrc a vbp vdd vdd sg13_lv_pmos w=4u l=0.5u ng=1 m=1 mm_ok=1
+XMnsnk b ibias vss vss sg13_lv_nmos w=2u l=0.5u ng=1 m=1 mm_ok=1
+XMpi upb up vdd vdd sg13_lv_pmos w=2u l=0.13u ng=1 m=1 mm_ok=1
+XMni upb up vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1 mm_ok=1
+XMswup vctrl upb a vdd sg13_lv_pmos w=4u l=0.13u ng=1 m=1 mm_ok=1
+XMswdn vctrl dn b vss sg13_lv_nmos w=2u l=0.13u ng=1 m=1 mm_ok=1
+.ends
+
+
+* expanding   symbol:  loop_filter.sym # of pins=2
+** sym_path: /work/sch/xschem/loop_filter.sym
+** sch_path: /work/sch/xschem/loop_filter.sch
+.subckt loop_filter vctrl vss
+*.iopin vctrl
+*.iopin vss
+XRz vctrl nz sub! rhigh w=1u l=88u m=1 b=0 mm_ok=1
+XCz nz vss cap_cmomf w=82u l=82u mmin=1 mmax=4 subblock=0 m=1 mm_ok=1
+XCp vctrl vss cap_cmomf w=16u l=16u mmin=1 mmax=4 subblock=0 m=1 mm_ok=1
+.ends
+
+
+* expanding   symbol:  rosc_vco.sym # of pins=4
+** sym_path: /work/sch/xschem/rosc_vco.sym
+** sch_path: /work/sch/xschem/rosc_vco.sch
+.subckt rosc_vco vctrl vco_out vdd vss
+*.ipin vctrl
+*.opin vco_out
+*.iopin vdd
+*.iopin vss
+XMpr vbp vbp vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1 mm_ok=1
+XMnr vbp vctrl vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1 mm_ok=1
+X1 n1 n2 vdd vbp vctrl vss cs_inv
+X2 n2 n3 vdd vbp vctrl vss cs_inv
+X3 n3 n4 vdd vbp vctrl vss cs_inv
+X4 n4 n5 vdd vbp vctrl vss cs_inv
+X5 n5 n6 vdd vbp vctrl vss cs_inv
+X6 n6 n7 vdd vbp vctrl vss cs_inv
+X7 n7 n1 vdd vbp vctrl vss cs_inv
+Xtap vco_outn n1 vdd vss sg13cmos5l_inv_1
+Xbuf vco_out vco_outn vdd vss sg13cmos5l_inv_4
+Xdum2 ndum2 n2 vdd vss sg13cmos5l_inv_1
+Xdum3 ndum3 n3 vdd vss sg13cmos5l_inv_1
+Xdum4 ndum4 n4 vdd vss sg13cmos5l_inv_1
+Xdum5 ndum5 n5 vdd vss sg13cmos5l_inv_1
+Xdum6 ndum6 n6 vdd vss sg13cmos5l_inv_1
+Xdum7 ndum7 n7 vdd vss sg13cmos5l_inv_1
+.ends
+
+
+* expanding   symbol:  divn.sym # of pins=7
+** sym_path: /work/sch/xschem/divn.sym
+** sch_path: /work/sch/xschem/divn.sch
+.subckt divn clk rstb nsel0 nsel1 div_out vdd vss
+*.ipin clk
+*.ipin rstb
+*.ipin nsel0
+*.ipin nsel1
+*.opin div_out
+*.iopin vdd
+*.iopin vss
+Xd1 q1 q1b clk q1b rstb vdd vss sg13cmos5l_dfrbp_1
+Xd2 q2 q2b q1 q2b rstb vdd vss sg13cmos5l_dfrbp_1
+Xd3 q3 q3b q2 q3b rstb vdd vss sg13cmos5l_dfrbp_1
+Xd4 q4 q4b q3 q4b rstb vdd vss sg13cmos5l_dfrbp_1
+Xmux div_out q1 q2 q3 q4 nsel0 nsel1 vdd vss sg13cmos5l_mux4_1
+.ends
+
+
+* expanding   symbol:  cs_inv.sym # of pins=6
+** sym_path: /work/sch/xschem/cs_inv.sym
+** sch_path: /work/sch/xschem/cs_inv.sch
+.subckt cs_inv in out vdd vbp vctrl vss
+*.ipin in
+*.opin out
+*.ipin vbp
+*.ipin vctrl
+*.iopin vdd
+*.iopin vss
+XMps nph vbp vdd vdd sg13_lv_pmos w=1u l=0.13u ng=1 m=1 mm_ok=1
+XMpu out in nph vdd sg13_lv_pmos w=2u l=0.13u ng=1 m=1 mm_ok=1
+XMnd out in npl vss sg13_lv_nmos w=2u l=0.13u ng=1 m=1 mm_ok=1
+XMns npl vctrl vss vss sg13_lv_nmos w=1u l=0.13u ng=1 m=1 mm_ok=1
+.ends
+
+.end
