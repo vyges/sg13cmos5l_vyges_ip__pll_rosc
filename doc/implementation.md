@@ -639,12 +639,12 @@ rules, each with its reason:
 | Rule | Limit | Placed | Why |
 | --- | --- | --- | --- |
 | `vctrl`: filter → pump | ≤ 8 µm | 6.0 | highest-impedance node; sets frequency directly |
-| `vctrl`: filter → ring bias | ≤ 40 µm | 30.0 | same net, other end |
+| `vctrl`: filter → ring bias | ≤ 40 µm | 28.0 | same net, other end |
 | `up`/`dn`: PFD → pump | ≤ 8 µm | 6.0 | mismatch is static phase offset and reference spur |
-| `div_out`: divider → PFD | ≤ 10 µm | 8.0 | |
+| `div_out`: divider → PFD | ≤ 10 µm | 6.0 | |
 | PFD / divider off the filter | ≥ 40 µm | 52.0 | standard cells switch at up to the VCO rate; the pump sits between |
-| ring off the filter | ≥ 25 µm | 30.0 | room for both guard rings and a shield |
-| ring output end → `vco_out` pad | ≤ 100 µm | 97.1 | `Xbuf` (`inv_4`) drives the line and the pad |
+| ring off the filter | ≥ 25 µm | 28.0 | room for both guard rings and a shield |
+| ring output end → `vco_out` pad | ≤ 100 µm | 99.1 | `Xbuf` (`inv_4`) drives the line and the pad |
 
 A channel is reserved along the left edge, y 70–100, for the routes coming in there:
 `ibias0` and the four controls (`porb`, `rstb`, `nsel0`, `nsel1`) all arrive in that band.
@@ -654,11 +654,16 @@ why nothing routes through the filter.
 🔁 **The ring region is FOLDED (2026-10-08).** The placer laid the seven stages in one row and
 wrapped it inside X6, so `n7` ran about 110 µm back to X7 and the extracted ring was 30 % slow.
 `PACK[...]["groups"]` in `tools/floorplan.py` now anchors each stage as a column (nMOS below,
-pMOS and its load inverter above): X1–X4 left to right, X5–X7 back above them. Same region,
-same rules. The extracted ring is 319.7 MHz against 421.4 in schematic; see the README.
+pMOS and its load inverter above): X1–X4 in one lane, X5–X7 back in the other. Same region,
+same rules. On `layout-refine` (2026-10-26) the fold is mirrored, X1 at the right: the output
+end (X1, X7, `Xbuf`) faces the `vco_out` pad and the bias column faces the filter. The extracted ring is 319.7 MHz against 421.4 in schematic; see the README.
 
-⚠️ **What it is not.** A first-cut placement: one guard ring per analog region, no routing,
-rectangular regions. Regions reserve 15.4 % of the slot. Two inputs are still open with the
+🔁 **Compacted on `layout-refine` (2026-10-26).** The regions now reserve 11.5 % of the slot, down
+from about 22 %. Each analog region has a p+ substrate ring, and the pump and the VCO also have
+an n+ well ring (`PACK[...]["rings"]`). The supply is a TopMetal1/Metal4 grid. The rule table
+above is this placement's.
+
+⚠️ **What it is not.** Rectangular regions; the ring wiring is left to the router. Two inputs are still open with the
 harness owner and do not move this placement: the `ibias0` source range, and whether
 `vco_out` keeps its analog pad and an on-slot divider joins the ring region (decided 2026-10-05).
 
