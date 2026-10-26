@@ -234,6 +234,16 @@ PLACE = [
 ]
 # Every analog region keeps its guard ring free; Rz folds at the height used above.
 PACK = {r[0]: dict(inset=GUARD) for r in BLOCKS if r[5] != "route"}
+# Guard rings at each region's edge (chipalooza tools/slot_gds.py, Ridha's construction): one p+
+# ring for every region, and a DOUBLE ring (n+ in NWell outside, p+ inside) for the two blocks
+# whose supply current switches at the reference or VCO rate next to vctrl -- the pump and the
+# ring (review rule 1, chipalooza docs/analog-layout-checklist.md section 3). The double ring
+# reaches 2.7 um in, so those regions keep their devices 4 um in.
+GUARD_DOUBLE = 4.0
+for _r in PACK:
+    PACK[_r]["rings"] = ("n", "p") if _r in ("charge pump", "VCO ring + output buffer") else ("p",)
+    if PACK[_r]["rings"][0] == "n":
+        PACK[_r]["inset"] = GUARD_DOUBLE
 # Rz is placed STRAIGHT (1.40 x 89.22 um fits the 94 um inner height). Folding it with the
 # PDK's serpentine changes what LVS extracts -- per-segment l plus bends -- so a folded Rz
 # would need b and a per-segment l in the schematic, and a re-simulation for the bend
