@@ -162,17 +162,20 @@ def render(path):
         art = ART.get(sym) or local_sym(sym, srcdir)
         if art is not None and art.get("texts") is not None and art.get("polys") == []:
             # locally generated sub-block symbol: box outline, pin stubs and pin names
-            for x1, y1, x2, y2 in art["lines"]:
+            # a mirrored instance (the PLL's feedback divider) mirrors its box and pins too
+            lines = [xf(x1, y1, rot, flip) + xf(x2, y2, rot, flip) for x1, y1, x2, y2 in art["lines"]]
+            for x1, y1, x2, y2 in lines:
                 body.append(f'<line x1="{x+x1}" y1="{y+y1}" x2="{x+x2}" y2="{y+y2}" '
                             f'stroke="#4a6fa5" stroke-width="2" stroke-linecap="round"/>')
                 note(x + x1, y + y1); note(x + x2, y + y2)
-            xs_ = [v for ln in art["lines"] for v in (ln[0], ln[2])]
-            ys_ = [v for ln in art["lines"] for v in (ln[1], ln[3])]
+            xs_ = [v for ln in lines for v in (ln[0], ln[2])]
+            ys_ = [v for ln in lines for v in (ln[1], ln[3])]
             if xs_:
                 body.append(f'<rect x="{x+min(xs_)}" y="{y+min(ys_)}" '
                             f'width="{max(xs_)-min(xs_)}" height="{max(ys_)-min(ys_)}" '
                             f'fill="#f4f7fb" fill-opacity="0.7" stroke="none"/>')
             for pn, pxo, pyo in art["pins"]:
+                pxo, pyo = xf(pxo, pyo, rot, flip)
                 body.append(f'<circle cx="{x+pxo}" cy="{y+pyo}" r="2.4" fill="#4a6fa5"/>')
                 body.append(f'<text x="{x+pxo+(6 if pxo>=0 else -6)}" y="{y+pyo+3.5}" '
                             f'text-anchor="{"start" if pxo>=0 else "end"}" '

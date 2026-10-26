@@ -24,4 +24,4 @@ C {sg13cmos5l_pr/cap_cmomf.sym} 0 -80 0 0 {name=Cz model=cap_cmomf w=82u l=82u m
 C {sg13cmos5l_pr/cap_cmomf.sym} 260 -80 0 0 {name=Cp model=cap_cmomf w=16u l=16u mmin=1 mmax=4 spiceprefix=X}
 N 0 -280 0 -320 {lab=vctrl}
 C {devices/iopin.sym} 0 -320 0 0 {name=p_vctrl lab=vctrl}
-C {devices/iopin.sym} -400 -200 0 0 {name=p_vss lab=vss}
+C {devices/iopin.sym} -120 60 0 0 {name=p_vss lab=vss}

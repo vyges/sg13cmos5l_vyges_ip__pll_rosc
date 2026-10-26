@@ -36,8 +36,8 @@ N -20 -300 -70 -300 {lab=vbp}
 C {devices/ipin.sym} -70 -300 0 1 {name=p_vbp lab=vbp}
 N -20 200 -70 200 {lab=vctrl}
 C {devices/ipin.sym} -70 200 0 1 {name=p_vctrl lab=vctrl}
-C {devices/iopin.sym} -420 -200 0 0 {name=p_vdd lab=vdd}
-C {devices/iopin.sym} -420 -140 0 0 {name=p_vss lab=vss}
+C {devices/iopin.sym} -320 -420 0 0 {name=p_vdd lab=vdd}
+C {devices/iopin.sym} -320 320 0 0 {name=p_vss lab=vss}
 N 20 -300 30 -300 {lab=vdd}
 N 20 -150 30 -150 {lab=vdd}
 N 20 200 30 200 {lab=vss}
