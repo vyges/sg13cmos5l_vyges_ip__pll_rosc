@@ -85,23 +85,26 @@ MEASURED_TOTAL = 7696.5     # area_budget.py's own total (+2 antennanp, D3, 2026
 BLOCKS = [
     # Reserved: the incoming bias and control routes, from the left-edge pin band to the
     # pump (ibias), the PFD (porb) and the divider (rstb, nsel0/1). Nothing is placed here.
-    ("bias + control channel", 6,   70,  316,  30,  "route"),
+    ("bias + control channel", 6,   70,  376,  30,  "route"),
 
     # The quiet core. Filter, then pump hard against its right side: vctrl is the pump's
     # output and the filter's input, and it leaves the filter's top-right corner for the
     # ring's bias input directly above.
-    ("loop filter (Cz Cp Rz)", 150, 102, 120,  100, "lf"),
-    ("charge pump",            276, 132, 40,   40,  "cp"),
+    # COMPACTED 2026-10-26 (layout review: "too much space"): every region is its contents plus
+    # its ring inset, the cluster sits at the pad edge, and the gaps between regions are 6 um --
+    # room for the rings, not distance. The filter is Rz + Cz + Cp side by side (108 um).
+    ("loop filter (Cz Cp Rz)", 216, 102, 114,  96,  "lf"),
+    ("charge pump",            336, 132, 40,   20,  "cp"),
 
     # Digital, on the far side of the pump from the filter. The PFD abuts the pump so up/dn
     # are two short, equal wires; the divider sits under the PFD, which takes its output.
-    ("PFD",                    322, 132, 48,   20,  "pfd"),     # 48: +tiehi (2026-10-26)
-    ("divider /N",             322, 102, 80,   22,  "div"),
+    ("PFD",                    382, 132, 48,   20,  "pfd"),     # 48: +tiehi (2026-10-26)
+    ("divider /N",             382, 104, 72,   22,  "div"),
 
-    # The ring, above. Its bias end (Mpr/Mnr) is the LEFT end, over the filter's corner; its
-    # output end (Xtap, Xbuf) is the RIGHT end, facing the vco_out pad at y 187-212. Seven
-    # stages in one row with identical surroundings: Kvco is a uniform stage delay.
-    ("VCO ring + output buffer", 300, 190, 140, 45, "vco"),
+    # The ring, above. Its bias end (Mpr/Mnr) is the LEFT end, beside the filter; its output
+    # end (X1/X7 and Xtap, Xbuf: the fold's open end) is the RIGHT end, facing the vco_out pad
+    # at y 187-212 (user 2026-10-26: the fold mirrored, the bias column kept by the filter).
+    ("VCO ring + output buffer", 358, 158, 80, 32, "vco"),
 ]
 
 # Routing rules, each a distance between two regions' nearest edges (um), and the limit.
@@ -248,8 +251,8 @@ for _r in PACK:
 # PDK's serpentine changes what LVS extracts -- per-segment l plus bends -- so a folded Rz
 # would need b and a per-segment l in the schematic, and a re-simulation for the bend
 # resistance. Found by LVS on the first routed slot GDS (2026-10-04).
-# The ring is FOLDED, one column per stage: X1-X4 run left to right in the lower lane, X5-X7
-# come back right to left in the upper lane, so X4 sits under X5 and X7 beside X1 and no ring
+# The ring is FOLDED, one column per stage: X1-X4 run RIGHT TO LEFT in the lower lane, X5-X7
+# come back left to right in the upper lane, so X4 sits under X5 and X7 beside X1 and no ring
 # wire is longer than about one column plus the lane gap. Each column is the stage's nMOS
 # (lower sub-row) and pMOS (upper), plus the one inverter that loads ITS output -- Xdum<i+1>
 # for stage i, Xtap for X7 -- so every stage drives the same load at the same distance.
@@ -263,7 +266,10 @@ RING_SUBROWS = (0.0, 5.0, 12.0, 19.0)   # lower n, lower p, upper p, upper n (um
 
 def _ring_groups():
     v = "/Xvco/"
-    col = lambda k: RING_BIAS_W + (k - 1) * RING_PITCH       # stage column k = 1..4
+    # stage column k = 1..4, k = 1 (X1, X7, Xbuf: the output end) at the RIGHT, by the pad;
+    # the bias column stays at the left, by the filter (mirrored 2026-10-26: X1 at the left put
+    # Xbuf ~230 um from vco_out, and the pad rule passed only on the oversized region's edge)
+    col = lambda k: RING_BIAS_W + (4 - k) * RING_PITCH
     g = [(0.0, RING_SUBROWS[0], [v + "XMnr$"]), (0.0, RING_SUBROWS[1], [v + "XMpr$"])]
     for i in range(1, 8):
         k, (yn, yp) = (i, RING_SUBROWS[:2]) if i <= 4 else (9 - i, RING_SUBROWS[:1:-1])
@@ -284,15 +290,15 @@ PACK["VCO ring + output buffer"]["groups"] = _ring_groups()
 # target is under 1 ohm from the pin to any point.
 # The grid, after the reference layouts (chipalooza docs/analog-layout-checklist.md):
 #   - a 28 um TopMetal1 bar from each wrapper pin (vss_1v2 y 66.4, vdd_1v2 y 2.0) to a TopMetal1
-#     spine on each side of the circuits: vss on the left (x 260-274), vdd on the right (398-414);
+#     spine on each side of the circuits: vss on the left (x 318-332), vdd on the right (460-476);
 #     28 um, not wider: any metal wider than 30 um needs slits (Slt.c);
-#   - interdigitated fingers over the whole cluster (divider, pump + PFD, ring: x 279-382,
-#     y 105-215), Metal4 + TopMetal1 stitched by TopVia1 arrays, 4 um wide on a 6 um pitch, vss
+#   - interdigitated fingers over the whole cluster (divider, pump + PFD, ring: x 336-454,
+#     y 104-190), Metal4 + TopMetal1 stitched by TopVia1 arrays, 4 um wide on a 6 um pitch, vss
 #     from the left spine, vdd from the right. The router only drops each terminal onto the
 #     nearest finger, and Metal1-3 stay free for signals (routed.def used Metal4 13 times).
 # ⛔ No Metal4 over the loop-filter region: Cz and Cp are MOM caps filling Metal1-4.
-SUP_Y0, SUP_W, SUP_PITCH, SUP_N = 100.0, 4.0, 6.0, 22    # fingers y 100 .. 230, vss first
-SUP_VSS_X, SUP_VDD_X = (271.0, 386.0), (277.0, 414.0)     # finger spans (M4 + TopMetal1)
+SUP_Y0, SUP_W, SUP_PITCH, SUP_N = 100.0, 4.0, 6.0, 16    # fingers y 100 .. 194, vss first
+SUP_VSS_X, SUP_VDD_X = (331.0, 448.0), (337.0, 476.0)     # finger spans (M4 + TopMetal1)
 _fingers = [("vss" if k % 2 == 0 else "vdd", SUP_Y0 + k * SUP_PITCH) for k in range(SUP_N)]
 STRAPS = dict(
     plate_pitch=1.0,        # TopVia1 0.42 cut + 0.42 space (TV1.a/b) = 0.84 minimum
@@ -305,10 +311,10 @@ STRAPS = dict(
     bands=[(net, ("Metal4", "TopMetal1"), *(SUP_VSS_X if net == "vss" else SUP_VDD_X)[:1], y,
             *(SUP_VSS_X if net == "vss" else SUP_VDD_X)[1:], y + SUP_W) for net, y in _fingers],
     feed=[
-        ("vss", "TopMetal1", 0.0,   66.365, 274.0, 94.365),   # vss_1v2 pin -> left spine
-        ("vss", "TopMetal1", 260.0, 66.365, 274.0, max(y for n, y in _fingers if n == "vss") + SUP_W),
-        ("vdd", "TopMetal1", 0.0,   2.0,    414.0, 30.0),     # vdd_1v2 pin -> right spine
-        ("vdd", "TopMetal1", 398.0, 2.0,    414.0, max(y for n, y in _fingers if n == "vdd") + SUP_W),
+        ("vss", "TopMetal1", 0.0,   66.365, 332.0, 94.365),   # vss_1v2 pin -> left spine
+        ("vss", "TopMetal1", 318.0, 66.365, 332.0, max(y for n, y in _fingers if n == "vss") + SUP_W),
+        ("vdd", "TopMetal1", 0.0,   2.0,    476.0, 30.0),     # vdd_1v2 pin -> right spine
+        ("vdd", "TopMetal1", 460.0, 2.0,    476.0, max(y for n, y in _fingers if n == "vdd") + SUP_W),
     ],
 )
 
