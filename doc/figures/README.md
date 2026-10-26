@@ -23,6 +23,9 @@ commit `bfc61e8` (which added the `pfd` antenna cells).
   IN/OUT = the stage's in/out, VCOOUT=vco_out. The free labels `rstb`, `div` and `n1` name internal nets.
 - The DFF symbol's R pin is the cell's active-low RESET_B. The cells' Q_N outputs (nets upn, dnn) connect
   to nothing in the schematic and are not drawn.
+- Since `bfc61e8`, the PFD's D inputs are driven by a tie-high cell `Xtiehi` (node `dhi`), not the
+  vdd rail. The flops still see a constant 1, and the figures show D tied high. The cell is in
+  `doc/schematics/pfd.svg`.
 - The folded ring follows the placement described in `doc/implementation.md` (X1-X4 one way, X5-X7 back); electrically it is the plain ring n1 -> X1 -> ... -> X7 -> n1.
 
 ## Simplifications

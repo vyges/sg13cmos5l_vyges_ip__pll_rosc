@@ -227,7 +227,31 @@ Open items:
   releases them.
 - ⚠️ `vco_out` keeps its analog pad, and an on-slot output divider is added (decided
   2026-10-05). The divider is not drawn yet.
-- ℹ️ The rails are routed as ordinary nets; a proper power grid comes with the final layout.
+- ℹ️ In the taped-out layout the rails are routed as ordinary nets. The supply grid is on the
+  `layout-refine` branch (below).
+
+### Layout refinement (branch `layout-refine`, in progress)
+
+The tables above describe the taped-out layout (tag `tapeout-2026-10`). This branch carries the
+items from the layout review. Its numbers are short checks only; the full post-layout gate runs
+once the refinements are done.
+
+- **Supply grid.** vdd and vss run as TopMetal1 bands over Metal4 fingers, fed from spines at the
+  block edges. Each supply terminal is joined to its band by a drawn via stack instead of being
+  left to the router.
+- **Tie cell.** The PFD flops' D inputs are driven by a tie-high cell (`dhi`), not the vdd rail.
+  With the grid on vdd, those two gates were the only gate area on a net with thousands of µm² of
+  metal, and the antenna rule failed.
+- **Guard rings.** Every analog region has a p+ substrate ring; the charge pump and the VCO also
+  have an n+ well ring.
+- **Compaction.** The regions take 11.5 % of the slot (was about 22 %). The VCO's fold is
+  mirrored so that its output end (X1, X7 and the output buffer) sits by the `vco_out` pad;
+  before, the buffer was about 230 µm from it.
+
+Short check (tt / 27 °C / 1.20 V; capacitance only): DRC 0, antenna 0, LVS match, keepouts 0. The
+tuning curve tops out at 539.9 MHz against 565.4 MHz for the taped-out layout (−4.5 %): ring nodes
+n2–n5 each gained 0.8–1 fF of routed Metal3. Drawing the ring wiring by hand is the next step for
+that.
 
 **What routing needed that the PDK cells do not provide:** a gate contact on every MOSFET, a well
 tap on every pMOS, a substrate tie beside every nMOS (LU.b), and short Metal4 stubs to bring
