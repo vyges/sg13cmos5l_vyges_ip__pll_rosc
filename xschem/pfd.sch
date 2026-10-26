@@ -31,8 +31,6 @@ N 560 320 -260 320 {lab=rstb}
 N -260 320 -260 80 {lab=rstb}
 N -260 80 -180 80 {lab=rstb}
 N -180 80 -90 80 {lab=rstb}
-C {devices/lab_pin.sym} 90 -240 0 0 {name=l_net_up sig_type=std_logic lab=up}
-C {devices/lab_pin.sym} 90 40 0 0 {name=l_net_dn sig_type=std_logic lab=dn}
 C {devices/lab_pin.sym} 480 -80 0 0 {name=l_net_nout sig_type=std_logic lab=nout}
 C {devices/lab_pin.sym} 480 180 0 0 {name=l_net_rstb sig_type=std_logic lab=rstb}
 C {sg13cmos5l_stdcells/sg13cmos5l_dfrbp_1.sym} 0 -220 0 0 {name=Xup VDD=vdd VSS=vss prefix=sg13cmos5l_}

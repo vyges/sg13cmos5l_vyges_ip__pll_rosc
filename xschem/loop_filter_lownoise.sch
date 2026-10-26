@@ -33,7 +33,6 @@ N 600 160 720 160 {lab=vprop}
 N 720 160 720 -15 {lab=vprop}
 N 720 -15 340 -15 {lab=vprop}
 N 340 -15 340 -80 {lab=vprop}
-C {devices/lab_pin.sym} -20 -110 0 0 {name=l_net_vctrl sig_type=std_logic lab=vctrl}
 C {devices/lab_pin.sym} 380 160 0 0 {name=l_net_propn sig_type=std_logic lab=propn}
 C {devices/lab_pin.sym} 600 160 0 0 {name=l_net_vprop sig_type=std_logic lab=vprop}
 C {sg13cmos5l_pr/sg13_hv_nmos.sym} 0 -110 0 0 {name=Mcint l=2.25u w=50u ng=1 m=20 model=sg13_hv_nmos spiceprefix=X}

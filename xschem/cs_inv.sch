@@ -17,9 +17,7 @@ N -90 -150 -90 50 {lab=in}
 N -90 50 -85 50 {lab=in}
 N -85 50 -20 50 {lab=in}
 C {devices/lab_pin.sym} 20 -270 0 0 {name=l_net_nph sig_type=std_logic lab=nph}
-C {devices/lab_pin.sym} 20 -120 0 0 {name=l_net_out sig_type=std_logic lab=out}
 C {devices/lab_pin.sym} 20 80 0 0 {name=l_net_npl sig_type=std_logic lab=npl}
-C {devices/lab_pin.sym} -20 -150 0 0 {name=l_net_in sig_type=std_logic lab=in}
 C {sg13cmos5l_pr/sg13_lv_pmos.sym} 0 -300 0 0 {name=Mps l=0.13u ng=1 m=1 model=sg13_lv_pmos spiceprefix=X w=1u}
 N -20 -300 -70 -300 {lab=vbp}
 C {devices/lab_pin.sym} -70 -300 0 1 {name=l_Mps_G sig_type=std_logic lab=vbp}

@@ -29,7 +29,6 @@ N -855 -100 -790 -100 {lab=div_out}
 C {devices/lab_pin.sym} -610 -155 0 0 {name=l_net_up sig_type=std_logic lab=up}
 C {devices/lab_pin.sym} -610 -45 0 0 {name=l_net_dn sig_type=std_logic lab=dn}
 C {devices/lab_pin.sym} -25 -100 0 0 {name=l_net_vctrl sig_type=std_logic lab=vctrl}
-C {devices/lab_pin.sym} 830 -100 0 0 {name=l_net_vco_out sig_type=std_logic lab=vco_out}
 C {devices/lab_pin.sym} 290 480 0 0 {name=l_net_div_out sig_type=std_logic lab=div_out}
 C {pfd.sym} -700 -100 0 0 {name=Xpfd }
 N -790 -180 -790 -220 {lab=ref}

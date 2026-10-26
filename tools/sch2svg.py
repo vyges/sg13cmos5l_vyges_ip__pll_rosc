@@ -55,6 +55,9 @@ def local_sym(sym, srcdir):
 NUM = r"(-?[0-9.eE+]+)"
 RE_C = re.compile(r"^C\s+\{([^}]*)\}\s+" + NUM + r"\s+" + NUM + r"\s+(\d+)\s+(\d+)\s*\{(.*)\}\s*$")
 RE_N = re.compile(r"^N\s+" + NUM + r"\s+" + NUM + r"\s+" + NUM + r"\s+" + NUM)
+# group-box frames (sch_gen.py "boxes"): graphic lines, drawn dashed, with their titles in place
+RE_L = re.compile(r"^L\s+4\s+" + NUM + r"\s+" + NUM + r"\s+" + NUM + r"\s+" + NUM)
+FRAMES, FRAME_TITLES = [], []
 RE_T = re.compile(r"^T\s+\{(.*)$", re.S)
 
 
@@ -85,7 +88,9 @@ def parse(path):
                 buf += "\n" + lines[j]
             body = buf[:buf.index("}")]
             rest = buf[buf.index("}") + 1:].split()
-            if len(rest) >= 2:
+            if len(rest) >= 2 and "layer=4" in buf[buf.index("}") + 1:]:
+                FRAME_TITLES.append((body, float(rest[0]), float(rest[1])))
+            elif len(rest) >= 2:
                 texts.append((body, float(rest[0]), float(rest[1]),
                               float(rest[4]) if len(rest) > 4 else 0.3))
             i = j + 1
@@ -98,6 +103,11 @@ def parse(path):
             inst.append((sym, float(x), float(y), int(rot), int(flip), d))
             i += 1
             continue
+        m = RE_L.match(ln)
+        if m:
+            FRAMES.append([float(v) for v in m.groups()])
+            i += 1
+            continue
         m = RE_N.match(ln)
         if m:
             wires.append([float(v) for v in m.groups()])
@@ -107,6 +117,7 @@ def parse(path):
 
 def render(path):
     srcdir = os.path.dirname(os.path.abspath(path))
+    FRAMES.clear(); FRAME_TITLES.clear()
     inst, wires, texts = parse(path)
     S, out, pts = 1.0, [], []
 
@@ -116,6 +127,14 @@ def render(path):
     for x1, y1, x2, y2 in wires:
         note(x1, y1); note(x2, y2)
     body = []
+    for x1, y1, x2, y2 in FRAMES:
+        body.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="#a0aec0" '
+                    f'stroke-width="1.5" stroke-dasharray="8 6"/>')
+        note(x1, y1); note(x2, y2)
+    for txt, x, y in FRAME_TITLES:
+        body.append(f'<text x="{x}" y="{y + 16}" font-family="Helvetica,Arial,sans-serif" '
+                    f'font-size="12" font-weight="bold" fill="#718096">{esc(txt)}</text>')
+        note(x, y)
     # wires first, so glyphs and text sit on top
     for x1, y1, x2, y2 in wires:
         body.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" '

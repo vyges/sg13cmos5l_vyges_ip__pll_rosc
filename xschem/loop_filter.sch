@@ -18,7 +18,6 @@ N 0 30 260 30 {lab=vss}
 N 260 30 260 15 {lab=vss}
 N 260 15 260 -50 {lab=vss}
 C {devices/lab_pin.sym} 0 -220 0 0 {name=l_net_nz sig_type=std_logic lab=nz}
-C {devices/lab_pin.sym} 0 -280 0 0 {name=l_net_vctrl sig_type=std_logic lab=vctrl}
 C {devices/lab_pin.sym} 0 -50 0 0 {name=l_net_vss sig_type=std_logic lab=vss}
 C {sg13cmos5l_pr/rhigh.sym} 0 -250 0 0 {name=Rz w=1u l=88u model=rhigh body=sub! b=0 m=1 mm_ok=1 spiceprefix=X}
 C {sg13cmos5l_pr/cap_cmomf.sym} 0 -80 0 0 {name=Cz model=cap_cmomf w=82u l=82u mmin=1 mmax=4 spiceprefix=X}
