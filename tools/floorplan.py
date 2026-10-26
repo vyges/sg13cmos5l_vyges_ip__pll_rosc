@@ -68,7 +68,8 @@ DEVICES = {
              ("Mpsrc", 1.80, 4.62), ("Mnsnk", 1.18, 2.36), ("Mpi", 1.43, 2.62),
              ("Mni", 0.81, 1.36), ("Mswup", 1.43, 4.62), ("Mswdn", 0.81, 2.36)],
     "pfd":  [("Xup", 13.92, 3.78), ("Xdn", 13.92, 3.78), ("Xnand", 1.92, 3.78),
-             ("Xand", 2.40, 3.78), ("Xantref", 1.44, 3.78), ("Xantporb", 1.44, 3.78)],
+             ("Xand", 2.40, 3.78), ("Xantref", 1.44, 3.78), ("Xantporb", 1.44, 3.78),
+             ("Xtiehi", 1.92, 3.78)],
     "div":  [("Xd1", 13.92, 3.78), ("Xd2", 13.92, 3.78), ("Xd3", 13.92, 3.78),
              ("Xd4", 13.92, 3.78), ("Xmux", 10.08, 3.78)],
     "vco":  [("Mpr", 1.43, 1.62), ("Mnr", 0.81, 1.36)]
@@ -78,7 +79,7 @@ DEVICES = {
             + [(f"Xdum{i}", 1.44, 3.78) for i in range(2, 8)]
             + [("Xtap", 1.44, 3.78), ("Xbuf", 2.88, 3.78)],
 }
-MEASURED_TOTAL = 7689.2     # area_budget.py's own total (+2 antennanp, D3, 2026-10-18); the table above must reproduce it
+MEASURED_TOTAL = 7696.5     # area_budget.py's own total (+2 antennanp, D3, 2026-10-18; +tiehi from the LEF, 2026-10-26); the table above must reproduce it
 
 # name, x, y, w, h, group(key into DEVICES, or "route")
 BLOCKS = [
@@ -94,7 +95,7 @@ BLOCKS = [
 
     # Digital, on the far side of the pump from the filter. The PFD abuts the pump so up/dn
     # are two short, equal wires; the divider sits under the PFD, which takes its output.
-    ("PFD",                    322, 132, 45,   20,  "pfd"),
+    ("PFD",                    322, 132, 48,   20,  "pfd"),     # 48: +tiehi (2026-10-26)
     ("divider /N",             322, 102, 80,   22,  "div"),
 
     # The ring, above. Its bias end (Mpr/Mnr) is the LEFT end, over the filter's corner; its
@@ -208,6 +209,11 @@ def report():
     for label, a, pin, kind, lim in PIN_RULES:
         print(f"  {label:<34} {pin_gap(by_name(a), pin):6.1f} um  ({kind} {lim})")
     bad = check()
+    sbad, srows = strap_check()
+    print("supply grid:")
+    for r in srows:
+        print(r)
+    bad += sbad
     if bad:
         print(f"\n{len(bad)} problem(s):")
         for b in bad:
@@ -260,6 +266,83 @@ def _ring_groups():
 
 
 PACK["VCO ring + output buffer"]["groups"] = _ring_groups()
+
+# ---- supply grid (chipalooza tools/slot_gds.py draws STRAPS as one cell, w_straps)
+# ⛔ Why (layout review, 2026-10-22): vdd and vss were routed as ordinary nets, at minimum width,
+# from 2 um pins on the far left edge -- one Metal4 run was 131 um / 0.2 um = 655 squares, about
+# 60 ohm -- and each rail reached TopMetal1 through ONE TopVia1 (counted 2026-10-26). The analog
+# target is under 1 ohm from the pin to any point.
+# The grid, after the reference layouts (chipalooza docs/analog-layout-checklist.md):
+#   - a 28 um TopMetal1 bar from each wrapper pin (vss_1v2 y 66.4, vdd_1v2 y 2.0) to a TopMetal1
+#     spine on each side of the circuits: vss on the left (x 260-274), vdd on the right (398-414);
+#     28 um, not wider: any metal wider than 30 um needs slits (Slt.c);
+#   - interdigitated fingers over the whole cluster (divider, pump + PFD, ring: x 279-382,
+#     y 105-215), Metal4 + TopMetal1 stitched by TopVia1 arrays, 4 um wide on a 6 um pitch, vss
+#     from the left spine, vdd from the right. The router only drops each terminal onto the
+#     nearest finger, and Metal1-3 stay free for signals (routed.def used Metal4 13 times).
+# ⛔ No Metal4 over the loop-filter region: Cz and Cp are MOM caps filling Metal1-4.
+SUP_Y0, SUP_W, SUP_PITCH, SUP_N = 100.0, 4.0, 6.0, 22    # fingers y 100 .. 230, vss first
+SUP_VSS_X, SUP_VDD_X = (271.0, 386.0), (277.0, 414.0)     # finger spans (M4 + TopMetal1)
+_fingers = [("vss" if k % 2 == 0 else "vdd", SUP_Y0 + k * SUP_PITCH) for k in range(SUP_N)]
+STRAPS = dict(
+    plate_pitch=1.0,        # TopVia1 0.42 cut + 0.42 space (TV1.a/b) = 0.84 minimum
+    # Each supply terminal under the fingers gets its own via stack to the nearest finger of its
+    # net, drawn by slot_gds.py rather than left to the router: left to it, the 22 fingers were
+    # reached through 4 Via3 in all and the terminals chained to each other at minimum width.
+    # step: a site every 2.5 um along a standard-cell rail; max_jog: a same-net finger is never
+    # more than 8 um away (4 um fingers, 12 um same-net pitch).
+    drops=dict(nets=("vdd", "vss"), step=2.5, max_jog=8.0),
+    bands=[(net, ("Metal4", "TopMetal1"), *(SUP_VSS_X if net == "vss" else SUP_VDD_X)[:1], y,
+            *(SUP_VSS_X if net == "vss" else SUP_VDD_X)[1:], y + SUP_W) for net, y in _fingers],
+    feed=[
+        ("vss", "TopMetal1", 0.0,   66.365, 274.0, 94.365),   # vss_1v2 pin -> left spine
+        ("vss", "TopMetal1", 260.0, 66.365, 274.0, max(y for n, y in _fingers if n == "vss") + SUP_W),
+        ("vdd", "TopMetal1", 0.0,   2.0,    414.0, 30.0),     # vdd_1v2 pin -> right spine
+        ("vdd", "TopMetal1", 398.0, 2.0,    414.0, max(y for n, y in _fingers if n == "vdd") + SUP_W),
+    ],
+)
+
+
+def strap_check():
+    """Geometry rules of the supply grid, and the resistance from each pin to the far end of its
+    farthest finger. Returns (failures, report lines)."""
+    RS_TM1, RS_M4 = 0.021, 0.103                      # ohm/sq, max (LDO tools/floorplan.py)
+    rs_f = 1 / (1 / RS_TM1 + 1 / RS_M4)               # a finger: both layers in parallel
+    bad, rows = [], []
+    shapes = [(n, "TopMetal1", (x1, y1, x2, y2)) for n, _, x1, y1, x2, y2 in STRAPS["feed"]]
+    shapes += [(n, l, (x1, y1, x2, y2)) for n, ls, x1, y1, x2, y2 in STRAPS["bands"] for l in ls]
+    for n, l, (x1, y1, x2, y2) in shapes:
+        if min(x2 - x1, y2 - y1) > 30.0:
+            bad.append(f"{n} {l} {x1},{y1}: {min(x2 - x1, y2 - y1):.1f} um wide needs slits (Slt.c, 30)")
+        if min(x2 - x1, y2 - y1) < 1.64 and l == "TopMetal1":
+            bad.append(f"{n} TopMetal1 {x1},{y1} under TM1.a 1.64 um")
+    for i, (na, la, a) in enumerate(shapes):        # opposite nets on one layer: TM1.b 1.64 apart
+        for nb, lb, b in shapes[i + 1:]:
+            if na == nb or la != lb:
+                continue
+            dx, dy = max(b[0] - a[2], a[0] - b[2], 0), max(b[1] - a[3], a[1] - b[3], 0)
+            if max(dx, dy) < 1.64:
+                bad.append(f"{na}/{nb} {la} {a} and {b}: {max(dx, dy):.2f} um apart")
+    lf = by_name("loop filter (Cz Cp Rz)")
+    for n, l, (x1, y1, x2, y2) in shapes:
+        if l == "Metal4" and x1 < lf[1] + lf[3] and lf[1] < x2 and y1 < lf[2] + lf[4] and lf[2] < y2:
+            bad.append(f"{n} Metal4 band at y {y1} enters the loop-filter region (MOM caps fill Metal1-4)")
+    feed = {n: [f for f in STRAPS["feed"] if f[0] == n] for n in ("vss", "vdd")}
+    for n in ("vss", "vdd"):
+        bar, spine = feed[n]
+        bw = bar[5] - bar[3]
+        r_bar = RS_TM1 * (bar[4] - 4.0) / bw                       # from the block edge
+        sw = spine[4] - spine[2]
+        r_sp = RS_TM1 * (spine[5] - (bar[3] + bar[5]) / 2) / sw
+        span = SUP_VSS_X if n == "vss" else SUP_VDD_X
+        r_f = rs_f * (span[1] - span[0]) / SUP_W
+        tot = r_bar + r_sp + r_f
+        rows.append(f"  {n}: bar {r_bar:.2f} + spine {r_sp:.2f} + finger {r_f:.2f} = {tot:.2f} ohm "
+                    f"from the pin to the far end of the farthest finger, at max sheet R")
+        if tot > 1.25:
+            bad.append(f"{n}: {tot:.2f} ohm to the farthest point")
+    return bad, rows
+
 
 COLOUR = {"lf": "#2a9d8f", "cp": "#e76f51", "pfd": "#adb5bd", "div": "#ced4da",
           "vco": "#219ebc", "route": "#ffffff"}

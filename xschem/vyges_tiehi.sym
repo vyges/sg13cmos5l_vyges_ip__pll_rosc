@@ -1,0 +1,20 @@
+v {xschem version=3.4.8RC file_version=1.3
+* Tie-high cell sg13cmos5l_tiehi. The PDK ships this symbol only from IHP-Open-PDK dev 2026-10-07
+* (sg13cmos5l_stdcells/sg13cmos5l_tiehi.sym); our PDK pin predates it. Same pin and netlist line,
+* so moving to the PDK's symbol later changes no netlist.
+}
+G {}
+K {type=primitive
+format="@name @@L_HI @VDD @VSS @prefix\\\\tiehi"
+template="name=x1 VDD=VDD VSS=VSS prefix=sg13cmos5l_ "
+extra="VDD VSS prefix"
+highlight=true}
+V {}
+S {}
+E {}
+L 4 0 0 0 -10 {}
+L 4 -10 -10 10 -10 {}
+B 5 -2.5 -2.5 2.5 2.5 {name=L_HI dir=out}
+T {tiehi} -12 -26 0 0 0.2 0.2 {}
+T {@name} 13 -6 0 0 0.2 0.2 {}
+T {L_HI} 4 -4 0 0 0.125 0.125 {}

@@ -40,15 +40,18 @@ N 90 -220 160 -220 {lab=upn}
 C {devices/lab_pin.sym} 160 -220 0 0 {name=l_Xup_Q_N sig_type=std_logic lab=upn}
 N -90 -240 -90 -280 {lab=ref}
 C {devices/lab_pin.sym} -90 -280 0 0 {name=l_Xup_CLK sig_type=std_logic lab=ref}
-N -90 -220 -140 -220 {lab=vdd}
-C {devices/lab_pin.sym} -140 -220 0 1 {name=l_Xup_D sig_type=std_logic lab=vdd}
+N -90 -220 -140 -220 {lab=dhi}
+C {devices/lab_pin.sym} -140 -220 0 1 {name=l_Xup_D sig_type=std_logic lab=dhi}
 C {sg13cmos5l_stdcells/sg13cmos5l_dfrbp_1.sym} 0 60 0 0 {name=Xdn VDD=vdd VSS=vss prefix=sg13cmos5l_}
 N 90 60 160 60 {lab=dnn}
 C {devices/lab_pin.sym} 160 60 0 0 {name=l_Xdn_Q_N sig_type=std_logic lab=dnn}
 N -90 40 -90 0 {lab=div}
 C {devices/lab_pin.sym} -90 0 0 0 {name=l_Xdn_CLK sig_type=std_logic lab=div}
-N -90 60 -140 60 {lab=vdd}
-C {devices/lab_pin.sym} -140 60 0 1 {name=l_Xdn_D sig_type=std_logic lab=vdd}
+N -90 60 -140 60 {lab=dhi}
+C {devices/lab_pin.sym} -140 60 0 1 {name=l_Xdn_D sig_type=std_logic lab=dhi}
+C {vyges_tiehi.sym} -200 -80 0 0 {name=Xtiehi VDD=vdd VSS=vss prefix=sg13cmos5l_}
+N -200 -80 -130 -80 {lab=dhi}
+C {devices/lab_pin.sym} -130 -80 0 0 {name=l_Xtiehi_L_HI sig_type=std_logic lab=dhi}
 C {sg13cmos5l_stdcells/sg13cmos5l_nand2_1.sym} 420 -80 0 0 {name=Xnand VDD=vdd VSS=vss prefix=sg13cmos5l_}
 C {sg13cmos5l_stdcells/sg13cmos5l_and2_1.sym} 420 180 0 0 {name=Xand VDD=vdd VSS=vss prefix=sg13cmos5l_}
 N 360 200 360 240 {lab=porb}
